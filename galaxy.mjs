@@ -4,6 +4,11 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import {
+  bbLin, bbHex, ZONE_T, getGfx, setGfx, onGfx, quality,
+  createBlackHole, BH_RS, makeStarMaterial, makePlanetMaterial, makeRingMaterial,
+  fieldStarMaterial, createLensMaterial, createPipeline, STAR_U, PLAN_U,
+} from './galaxy-fx.mjs';
 
 const ZONES = [
   { id: 'build', name: 'Build', line: 'Make or change something.', col: '#A9C1FF', ids: ['feature', 'refactoring', 'prototype', 'visual-parity', 'authoring-a-skill', 'multi-phase-plan'] },
@@ -47,7 +52,13 @@ const YV = new THREE.Vector3(0, 1, 0);
 export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   const router = G.nodes.find((n) => n.kind === 'router');
   const zoneOfStar = new Map();
-  ZONES.forEach((z) => z.ids.forEach((s) => zoneOfStar.set('playbook:' + s, z)));
+  ZONES.forEach((z) => {
+    z.T = ZONE_T[z.id];
+    z.col = bbHex(z.T);
+    z.ids.forEach((s) => zoneOfStar.set('playbook:' + s, z));
+  });
+  const SP_IN = 1.4;
+  const SP_ARM = 1.6;
   let gseed = 11;
   const grnd = () => (gseed = (gseed * 16807) % 2147483647) / 2147483647;
   const gauss = () => {
@@ -124,15 +135,15 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       RANKK[kindOf(a.kind)] - RANKK[kindOf(b.kind)] || deg(b.id) - deg(a.id)
     ));
     const q = new THREE.Quaternion().setFromEuler(new THREE.Euler((grnd() - 0.5) * 0.3, 0, (grnd() - 0.5) * 0.3));
-    let r = 9;
+    let r = SP_IN * 9;
     let j = 0;
-    let cap = Math.floor((2 * Math.PI * r) / 7);
+    let cap = Math.floor((2 * Math.PI * r) / (7 * SP_IN));
     let used = 0;
     kids.forEach((n) => {
       if (used >= cap) {
         j += 1;
-        r = 9 + 4.2 * j;
-        cap = Math.floor((2 * Math.PI * r) / 7);
+        r = SP_IN * (9 + 4.2 * j);
+        cap = Math.floor((2 * Math.PI * r) / (7 * SP_IN));
         used = 0;
       }
       ORB.set(n.id, { c: s.id, r, ph: (used / cap) * Math.PI * 2 + j * 0.9 + grnd() * 0.3, q });
@@ -146,7 +157,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     const i = sib.indexOf(n);
     ORB.set(n.id, {
       c: p,
-      r: 3.2 + i * 1.1,
+      r: SP_IN * (3.2 + i * 1.1),
       ph: i * GOLD * 2.4,
       q: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.35, 0, 0.2)),
       moon: true,
@@ -156,7 +167,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   const homes = new Map();
   homes.set(router.id, new THREE.Vector3());
   const ARM_B = 0.95;
-  const ARM_R0 = 115;
+  const ARM_R0 = 115 * SP_IN;
   const armAt = (k, r) => {
     const t = (k * 2 * Math.PI) / 5 + 0.31 + ARM_B * Math.log(r / ARM_R0);
     return new THREE.Vector3(Math.cos(t) * r, 0, Math.sin(t) * r);
@@ -165,7 +176,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     const stars = z.ids.map((s) => 'playbook:' + s).filter((s) => byId.has(s)).sort((a, b) => deg(b) - deg(a));
     let r = ARM_R0;
     stars.forEach((s, j) => {
-      if (j > 0) r += sysR.get(stars[j - 1]) * 0.75 + sysR.get(s) * 0.75 + 9;
+      if (j > 0) r += (sysR.get(stars[j - 1]) * 0.75 + sysR.get(s) * 0.75 + 9) * SP_ARM;
       const p = armAt(k, r);
       p.y = (grnd() - 0.5) * 6;
       homes.set(s, p);
@@ -178,20 +189,23 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   const core = G.nodes.filter((n) => SYS.get(n.id) === 'core');
   neb.forEach((n, i) => {
     const a = (i / Math.max(1, neb.length)) * Math.PI * 2 + 0.4;
-    const r = 66 + ((i * 37) % 5) * 6;
+    const r = SP_IN * (66 + ((i * 37) % 5) * 6);
     homes.set(n.id, new THREE.Vector3(Math.cos(a) * r, (grnd() - 0.5) * 10, Math.sin(a) * r));
   });
   core.forEach((n, i) => {
     ORB.set(n.id, {
       c: 'core',
-      r: 30 + (i % 3) * 7,
+      r: SP_IN * (30 + (i % 3) * 7),
       ph: i * GOLD,
       q: new THREE.Quaternion().setFromEuler(new THREE.Euler(0.18, 0, -0.1)),
     });
   });
   ORB.forEach((o) => {
-    const T = o.moon ? 180 : THREE.MathUtils.clamp(360 * (o.r / 20) ** 1.5, 240, 1200);
-    o.w = reduced ? 0 : (2 * Math.PI) / (T * 1000);
+    const a0 = o.moon ? SP_IN * 3.2 : SP_IN * 9;
+    const T0 = o.moon ? 50 : 150;
+    const M = o.c === 'core' ? 4 : 1;
+    o.T = (T0 * (o.r / a0) ** 1.5) / Math.sqrt(M);
+    o.w = reduced ? 0 : (2 * Math.PI) / (o.T * 1000);
   });
   const centreOf = (c) => (c === 'core' ? new THREE.Vector3() : homes.get(c));
   const orbitPos = (id, t) => {
@@ -219,6 +233,31 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   };
 
   const maxDeg = Math.max(1, ...G.nodes.filter((n) => n.kind !== 'router').map((n) => deg(n.id)));
+  const MASS = (id) => Math.sqrt(deg(id) / maxDeg);
+  const GP = new THREE.Vector3();
+  const gravPull = (a, b, m, len) => {
+    GP.set(0, 0, 0);
+    const wells = [{ p: new THREE.Vector3(), mu: 0.45, eps: 90 * SP_IN }];
+    G.nodes.filter((n) => isStar(n.id)).forEach((n) => {
+      wells.push({ p: homes.get(n.id), mu: 0.2 * MASS(n.id), eps: (sysR.get(n.id) || 6) * 1.5 });
+    });
+    wells.forEach((w) => {
+      if (w.p.distanceToSquared(a) < 1 || w.p.distanceToSquared(b) < 1) return;
+      const dx = w.p.x - m.x;
+      const dy = w.p.y - m.y;
+      const dz = w.p.z - m.z;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      const d = Math.sqrt(d2) || 1;
+      const f = (w.mu * len * w.eps * w.eps) / (d2 + w.eps * w.eps) / d;
+      GP.x += dx * f;
+      GP.y += dy * f;
+      GP.z += dz * f;
+    });
+    const L = GP.length();
+    const cap = 0.35 * len;
+    if (L > cap) GP.multiplyScalar(cap / L);
+    return GP;
+  };
   const KMUL = { router: 1, playbook: 1.5, skill: 0.58, agent: 0.58, automation: 0.5, principle: 0.62, script: 0.42, reference: 0.42, other: 0.45 };
   const radiusOf = (n) => (n.kind === 'router' ? 6 : KMUL[kindOf(n.kind)] * (1.6 + 3.4 * Math.sqrt(deg(n.id) / maxDeg)));
   const GEO = {
@@ -241,8 +280,25 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   let focusRings = null;
   let frMat = null;
   let diskMat = null;
-  let ringMat = null;
-  let bhRing = null;
+  let bhMesh = null;
+  let galaxyDust = null;
+  let armGlow = null;
+  let hiiCount = 36;
+  let bulge = null;
+  let bulge2 = null;
+  let GRID = null;
+  let LRT = null;
+  let pipe = null;
+  let lensScale = 1;
+  const lenses = [];
+  const spikes = [];
+  let decorList = [];
+  const LSRC = new Map();
+  let orbitT = 0;
+  let mclk = 0;
+  let paused = new URLSearchParams(location.search).get('paused') === '1';
+  let keyClose = false;
+  let keyPin = false;
   const galaxyFx = [];
   const starLayers = [];
   const zoneLbls = [];
@@ -321,7 +377,8 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     homeCam,
     gkeep: 0,
     pulse: { speed: 0.33, per: 2, size: 0.55, color: '#FFF1D6' },
-    homeVX: -130,
+    homeVX: 0,
+    homeMax: 2600,
     showSel: true,
     stars: false,
     GEO,
@@ -331,11 +388,12 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     idleMs: 700,
     motion: { REGROUP: 2000, TRAVEL: 1900, EXIT: 1800, STAGGER: 26, STAGGER_MAX: 520, DISPERSE: 1700 },
     zones: ZONES,
-    bindRuntime(runtime) { rt = runtime; },
+    bindRuntime(runtime) { rt = runtime; installRuntime(); },
     fitDist(w, h, mobile, vf) {
+      const l = mobile ? 0 : 292;
       const ppu = Math.min(
-        (h - (mobile ? 150 : 190)) / 2 / (RMAX * Math.sin(homeCam.el) * 1.08 + 10),
-        (w - (mobile ? 24 : 96 + 300)) / 2 / (RMAX * 0.96),
+        (h - 56 - (mobile ? 110 : 84)) / 2 / (RMAX * Math.sin(homeCam.el) * 1.24 + 10),
+        (w - l - (mobile ? 24 : 56)) / 2 / (RMAX * 0.96),
       );
       return h / (2 * Math.tan(vf / 2) * Math.max(ppu, 0.001));
     },
@@ -344,38 +402,22 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       return { near: d, far: d + RMAX * 3.2 };
     },
     camLimits(Rb, dist) {
-      return { min: Math.max(Rb * 1.1, 30), max: Math.min(dist * 2.2, 1200) };
+      return { min: Math.max(Rb * 1.1, 30), max: Math.min(dist * 2.2, 2600) };
     },
     paintBases(N) {
       N.forEach((o) => {
         if (o.k === 'playbook') {
           const z = zoneOfStar.get(o.id);
-          if (z) o.base = new THREE.Color(z.col);
+          if (z) {
+            o.T = Math.round(z.T * (0.94 + 0.12 * Math.sqrt(deg(o.id) / maxDeg)));
+            o.base = bbLin(o.T);
+          }
         }
       });
     },
     material(k) {
-      if (k === 'playbook') {
-        const m = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        m.onBeforeCompile = (sh) => {
-          sh.vertexShader = sh.vertexShader
-            .replace('#include <common>', '#include <common>\nvarying vec3 gN;varying vec3 gV;')
-            .replace('#include <project_vertex>', '#include <project_vertex>\n gN=normalize(normalMatrix*mat3(instanceMatrix)*normal);gV=normalize(-mvPosition.xyz);');
-          sh.fragmentShader = sh.fragmentShader
-            .replace('#include <common>', '#include <common>\nvarying vec3 gN;varying vec3 gV;')
-            .replace('#include <opaque_fragment>', 'float mu=clamp(dot(normalize(gN),normalize(gV)),0.,1.);outgoingLight=mix(diffuseColor.rgb*vec3(1.,.78,.58)*.62,mix(diffuseColor.rgb,vec3(1.),.6),pow(mu,.55));\n#include <opaque_fragment>');
-        };
-        return m;
-      }
-      const map = PTEX[k] ? tex(PTEX[k]) : null;
-      const m = new THREE.MeshStandardMaterial({ map, color: 0xffffff, roughness: 0.92, metalness: 0 });
-      m.onBeforeCompile = (sh) => {
-        sh.fragmentShader = sh.fragmentShader.replace(
-          '#include <opaque_fragment>',
-          'float rimF=pow(1.0-saturate(abs(dot(normalize(normal),normalize(vViewPosition)))),3.0);outgoingLight+=diffuseColor.rgb*rimF*0.45+vec3(.55,.68,.9)*rimF*0.12;\n#include <opaque_fragment>',
-        );
-      };
-      return m;
+      if (k === 'playbook') return makeStarMaterial();
+      return makePlanetMaterial(PTEX[k] ? tex(PTEX[k]) : tex(PTEX.other));
     },
     hideHomeEdge: sameSystem,
     dashEdge: (x) => x.e.mode === 'conditional',
@@ -388,6 +430,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       } else {
         m.applyAxisAngle(YV, 0.32 * Math.min(1, len / 260));
         m.y += len * 0.05;
+        m.add(gravPull(a, b, m, len));
       }
       const mt = 1 - t;
       return out.set(
@@ -401,9 +444,41 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     },
     labelTier(o, hovered) {
       if (o.k === 'router' || o === hovered) return 0;
-      if (o.k === 'playbook' || deg(o.id) >= 14) return 1;
+      if (o.k === 'playbook') return 1;
       if (o.k === 'script' || o.k === 'reference') return 3;
       return 2;
+    },
+    centreTarget() {
+      const header = document.querySelector('header').getBoundingClientRect();
+      const host = document.getElementById('scene').getBoundingClientRect();
+      const pop = document.getElementById('pop');
+      const focused = document.body.classList.contains('focus');
+      const narrow = innerWidth < 760;
+      let l = host.left;
+      let r = host.right;
+      let t = header.bottom;
+      let b = host.bottom;
+      const shown = pop && pop.classList.contains('show');
+      if (focused) {
+        const trail = document.getElementById('trail');
+        const tb = trail && trail.firstElementChild ? trail.getBoundingClientRect().bottom : header.bottom + 56;
+        t = Math.max(t, tb);
+      }
+      const key = document.querySelector('.key');
+      const keyOpen = document.body.classList.contains('kopen');
+      const keyClosed = document.body.classList.contains('kclose');
+      if (!focused && !narrow && key && getComputedStyle(key).display !== 'none' && !(keyClosed && !keyOpen)) {
+        l = key.getBoundingClientRect().right;
+      }
+      if (narrow) {
+        if (focused) b = shown ? pop.getBoundingClientRect().top : innerHeight * 0.54;
+      } else if (focused) {
+        r = shown ? pop.getBoundingClientRect().left : innerWidth - 16 - 320;
+      }
+      return {
+        x: host.width / 2 - ((l + r) / 2 - host.left),
+        y: host.height / 2 - ((t + b) / 2 - host.top),
+      };
     },
     inZone(o) {
       if (!zView) return true;
@@ -424,27 +499,40 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       milky.renderOrder = -10;
       sky.add(milky);
       sky0 = milky;
-      [[3200, 2600, 3600, 1.2, 0.5], [2200, 1500, 2200, 1.5, 0.6], [900, 800, 1200, 2.1, 0.75]].forEach(([n, r0, r1, sz, op], li) => {
+      const sfMat = fieldStarMaterial();
+      const fieldT = () => {
+        const u = grnd();
+        return u < 0.7 ? 3000 + grnd() * 2200 : u < 0.92 ? 5200 + grnd() * 2300 : 7500 + grnd() ** 2 * 12500;
+      };
+      [[6400, 2600, 3600, 1.1, 0.55], [3800, 1500, 2300, 1.3, 0.7], [1700, 800, 1300, 1.6, 0.85], [900, 420, 800, 1.9, 0.9]].forEach(([n, r0, r1, sz, op], li) => {
         const p = new Float32Array(n * 3);
         const c = new Float32Array(n * 3);
-        const pal = ['#FFFFFF', '#CAD8FF', '#FFE9C4', '#FFD2A6', '#B9CBFF'].map((h) => new THREE.Color(h));
+        const z = new Float32Array(n);
         for (let i = 0; i < n; i++) {
           const u = grnd() * 2 - 1;
           const th = grnd() * Math.PI * 2;
           const r = r0 + grnd() * (r1 - r0);
           const s = Math.sqrt(1 - u * u);
           p.set([r * s * Math.cos(th), r * u, r * s * Math.sin(th)], i * 3);
-          const col = pal[Math.floor(grnd() * 5)].clone().multiplyScalar(0.25 + grnd() ** 2.2 * 0.75);
+          const mag = grnd() ** 5;
+          const bright = op * (0.1 + mag * 1.1) * (mag > 0.6 ? 2.6 : 1);
+          const col = bbLin(fieldT()).multiplyScalar(bright);
           c.set([col.r, col.g, col.b], i * 3);
+          z[i] = sz * (0.75 + mag * 1.1);
         }
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.BufferAttribute(p, 3));
-        g.setAttribute('color', new THREE.BufferAttribute(c, 3));
-        const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: sz, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: op, fog: false, depthWrite: false }));
+        g.setAttribute('col', new THREE.BufferAttribute(c, 3));
+        g.setAttribute('sz', new THREE.BufferAttribute(z, 1));
+        const mat = sfMat.clone();
+        mat.uniforms.op.value = 1;
+        const pts = new THREE.Points(g, mat);
+        pts.userData.n = n;
         sky.add(pts);
-        const periods = [5400, 3600, 2400];
+        const periods = [5400, 3600, 2400, 1800];
         starLayers.push({ pts, w: ((2 * Math.PI) / (periods[li] * 1000)) * (li % 2 ? -1 : 1) });
       });
+      sky.traverse((o) => o.layers.set(1));
       {
         const n = 8000;
         const p = new Float32Array(n * 3);
@@ -456,14 +544,14 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
           let z;
           let col;
           if (i < 2600) {
-            const r = Math.abs(gauss()) * 34;
+            const r = 14 + Math.abs(gauss()) * 30;
             const v = new THREE.Vector3(gauss(), gauss() * 0.45, gauss()).normalize().multiplyScalar(r);
             x = v.x; y = v.y; z = v.z;
             col = warm.clone().multiplyScalar(0.5 + grnd() * 0.5);
           } else {
             const k = Math.floor(grnd() * 5);
             const inter = grnd() < 0.1;
-            const r = 55 + grnd() ** 0.8 * (RMAX - 30);
+            const r = 55 * SP_IN + grnd() ** 0.8 * (RMAX - 30 * SP_IN);
             const th = (k * 2 * Math.PI) / 5 + 0.31 + ARM_B * Math.log(r / ARM_R0) + gauss() * (inter ? 0.5 : 0.1) * (1 + r / 500);
             x = Math.cos(th) * r;
             z = Math.sin(th) * r;
@@ -476,9 +564,19 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.BufferAttribute(p, 3));
         g.setAttribute('color', new THREE.BufferAttribute(c, 3));
-        const m = new THREE.PointsMaterial({ size: 1.5, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-        scene.add(new THREE.Points(g, m));
+        const m = new THREE.PointsMaterial({ map: HALO, size: 2.4, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+        g.setDrawRange(2600, 5400);
+        galaxyDust = new THREE.Points(g, m);
+        galaxyDust.layers.set(1);
+        scene.add(galaxyDust);
         galaxyFx.push({ m, op: 0.55 });
+        const bg = g.clone();
+        bg.setDrawRange(0, 2600);
+        const bulgePts = new THREE.Points(bg, m.clone());
+        bulgePts.userData.noLens = true;
+        bulgePts.renderOrder = -10;
+        scene.add(bulgePts);
+        galaxyFx.push({ m: bulgePts.material, op: 0.55 });
       }
       const hazePts = (list, map, size, op) => {
         const p = new Float32Array(list.length * 3);
@@ -491,27 +589,103 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         g.setAttribute('position', new THREE.BufferAttribute(p, 3));
         g.setAttribute('color', new THREE.BufferAttribute(c, 3));
         const m = new THREE.PointsMaterial({ map, size, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-        scene.add(new THREE.Points(g, m));
+        const o = new THREE.Points(g, m);
+        scene.add(o);
         galaxyFx.push({ m, op });
+        return o;
       };
       {
         const L = [];
-        for (let i = 0; i < 220; i++) {
+        for (let i = 0; i < 640; i++) {
           const k = i % 5;
-          const r = 70 + grnd() * (RMAX - 60);
-          const th = (k * 2 * Math.PI) / 5 + 0.31 + ARM_B * Math.log(r / ARM_R0) + gauss() * 0.12;
-          L.push([new THREE.Vector3(Math.cos(th) * r, gauss() * 2, Math.sin(th) * r), new THREE.Color(ZONES[k].col).lerp(new THREE.Color('#FFD9B0'), 0.5)]);
+          const r = 64 * SP_IN + grnd() ** 0.85 * (RMAX - 64 * SP_IN);
+          const off = gauss() * 0.07;
+          const th = (k * 2 * Math.PI) / 5 + 0.31 + ARM_B * Math.log(Math.max(r, ARM_R0)) + off;
+          const c = new THREE.Color(ZONES[k].col).lerp(off > 0 ? bbLin(12000) : new THREE.Color('#FFD9B0'), 0.45).multiplyScalar(0.75 + grnd() * 0.5 * (1 - r / RMAX * 0.5));
+          L.push([new THREE.Vector3(Math.cos(th) * r, gauss() * 2, Math.sin(th) * r), c]);
         }
-        hazePts(L, NEB, 70, 0.11);
+        armGlow = hazePts(L, NEB, 96, 0.34);
+        armGlow.layers.set(1);
+        armGlow.renderOrder = -10;
       }
       {
         const L = [];
         for (let i = 0; i < 46; i++) {
           const a = grnd() * Math.PI * 2;
-          const r = 58 + grnd() * 36;
+          const r = SP_IN * (58 + grnd() * 36);
           L.push([new THREE.Vector3(Math.cos(a) * r, gauss() * 4, Math.sin(a) * r), new THREE.Color(i % 3 ? '#5FB8C9' : '#9A7FD6')]);
         }
-        hazePts(L, NEB2, 62, 0.2);
+        const nebula = hazePts(L, NEB2, 62, 0.2);
+        nebula.layers.set(1);
+        nebula.renderOrder = -10;
+      }
+      {
+        const p = [];
+        const c = [];
+        for (let k = 0; k < 5; k++) {
+          for (let i = 0; i < 150; i++) {
+            const r = 62 * SP_IN + grnd() ** 0.9 * (RMAX - 70 * SP_IN);
+            const th = (k * 2 * Math.PI) / 5 + 0.31 + ARM_B * Math.log(Math.max(r, ARM_R0)) - 0.11 + gauss() * 0.02;
+            p.push(Math.cos(th) * r, gauss() * 1.4, Math.sin(th) * r);
+            const a = 0.55 + grnd() * 0.45;
+            c.push(a, a, a);
+          }
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+        g.setAttribute('color', new THREE.Float32BufferAttribute(c, 3));
+        const m = new THREE.PointsMaterial({ map: NEB, size: 46, sizeAttenuation: true, vertexColors: false, color: 0x000000, transparent: true, opacity: 0.75, depthWrite: false, fog: false });
+        m.onBeforeCompile = (sh) => {
+          sh.fragmentShader = sh.fragmentShader.replace('#include <premultiplied_alpha_fragment>', '#include <premultiplied_alpha_fragment>\n gl_FragColor.rgb=vec3(0.);');
+        };
+        const o = new THREE.Points(g, m);
+        o.layers.set(1);
+        o.renderOrder = -9;
+        scene.add(o);
+        galaxyFx.push({ m, op: 0.75 });
+      }
+      {
+        const gs = quality();
+        hiiCount = Math.round(36 * gs.hii);
+        const puffs = [];
+        const knots = [];
+        const ob = [];
+        const pink = new THREE.Color('#FF6FA0');
+        const blue = bbLin(24000);
+        for (let i = 0; i < 36; i++) {
+          const k = i % 5;
+          const r = 80 * SP_IN + grnd() * (RMAX - 90 * SP_IN);
+          const th = (k * 2 * Math.PI) / 5 + 0.31 + ARM_B * Math.log(Math.max(r, ARM_R0)) + 0.04 + gauss() * 0.05;
+          const C0 = new THREE.Vector3(Math.cos(th) * r, gauss() * 1.5, Math.sin(th) * r);
+          puffs.push([C0, pink.clone().multiplyScalar(0.7 + grnd() * 0.4)]);
+          for (let j = 0; j < 5; j++) knots.push([C0.clone().add(new THREE.Vector3(gauss() * 7, gauss() * 1.5, gauss() * 7)), pink.clone()]);
+          for (let j = 0; j < 3; j++) ob.push(C0.clone().add(new THREE.Vector3(gauss() * 5, gauss() * 1.2, gauss() * 5)));
+        }
+        const puff = hazePts(puffs, NEB2, 54, 0.9);
+        const knot = hazePts(knots, NEB, 15, 1);
+        puff.layers.set(1);
+        knot.layers.set(1);
+        puff.geometry.setDrawRange(0, hiiCount);
+        knot.geometry.setDrawRange(0, hiiCount * 5);
+        const p = new Float32Array(ob.length * 3);
+        const c = new Float32Array(ob.length * 3);
+        const z = new Float32Array(ob.length);
+        ob.forEach((v, i) => {
+          p.set([v.x, v.y, v.z], i * 3);
+          const b = blue.clone().multiplyScalar(1.4 + grnd() * 1.6);
+          c.set([b.r, b.g, b.b], i * 3);
+          z[i] = 2 + grnd() * 1.4;
+        });
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+        g.setAttribute('col', new THREE.BufferAttribute(c, 3));
+        g.setAttribute('sz', new THREE.BufferAttribute(z, 1));
+        const hm = fieldStarMaterial();
+        const ho = new THREE.Points(g, hm);
+        ho.layers.set(1);
+        ho.geometry.setDrawRange(0, hiiCount * 3);
+        scene.add(ho);
+        api._hii = { puff, knot, ho };
       }
       const mkHaloG = (col, size, op) => {
         const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO, color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
@@ -520,8 +694,8 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         galaxyFx.push({ m: s.material, op });
         return s;
       };
-      mkHaloG('#FFD9A8', 260, 0.3);
-      mkHaloG('#FFF1DC', 90, 0.5);
+      bulge = mkHaloG('#FFD9A8', 260, 0.3);
+      bulge2 = mkHaloG('#FFF1DC', 90, 0.5);
       const guides = [];
       {
         const a = [];
@@ -548,6 +722,61 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         scene.add(l);
         guides.push(l);
       }
+      {
+        const RG = RMAX * 1.08;
+        const NL = 36;
+        const SUB = 150;
+        const Y0 = -34;
+        const wells = [{ x: 0, z: 0, A: 95, s: 30 * SP_IN }];
+        G.nodes.filter((n) => isStar(n.id)).forEach((n) => {
+          const p = homes.get(n.id);
+          wells.push({ x: p.x, z: p.z, A: 6 + 24 * MASS(n.id), s: 7 + (sysR.get(n.id) || 6) * 0.55 });
+        });
+        const yAt = (x, z) => {
+          let d = 0;
+          wells.forEach((w) => {
+            const dx = x - w.x;
+            const dz = z - w.z;
+            d += w.A / (1 + (dx * dx + dz * dz) / (w.s * w.s));
+          });
+          return Y0 - d;
+        };
+        const a = [];
+        const col = [];
+        const base = new THREE.Color('#6F8CC4');
+        const push = (x0, z0, x1, z1) => {
+          const y0 = yAt(x0, z0);
+          const y1 = yAt(x1, z1);
+          a.push(x0, y0, z0, x1, y1, z1);
+          [[x0, y0, z0], [x1, y1, z1]].forEach(([x, y, z]) => {
+            const r = Math.hypot(x, z) / RG;
+            const fade = 1 - THREE.MathUtils.smoothstep(r, 0.55, 1);
+            const glow = 1 + Math.min(1, (Y0 - y) / 40) * 1.6;
+            const c = base.clone().multiplyScalar(0.05 * fade * glow);
+            col.push(c.r, c.g, c.b);
+          });
+        };
+        for (let i = 0; i <= NL; i++) {
+          const u = -RG + (2 * RG * i) / NL;
+          for (let s = 0; s < SUB; s++) {
+            const v0 = -RG + (2 * RG * s) / SUB;
+            const v1 = -RG + (2 * RG * (s + 1)) / SUB;
+            if (Math.hypot(u, v0) > RG && Math.hypot(u, v1) > RG) continue;
+            push(u, v0, u, v1);
+            push(v0, u, v1, u);
+          }
+        }
+        const g = new LineSegmentsGeometry();
+        g.setPositions(a);
+        g.setColors(col);
+        GRID = new LineSegments2(g, mkLineMat({ vertexColors: true, linewidth: 1, opacity: 1, blending: THREE.AdditiveBlending }));
+        GRID.userData.op = 1;
+        GRID.userData.grid = true;
+        GRID.renderOrder = -8;
+        GRID.layers.set(1);
+        scene.add(GRID);
+        guides.push(GRID);
+      }
       ZONES.forEach((z) => {
         const d = document.createElement('div');
         d.className = 'zlbl';
@@ -558,42 +787,12 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         scene.add(o);
         zoneLbls.push({ o, d, z });
       });
-      diskMat = new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide,
-        uniforms: { time: { value: 0 }, dim: { value: 0 } },
-        vertexShader: 'varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-        fragmentShader: `uniform float time;uniform float dim;varying vec3 vP;
-          float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-          float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-          void main(){float r=length(vP.xy);float rr=(r-1.45)/2.9;if(rr<0.||rr>1.)discard;float a=atan(vP.y,vP.x)-time*.09/(r*r*.3);
-            vec2 q=vec2(cos(a),sin(a));float t=n(q*3.*r)*.6+n(q*8.*r+7.)*.4;float I=pow(1.-rr,2.4)*smoothstep(0.,.06,rr);
-            vec3 c=mix(vec3(.95,.48,.2),vec3(1.,.93,.82),pow(1.-rr,4.));gl_FragColor=vec4(c*I*(.45+.75*t)*(1.-dim*.85),1.);}`,
-      });
-      ringMat = new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: { dim: { value: 0 } },
-        vertexShader: 'varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-        fragmentShader: 'uniform float dim;varying vec3 vP;void main(){float r=length(vP.xy);float g=exp(-pow((r-1.07)/.05,2.))+.35*exp(-pow((r-1.15)/.22,2.));gl_FragColor=vec4(vec3(1.,.86,.66)*g*(1.-dim*.85),1.);}',
-      });
-      const starMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), new THREE.MeshBasicMaterial({ color: 0x000000 }));
-      const disk = new THREE.Mesh(new THREE.RingGeometry(1.45, 4.35, 160, 6), diskMat);
-      const ring = new THREE.Mesh(new THREE.RingGeometry(0.98, 1.6, 160, 2), ringMat);
-      disk.rotation.set(-Math.PI / 2 + 0.22, 0, 0);
-      starMesh.add(disk);
-      starMesh.add(ring);
-      ring.renderOrder = 2;
-      bhRing = ring;
-      scene.add(starMesh);
-      api.routerMesh = starMesh;
-      api.routerDim = (d) => {
-        diskMat.uniforms.dim.value = d;
-        ringMat.uniforms.dim.value = d;
-      };
+      const bh = createBlackHole();
+      diskMat = bh.mat;
+      bhMesh = bh.mesh;
+      scene.add(bhMesh);
+      api.routerMesh = bhMesh;
+      api.routerDim = (d) => { diskMat.uniforms.dim.value = d; };
       frMat = mkLineMat({ color: '#AFC0E0', linewidth: 1, opacity: 0 });
       api._scene = scene;
       api._mkLineMat = mkLineMat;
@@ -607,17 +806,49 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       return { sunLight, fill, guides };
     },
     decor(starNode, N, mkHalo) {
-      const decor = [{ o: starNode, s: mkHalo('#FFC48A', 1, 0.28), f: 9, op: 0.28 }];
+      const decor = [];
       N.filter((o) => o.k === 'playbook').forEach((o) => {
         const c = '#' + o.base.getHexString();
-        decor.push({ o, s: mkHalo(c, 1, 0.75), f: 3.1, op: 0.75 }, { o, s: mkHalo(c, 1, 0.14), f: 8, op: 0.14 });
+        const inner = mkHalo(c, 1, 0.6);
+        const outer = mkHalo(c, 1, 0.16);
+        inner.material.color.multiplyScalar(1.8);
+        outer.material.color.multiplyScalar(0.5);
+        decor.push({ o, s: inner, f: 3.0, op: 0.6 }, { o, s: outer, f: 8.5, op: 0.16 });
       });
+      if (quality().spikes) {
+        const c = document.createElement('canvas');
+        c.width = c.height = 256;
+        const x = c.getContext('2d');
+        x.globalCompositeOperation = 'lighter';
+        [0, Math.PI / 2].forEach((a) => {
+          x.save();
+          x.translate(128, 128);
+          x.rotate(a);
+          const g = x.createLinearGradient(-128, 0, 128, 0);
+          g.addColorStop(0, 'rgba(255,255,255,0)');
+          g.addColorStop(0.5, 'rgba(255,255,255,1)');
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          x.fillStyle = g;
+          x.fillRect(-128, -1.2, 256, 2.4);
+          x.restore();
+        });
+        const st = new THREE.CanvasTexture(c);
+        st.colorSpace = THREE.SRGBColorSpace;
+        N.filter((o) => o.k === 'playbook').sort((a, b) => deg(b.id) - deg(a.id)).slice(0, 3).forEach((o) => {
+          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: st, color: o.base.clone().multiplyScalar(1.6), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, rotation: 0.38 }));
+          api._scene.add(s);
+          decor.push({ o, s, f: 15, op: 0.5, spike: true });
+          spikes.push(s);
+        });
+      }
       N.filter((o) => (o.k === 'skill' || o.k === 'agent') && deg(o.id) >= 16).forEach((o, j) => {
-        const m = new THREE.Mesh(new THREE.RingGeometry(1.45, 2.2, 96), new THREE.MeshBasicMaterial({ color: css('--k-' + o.k), transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false }));
-        m.rotation.set(Math.PI / 2 - 0.35, 0, 0.2 * (j % 2 ? 1 : -1));
+        const m = new THREE.Mesh(new THREE.RingGeometry(1.45, 2.2, 128, 1), makeRingMaterial(css('--k-' + o.k)));
+        m.rotation.set(Math.PI / 2 - 0.95, 0, 0.3 * (j % 2 ? 1 : -1));
+        m.updateMatrixWorld();
         api._scene.add(m);
-        hubs.push({ o, m });
+        hubs.push({ o, m, n: new THREE.Vector3(0, 0, 1).applyQuaternion(m.quaternion) });
       });
+      decorList = decor;
       return decor;
     },
     beforeCam() {
@@ -625,24 +856,41 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       const now = performance.now();
       const dt = Math.min(100, now - gLast);
       gLast = now;
-      if (!reduced) {
+      const moving = !reduced && !paused;
+      if (moving) mclk += dt;
+      if (moving) {
         starLayers.forEach((l) => { l.pts.rotation.y += l.w * dt; });
         if (sky0) sky0.rotation.y += starLayers[0].w * dt * 0.5;
         if (!rt.focus && !rt.drag && !rt.camTw) rt.cam.az += dt * ((2 * Math.PI) / 720000);
       }
-      if (!reduced && !rt.focus && rt.NB) {
-        const t = now - gT0;
+      const orbiting = moving && !rt.focus && (rt.idle ?? 1) > 0.98 && !rt.camTw;
+      if (orbiting) orbitT += dt;
+      if (orbiting && rt.NB) {
         let moved = false;
-        ORB.forEach((o, id) => {
+        const step = (id) => {
           const nd = rt.NB.get(id);
           if (!nd || (nd.dur && now < nd.t0 + nd.dur)) return;
-          const p = orbitPos(id, t);
+          const p = orbitPos(id, orbitT);
           homes.set(id, p);
           nd.from.copy(p);
           nd.to.copy(p);
           moved = true;
-        });
+        };
+        [...ORB.keys()].filter((id) => !ORB.get(id).moon).forEach(step);
+        [...ORB.keys()].filter((id) => ORB.get(id).moon).forEach(step);
         if (moved) rt.dirty();
+      }
+      const close = !rt.focus && !rt.mobile() && rt.cam.dist < rt.fitDist() * 0.45;
+      if (close !== keyClose) {
+        keyClose = close;
+        if (!close) {
+          keyPin = false;
+          document.body.classList.remove('kopen');
+        }
+        document.body.classList.toggle('kclose', close);
+        const pill = document.querySelector('.kpill');
+        if (pill) pill.setAttribute('aria-expanded', String(keyPin));
+        rt.dirty();
       }
     },
     tick(idleAlpha) {
@@ -653,14 +901,60 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         z.o.visible = idleAlpha > 0.02 && (!zView || z.z.id === zView);
       });
       if (frMat) frMat.opacity = (1 - idleAlpha) * 0.4;
-      if (diskMat) diskMat.uniforms.time.value = reduced ? 0 : performance.now() / 1000;
-      if (bhRing && rt?.camera) bhRing.quaternion.copy(rt.camera.quaternion);
-      hubs.forEach((p) => {
-        p.m.position.copy(p.o.pos);
-        p.m.scale.setScalar(p.o.sc);
-        p.m.material.opacity = 0.32 * (1 - p.o.dim);
-        p.m.visible = p.o.dim < 0.98;
+      if (GRID && rt) {
+        const base = GRID.material.opacity;
+        GRID.material.opacity = base * THREE.MathUtils.clamp((1.05 - Math.sin(rt.cam.el)) * 1.6, 0.15, 1);
+      }
+      const coreLc = bbLin(4500).multiplyScalar(1.1);
+      if (rt?.NB) {
+        rt.NB.forEach((o) => {
+          if (!LSRC.has(o.id) || !o.im) return;
+          const src = LSRC.get(o.id);
+          const p = src ? src.pos : (rt.NB.get(router.id)?.pos || new THREE.Vector3());
+          o.im.geometry.attributes.aLight?.setXYZ(o.i, p.x, p.y, p.z);
+        });
+        const seen = new Set();
+        rt.NB.forEach((o) => {
+          if (o.im && o.im.geometry.attributes.aLight && !seen.has(o.im)) {
+            o.im.geometry.attributes.aLight.needsUpdate = true;
+            seen.add(o.im);
+          }
+        });
+        const f = rt.focus && rt.NB.get(rt.focus);
+        let src = f && f.k === 'playbook' ? f : f && LSRC.get(f.id);
+        if (src && src.dim < 0.5) {
+          PLAN_U.uFocusL.value.copy(src.pos);
+          PLAN_U.uFocusLC.value.copy(src.base).multiplyScalar(1.15);
+        } else if (rt.camera) {
+          PLAN_U.uFocusL.value.copy(rt.camera.position).addScaledVector(rt.camera.up, rt.cam.dist * 0.6);
+          PLAN_U.uFocusLC.value.setRGB(1, 0.96, 0.9);
+        }
+        PLAN_U.uFocusMix.value = 1 - idleAlpha;
+        hubs.forEach((p) => {
+          const u = p.m.material.uniforms;
+          const s = LSRC.get(p.o.id);
+          u.pC.value.copy(p.o.pos);
+          u.pR.value = p.o.sc;
+          const fm = 1 - idleAlpha;
+          u.lP.value.copy(s ? s.pos : new THREE.Vector3()).lerp(PLAN_U.uFocusL.value, fm);
+          u.lC.value.copy(s ? s.base : coreLc).lerp(PLAN_U.uFocusLC.value, fm);
+          u.dim.value = p.o.dim;
+          p.m.position.copy(p.o.pos);
+          p.m.scale.setScalar(p.o.sc);
+          p.m.visible = p.o.dim < 0.98;
+        });
+      }
+      decorList.forEach((d) => {
+        if (!rt?.camera) return;
+        const ad = THREE.MathUtils.smoothstep(rt.camera.position.distanceTo(d.o.pos) / Math.max(d.o.sc, 0.01), 8, 70);
+        if (d.spike) {
+          const r = rt.screenOf ? rt.screenOf(d.o).rad : 0;
+          d.s.material.opacity *= 1 - THREE.MathUtils.smoothstep(r, 5, 14);
+          d.s.visible = !!quality(rt.renderer).spikes && d.s.material.opacity > 0.01;
+        } else d.s.material.opacity *= 0.3 + 0.7 * ad;
       });
+      STAR_U.uTime.value = (reduced || paused) ? 0 : mclk / 1000;
+      STAR_U.uGran.value = quality(rt?.renderer).gran && !reduced && !paused ? 1 : 0;
     },
     focusScale(o, ppu, id) {
       if (o.id === id) return Math.min(o.k === 'router' ? 7 : 5.5, 30 / Math.max(ppu, 0.001));
@@ -693,10 +987,11 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       const up = sortK(inc).slice(0, 9);
       Object.keys(grp).forEach((key) => { grp[key] = grp[key].slice(0, 14); });
       const T2 = Math.PI * 2;
-      const r1 = Math.max(15, (grp.planet.length * 8) / T2);
-      const r2 = Math.max(r1 + 10, (grp.rule.length * 8.5) / T2);
-      const r3 = Math.max(r2 + 9, (grp.moon.length * 7) / T2);
-      const r4 = Math.max(r3 + 12, (grp.star.length * 10) / T2);
+      const SF = 1.4;
+      const r1 = Math.max(15 * SF, (grp.planet.length * 8 * SF) / T2);
+      const r2 = Math.max(r1 + 10 * SF, (grp.rule.length * 8.5 * SF) / T2);
+      const r3 = Math.max(r2 + 9 * SF, (grp.moon.length * 7 * SF) / T2);
+      const r4 = Math.max(r3 + 12 * SF, (grp.star.length * 10 * SF) / T2);
       const radii = [];
       const at = (a, r, y) => C.clone().addScaledVector(Rh, Math.sin(a) * r).addScaledVector(Df, Math.cos(a) * r).addScaledVector(Y, y);
       const member = new Map([[id, { p: C.clone() }]]);
@@ -710,12 +1005,12 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       ring(grp.moon, r3, Math.PI / 2 + 0.1);
       ring(grp.star, r4, Math.PI / 2 + 0.55);
       const rOut = radii.length ? Math.max(...radii) : 15;
-      const upY = rOut * 0.55 + 18;
-      const upW = Math.max(Math.min(rOut, ((up.length - 1) * 16) / 2), ((up.length - 1) * 13) / 2);
+      const upY = rOut * 0.55 + 18 * SF;
+      const upW = Math.max(Math.min(rOut, ((up.length - 1) * 16 * SF) / 2), ((up.length - 1) * 13 * SF) / 2);
       up.forEach((x, i) => {
         const t = up.length === 1 ? 0 : -upW + (2 * upW * i) / (up.length - 1);
         const st = up.length > 5 && i % 2 ? 1 : 0;
-        member.set(x.id, { p: C.clone().addScaledVector(Rh, t).addScaledVector(Df, -rOut * 0.35 - st * 10).addScaledVector(Y, upY + st * 13) });
+        member.set(x.id, { p: C.clone().addScaledVector(Rh, t).addScaledVector(Df, -rOut * 0.35 - st * 10 * SF).addScaledVector(Y, upY + st * 13 * SF) });
       });
       const el = rt?.cam?.el ?? homeCam.el;
       const hw = Math.max(rOut, upW) + 6;
@@ -755,22 +1050,16 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         focusRings = null;
       }
     },
-    dockCard({ pop, screenOf, cardId, NB, FS, THREE: T }) {
-      const o = NB.get(cardId);
-      if (!o) return;
-      const s = screenOf(o);
+    dockCard({ pop, cardId, NB }) {
+      if (!NB.get(cardId) || innerWidth < 760) return;
       const inset = 16;
-      const top0 = document.querySelector('header').offsetHeight + 16 + 40 + 8;
-      pop.style.maxHeight = Math.min(580, innerHeight - inset - top0) + 'px';
-      const w = pop.offsetWidth;
+      const top0 = document.querySelector('header').offsetHeight + 16;
+      const w = pop.offsetWidth || 320;
       const h = pop.offsetHeight;
-      const hw = FS?.hwPx || 60;
-      let x = s.x - hw - 28 - w;
-      if (x < inset) x = Math.min(s.x + hw + 28, innerWidth - inset - w);
-      x = T.MathUtils.clamp(x, inset, innerWidth - inset - w);
-      const y = T.MathUtils.clamp(s.y - h * 0.42, top0, innerHeight - inset - h);
+      pop.style.maxHeight = Math.min(580, innerHeight - inset - top0) + 'px';
+      const y = top0 + Math.max(0, (innerHeight - top0 - inset - h) / 2);
       pop.className = pop.className.replace(/\b(below|above|side)\b/g, '').trim() + ' side';
-      pop.style.left = Math.round(x) + 'px';
+      pop.style.left = Math.round(innerWidth - inset - w) + 'px';
       pop.style.top = Math.round(y) + 'px';
       pop.style.setProperty('--cx', Math.round(w / 2) + 'px');
     },
@@ -843,6 +1132,186 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       for (let i = used; i < stepMk.length; i++) stepMk[i].o.visible = false;
     },
   };
+
+  function updBH() {
+    if (!bhMesh || !rt?.camera) return;
+    const star = rt.NB.get(router.id);
+    if (!star) return;
+    bhMesh.quaternion.copy(rt.camera.quaternion);
+    const u = diskMat.uniforms;
+    u.bhPos.value.copy(star.pos);
+    u.Rs.value = BH_RS * (star.sc / 6);
+    u.uTime.value = (reduced || paused) ? 0 : mclk / 1000;
+    u.uVP.value.multiplyMatrices(rt.camera.projectionMatrix, rt.camera.matrixWorldInverse);
+  }
+  function lensPass() {
+    if (!rt || !LRT) return;
+    const renderer = rt.renderer;
+    const camera = rt.camera;
+    const gs = quality(renderer);
+    const half = gs.lensHalf || rt.mobile() || renderer.getPixelRatio() >= 2;
+    lensScale = half ? 0.5 : 1;
+    const buf = new THREE.Vector2();
+    renderer.getDrawingBufferSize(buf);
+    const w = Math.max(2, Math.round(buf.x * lensScale));
+    const h = Math.max(2, Math.round(buf.y * lensScale));
+    if (LRT.width !== w || LRT.height !== h) LRT.setSize(w, h);
+    const host = document.getElementById('scene').getBoundingClientRect();
+    const pr = renderer.getPixelRatio();
+    const star = rt.NB.get(router.id);
+    lenses.forEach((L) => {
+      const o = L.o;
+      const s = rt.screenOf(o);
+      const ppw = s.rad / Math.max(o.sc, 0.01);
+      const rEw = L.rE * (o.sc / Math.max(o.r, 0.01));
+      const u = L.m.material.uniforms;
+      u.res.value.set(buf.x, buf.y);
+      u.c.value.set((s.x - host.left) * pr, (rt.H() - (s.y - host.top)) * pr);
+      u.rE.value = rEw * ppw * pr;
+      u.rQ.value = rEw * L.q * ppw * pr;
+      u.dim.value = Math.min(1, o.dim * 1.2);
+      const vd = o.pos.clone().sub(camera.position).normalize();
+      L.m.position.copy(camera.position).addScaledVector(vd, 3000);
+      L.m.quaternion.copy(camera.quaternion);
+      L.m.scale.setScalar((u.rQ.value / pr) * 1.04 * 2 * Math.tan((camera.fov * Math.PI) / 360) * 3000 / Math.max(1, rt.H()));
+      L.m.visible = s.z < 1 && u.rQ.value > 3;
+    });
+    const bf = THREE.MathUtils.smoothstep(rt.cam.dist, 220, 700);
+    if (bulge) bulge.material.opacity *= bf;
+    if (bulge2) bulge2.material.opacity *= bf;
+    const n0 = camera.near;
+    camera.near = Math.max(1, camera.position.distanceTo(star.pos) - star.sc * 2);
+    camera.updateProjectionMatrix();
+    const prev = renderer.getRenderTarget();
+    camera.layers.set(1);
+    renderer.setRenderTarget(LRT);
+    renderer.clear();
+    renderer.render(api._scene, camera);
+    renderer.setRenderTarget(prev);
+    camera.layers.set(0);
+    camera.layers.enable(1);
+    camera.near = n0;
+    camera.updateProjectionMatrix();
+    diskMat.uniforms.tBg.value = LRT.texture;
+    diskMat.uniforms.bgOn.value = 1;
+  }
+  function applyGfx() {
+    const gs = quality(rt.renderer);
+    starLayers.forEach((l) => l.pts.geometry.setDrawRange(0, Math.round(l.pts.userData.n * gs.stars)));
+    if (galaxyDust) galaxyDust.geometry.setDrawRange(2600, Math.round(5400 * (gs.dust < 1 ? 0.6 : 1)));
+    if (armGlow) armGlow.geometry.setDrawRange(0, Math.round(640 * (gs.glow < 1 ? 0.55 : 1)));
+    if (api._hii) {
+      const n = Math.round(36 * gs.hii);
+      api._hii.puff.geometry.setDrawRange(0, n);
+      api._hii.knot.geometry.setDrawRange(0, n * 5);
+      api._hii.ho.geometry.setDrawRange(0, n * 3);
+    }
+    diskMat.defines.STEPS = gs.bhSteps;
+    diskMat.defines.LITE = gs.bhLite;
+    diskMat.needsUpdate = true;
+    spikes.forEach((s) => { s.visible = !!gs.spikes; });
+    pipe?.invalidate();
+    document.querySelectorAll('[data-g]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.g === getGfx())));
+    rt.dirty();
+  }
+  function installRuntime() {
+    const coreLc = bbLin(4500).multiplyScalar(1.1);
+    const dressed = new Set();
+    rt.NB.forEach((o) => {
+      if (!o.im || o.k === 'playbook' || dressed.has(o.im)) return;
+      dressed.add(o.im);
+      const n = o.im.count;
+      const g = o.im.geometry;
+      g.setAttribute('aLight', new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+      g.setAttribute('aLCol', new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3));
+      g.setAttribute('aRing', new THREE.InstancedBufferAttribute(new Float32Array(n * 4), 4));
+    });
+    rt.NB.forEach((o) => {
+      if (o.k === 'router' || o.k === 'playbook') return;
+      const sys = SYS.get(o.id);
+      LSRC.set(o.id, sys && isStar(sys) ? rt.NB.get(sys) : null);
+      if (!o.im?.geometry.attributes.aLCol) return;
+      const src = LSRC.get(o.id);
+      const c = src?.base ? src.base.clone().multiplyScalar(1.15) : coreLc;
+      o.im.geometry.attributes.aLCol.setXYZ(o.i, c.r, c.g, c.b);
+    });
+    hubs.forEach((p) => {
+      const ring = p.o.im?.geometry.attributes.aRing;
+      if (ring) ring.setXYZW(p.o.i, p.n.x, p.n.y, p.n.z, 1);
+    });
+    dressed.forEach((im) => {
+      im.geometry.attributes.aLCol.needsUpdate = true;
+      im.geometry.attributes.aRing.needsUpdate = true;
+    });
+    const lensOn = new URLSearchParams(location.search).get('lens') !== '0';
+    LRT = new THREE.WebGLRenderTarget(2, 2, { depthBuffer: false, type: THREE.HalfFloatType });
+    [...rt.NB.values()].filter((o) => o.k === 'playbook').sort((a, b) => deg(b.id) - deg(a.id)).slice(0, 6).forEach((o) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), createLensMaterial(LRT));
+      m.renderOrder = -9;
+      m.frustumCulled = false;
+      m.visible = false;
+      api._scene.add(m);
+      lenses.push({ o, m, rE: 5 + 7 * MASS(o.id), q: 3.4 });
+    });
+    rt.camera.layers.enable(1);
+    pipe = createPipeline(rt.renderer);
+    api.renderFrame = (renderer, scene, camera) => {
+      updBH();
+      if (lensOn) lensPass();
+      else diskMat.uniforms.bgOn.value = 0;
+      pipe.render(scene, camera);
+      api.lastStats = { ...pipe.stats, lrt: [LRT.width, LRT.height], bloom0: pipe.bloom0(), hdr: pipe.hdr(), gfx: getGfx() };
+    };
+    const reset = document.getElementById('reset');
+    const dock = document.createElement('div');
+    dock.className = 'gseg';
+    dock.id = 'gfxDock';
+    dock.setAttribute('role', 'group');
+    dock.setAttribute('aria-label', 'Graphics quality');
+    dock.innerHTML = '<button type="button" data-g="high">High</button><button type="button" data-g="balanced">Balanced</button>';
+    reset.parentNode.insertBefore(dock, reset);
+    const pauseI = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3.5 2.5h2.2v9H3.5zM8.3 2.5h2.2v9H8.3z"/></svg>';
+    const playI = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M4 2.2l7.5 4.8L4 11.8z"/></svg>';
+    const motion = document.createElement('button');
+    motion.className = 'btn icon';
+    motion.id = 'motionBtn';
+    motion.type = 'button';
+    motion.hidden = reduced;
+    const setPaused = (p) => {
+      paused = p;
+      motion.innerHTML = p ? playI : pauseI;
+      motion.setAttribute('aria-pressed', String(p));
+      motion.setAttribute('aria-label', p ? 'Resume motion' : 'Pause motion');
+      motion.title = (p ? 'Resume' : 'Pause') + ' motion (Space)';
+      rt.dirty();
+    };
+    motion.onclick = () => setPaused(!paused);
+    reset.parentNode.insertBefore(motion, reset);
+    setPaused(paused);
+    addEventListener('keydown', (e) => {
+      if (e.code !== 'Space' || reduced || rt.focus || /INPUT|TEXTAREA|BUTTON|SELECT/.test(document.activeElement?.tagName || '')) return;
+      e.preventDefault();
+      setPaused(!paused);
+    });
+    document.getElementById('about').insertAdjacentHTML('beforeend', '<div class="gfx"><span>Graphics</span><div class="gseg" id="gfxSeg" role="group" aria-label="Graphics quality"><button type="button" data-g="high">High</button><button type="button" data-g="balanced">Balanced</button></div></div><p class="gnote">Balanced halves the bloom and lensing resolution, draws fewer stars and a simpler black-hole disk. Saved on this device.</p>');
+    document.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => setGfx(b.dataset.g); });
+    onGfx(applyGfx);
+    const key = document.getElementById('key');
+    const pill = document.createElement('button');
+    pill.className = 'kpill';
+    pill.type = 'button';
+    pill.innerHTML = 'Key <span aria-hidden="true">▴</span>';
+    pill.setAttribute('aria-expanded', 'false');
+    pill.onclick = () => {
+      keyPin = !keyPin;
+      document.body.classList.toggle('kopen', keyPin);
+      pill.setAttribute('aria-expanded', String(keyPin));
+      rt.dirty();
+    };
+    key.appendChild(pill);
+    applyGfx();
+    api.gfx = () => ({ ...api.lastStats, gfx: getGfx(), steps: diskMat.defines.STEPS, lite: diskMat.defines.LITE, paused, mclk: Math.round(mclk) });
+  }
 
   function mkStep() {
     const d = document.createElement('div');

@@ -229,11 +229,11 @@ function kitchenTheme({ G, byId, kindOf, nm, deg }) {
     other: () => new THREE.IcosahedronGeometry(0.9, 1),
   };
   const LAYERS = [
-    { kinds: ['playbook'], r: 80, y: 84 },
-    { kinds: ['skill', 'agent', 'other'], r: 136, y: 42 },
-    { kinds: ['automation'], r: 96, y: 8 },
-    { kinds: ['principle'], r: 178, y: -12 },
-    { kinds: ['reference', 'script'], r: 222, y: -28 },
+    { kinds: ['playbook'], r: 120, y: 84 },
+    { kinds: ['skill', 'agent', 'other'], r: 175, y: 42 },
+    { kinds: ['automation'], r: 130, y: 8 },
+    { kinds: ['principle'], r: 215, y: -12 },
+    { kinds: ['reference', 'script'], r: 255, y: -28 },
   ];
   const CHEF_Y = 124;
   const FLOOR_Y = -36;
@@ -282,7 +282,7 @@ function kitchenTheme({ G, byId, kindOf, nm, deg }) {
     });
   });
   G.nodes.forEach((n) => { if (!homes.has(n.id)) homes.set(n.id, new THREE.Vector3(0, 40, 0)); });
-  const RMAX = 222;
+  const RMAX = 255;
   const sceneC = new THREE.Vector3(0, 4, 0);
   const bellMat = new THREE.MeshStandardMaterial({ color: '#E2BB72', metalness: 0.75, roughness: 0.24, emissive: '#4A3212', emissiveIntensity: 1 });
   const api = {
@@ -343,7 +343,7 @@ function kitchenTheme({ G, byId, kindOf, nm, deg }) {
     },
     labelTier(o, hovered) {
       if (o.k === 'router' || o === hovered) return 0;
-      if (o.k === 'playbook' || o.k === 'automation' || deg(o.id) >= 14) return 1;
+      if (o.k === 'playbook' || deg(o.id) >= 22) return 1;
       if (o.k === 'script' || o.k === 'reference') return 3;
       return 2;
     },
@@ -401,7 +401,7 @@ function kitchenTheme({ G, byId, kindOf, nm, deg }) {
       mkPool(0, 0, 330, 0.26);
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2 + 0.2;
-        mkPool(Math.cos(a) * 222, Math.sin(a) * 222, 110, 0.11);
+        mkPool(Math.cos(a) * 255, Math.sin(a) * 255, 110, 0.11);
       }
       const plate = new THREE.Group();
       const disc = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.86, 0.07, 96), new THREE.MeshStandardMaterial({ color: '#B9BEC4', roughness: 0.55, metalness: 0, emissive: '#24262A', transparent: true, opacity: 0 }));
@@ -461,8 +461,8 @@ function circuitTheme({ G, kindOf, deg }) {
     script: () => merge([[new THREE.TorusGeometry(0.75, 0.22, 12, 32).rotateX(Math.PI / 2), [1, 1, 1]]]),
     other: () => merge([[BX(1, 0.5, 1), [1, 1, 1]]]),
   };
-  const LAYERS = [{ kinds: ['playbook'], s: 72 }, { kinds: ['skill', 'agent', 'other'], s: 122 }, { kinds: ['principle'], s: 168 }, { kinds: ['reference', 'script'], s: 214 }];
-  const RMAX = 214;
+  const LAYERS = [{ kinds: ['playbook'], s: 108 }, { kinds: ['skill', 'agent', 'other'], s: 160 }, { kinds: ['principle'], s: 205 }, { kinds: ['reference', 'script'], s: 244 }];
+  const RMAX = 244;
   const homes = new Map();
   const dirOf = new Map();
   const router = G.nodes.find((n) => n.kind === 'router');
@@ -755,7 +755,7 @@ function earthTheme({ G, byId, kindOf, nm, deg }) {
     const t2 = cd.clone().cross(t1);
     const mem = G.nodes.filter((n) => region.get(n.id) === c.id && n.id !== c.id).sort((a, b) => (TIER[kindOf(a.kind)] ?? 0) - (TIER[kindOf(b.kind)] ?? 0) || deg(b.id) - deg(a.id));
     mem.forEach((n, i) => {
-      const ang = 0.07 + 0.052 * Math.sqrt(i + 1) + (c === router ? 0.05 : 0);
+      const ang = 1.4 * (0.07 + 0.052 * Math.sqrt(i + 1)) + (c === router ? 0.05 : 0);
       const ph = i * GOLD + c.id.length;
       const d = cd.clone().addScaledVector(t1, Math.cos(ph) * Math.tan(ang)).addScaledVector(t2, Math.sin(ph) * Math.tan(ang)).normalize();
       homes.set(n.id, onGlobe(d, 1.5));
@@ -924,7 +924,7 @@ function brainTheme({ G, kindOf, deg, css }) {
     script: () => new THREE.IcosahedronGeometry(1, 2),
     other: () => new THREE.IcosahedronGeometry(1, 2),
   };
-  const zoneOf = (u) => (u.y <= -0.12 && u.x > -0.55 ? 'temporal' : u.x > 0.28 ? 'frontal' : u.x > -0.12 ? 'motor' : u.x < -0.62 ? 'occipital' : 'parietal');
+  const zoneOf = (u) => (u.y <= -0.12 && u.x > -0.55 ? 'temporal' : u.x > 0.14 ? 'frontal' : u.x > -0.24 ? 'motor' : u.x < -0.66 ? 'occipital' : 'parietal');
   const ZK = { frontal: ['playbook'], motor: ['skill', 'agent', 'other'], parietal: ['principle'], temporal: ['reference', 'script'] };
   const CB = new THREE.Vector3(-118, -72, 0);
   const CBS = new THREE.Vector3(58, 40, 100);
@@ -952,7 +952,7 @@ function brainTheme({ G, kindOf, deg, css }) {
     if (pool.length < list.length) pool = cand.filter((d) => zoneOf(d) === z);
     if (!pool.length) pool = cand;
     const st = pool.length / list.length;
-    const slots = list.map((_, i) => cortex(pool[Math.min(pool.length - 1, Math.floor(i * st + st / 2))], 0.84));
+    const slots = list.map((_, i) => cortex(pool[Math.min(pool.length - 1, Math.floor(i * st + st / 2))], 0.9));
     const free = slots.map(() => true);
     const target = (n) => {
       const v = new THREE.Vector3();

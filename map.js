@@ -81,7 +81,12 @@ const W = () => host.clientWidth;
 const H = () => host.clientHeight;
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer = new THREE.WebGLRenderer({
+    antialias: theme.id !== 'galaxy',
+    preserveDrawingBuffer: true,
+    depth: theme.id !== 'galaxy',
+    stencil: theme.id !== 'galaxy',
+  });
   if (!renderer.getContext()) throw new Error('no context');
 } catch {
   showError('This browser has no 3D support.');
@@ -449,9 +454,10 @@ const fitDist = () => (theme.fitDist
     return H() / (2 * Math.tan(vf / 2) * ppu) + RMAX * 0.18;
   })());
 const homeViewX = () => (mobile() ? 0 : (theme.homeVX || 0));
-const cam = { target: theme.sceneC.clone(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el, min: 60, max: 1400 };
+const cam = { target: theme.sceneC.clone(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el, min: 60, max: theme.homeMax || 1400 };
 let viewX = homeViewX();
 let viewY = 0;
+let centreReady = false;
 const DAMP = 0.08;
 let spinAz = 0;
 let spinEl = 0;
@@ -459,7 +465,27 @@ function stopSpin() {
   spinAz = 0;
   spinEl = 0;
 }
+function easeCentre() {
+  if (!theme.centreTarget) return;
+  const want = theme.centreTarget();
+  if (!centreReady || reduced) {
+    viewX = want.x;
+    viewY = want.y;
+    centreReady = true;
+    return;
+  }
+  const now = performance.now();
+  const dt = Math.min(100, now - (easeCentre.t || now));
+  easeCentre.t = now;
+  const k = 1 - Math.exp(-dt / 220);
+  const dx = want.x - viewX;
+  const dy = want.y - viewY;
+  viewX += dx * k;
+  viewY += dy * k;
+  if (Math.abs(dx) > 0.25 || Math.abs(dy) > 0.25) dirty = true;
+}
 function applyCam() {
+  easeCentre();
   const { target: t, dist: d, az, el } = cam;
   camera.position.set(t.x + d * Math.cos(el) * Math.sin(az), t.y + d * Math.sin(el), t.z + d * Math.cos(el) * Math.cos(az));
   camera.lookAt(t);
@@ -673,7 +699,7 @@ function camTo(t, dist, az, el, dur) {
 
 const GOLD = Math.PI * (3 - Math.sqrt(5));
 const FL = {
-  R0: 34, R_PER: 1.5, SHELL_IN: 0.82, SHELL_OUT: 1.12, H_SPAN: 0.9, STEP_MAX: 0.2, PSI_MAX: (55 * Math.PI) / 180, X_SCALE: 0.75, ROW_PX: 22, CAP: 36,
+  R0: 46, R_PER: 2, SHELL_IN: 0.82, SHELL_OUT: 1.12, H_SPAN: 0.9, STEP_MAX: 0.2, PSI_MAX: (55 * Math.PI) / 180, X_SCALE: 0.75, ROW_PX: 30, CAP: 36,
   R_MIN: 1.8, R_MAX: 3.2, R_SEL: 6.5, LABEL_PX: 170, DISPERSE_K: 4.5, SHELL_MIN: 520, SHELL_MAX: 1100, CARD_HALF: 176,
   REGROUP: 900, TRAVEL: 900, EXIT: 700, STAGGER: 14, STAGGER_MAX: 260, DISPERSE: 800, CARD_IN: 0.7, CARD_ANCHOR: 0.42, SHEET_ANCHOR: 0.27, SEL_PX: 28, LABEL_PX_M: 104,
   ...(theme.motion || {}),
@@ -859,8 +885,10 @@ function focus(id, dur) {
       shell = laid.shell;
       dist = laid.dist;
       ppu = laid.ppu;
-      viewX = laid.viewX;
-      viewY = laid.viewY;
+      if (!theme.centreTarget) {
+        viewX = laid.viewX;
+        viewY = laid.viewY;
+      }
       FS = { Rc: laid.rOut || laid.Rb, Rb, shell, dist, Rv: laid.Rv.clone(), C, hwPx: laid.hwPx };
     } else {
     const visW = W() - 32;
@@ -962,9 +990,11 @@ function exitFocus() {
     o.lmode = 'home';
   });
   cam.min = 60;
-  cam.max = 1400;
-  viewX = homeViewX();
-  viewY = 0;
+  cam.max = theme.homeMax || 1400;
+  if (!theme.centreTarget) {
+    viewX = homeViewX();
+    viewY = 0;
+  }
   theme._plateOn = false;
   theme.clearFocus?.();
   const c = savedCam || { target: theme.sceneC.clone(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el };
@@ -1551,7 +1581,8 @@ function frameBody(now) {
     const rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
     h.lo.position.copy(h.node.pos).addScaledVector(rv, h.side * (h.node.sc * 1.2 + 0.8));
   });
-  renderer.render(scene, camera);
+  if (theme.renderFrame) theme.renderFrame(renderer, scene, camera);
+  else renderer.render(scene, camera);
   labelR.render(scene, camera);
   declutter();
   if (cardId && (anyAnim || dirty)) placeCard();
@@ -1845,6 +1876,10 @@ theme.bindRuntime?.({
   H,
   vf,
   viewX(v) { viewX = v; },
+  screenOf,
+  renderer,
+  fitDist,
+  get idle() { return idleAlpha; },
 });
 applyCam();
 requestAnimationFrame(frame);
@@ -1904,7 +1939,8 @@ window.__pstack = {
     };
   },
   name: nm,
-  get calls() { return renderer.info.render.calls; },
-  get tris() { return renderer.info.render.triangles; },
+  get calls() { return theme.lastStats?.calls ?? renderer.info.render.calls; },
+  get tris() { return theme.lastStats?.tris ?? renderer.info.render.triangles; },
+  get gfx() { return theme.gfx ? theme.gfx() : null; },
   get play() { return PLAY && { id: PLAY.id, k: PLAY.k, playing: PLAY.playing, n: PLAY.S.length, order: PLAY.k >= 0 ? PLAY.S[PLAY.k][0] : null }; },
 };
