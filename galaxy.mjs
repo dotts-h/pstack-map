@@ -1310,7 +1310,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     };
     key.appendChild(pill);
     applyGfx();
-    api.gfx = () => ({ gfx: getGfx(), ...api.lastStats, paused, mclk: Math.round(mclk) });
+    api.gfx = () => ({ ...api.lastStats, gfx: getGfx(), steps: diskMat.defines.STEPS, lite: diskMat.defines.LITE, paused, mclk: Math.round(mclk) });
   }
 
   function mkStep() {
