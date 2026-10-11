@@ -2,6 +2,8 @@
 
 An interactive 3D map of the [pstack](https://github.com/cursor/plugins/tree/main/pstack) Cursor plugin. The sphere opens on the Start here star, with workflows, tools, rules, and docs on nested shells. Click a body to fly to it and open its card; chips travel onward and leave a breadcrumb trail. A Rhombus shape is available from the control at the bottom right.
 
+The header theme menu also opens Kitchen, Circuit, Earth, and Brain. `?theme=sphere|kitchen|circuit|earth|brain` is a shareable link and stays put while you travel. On the sphere, focus lays neighbours in tidy columns and sends a pulse along each highlighted link.
+
 **Live:** https://dotts-h.github.io/pstack-map/
 
 ## How the data refreshes
