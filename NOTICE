@@ -46,3 +46,32 @@ offsets in Math.round so labels sit on whole pixels:
     + Math.round( - _vector.y * _heightHalf + _heightHalf ) + 'px)';
 
 Keep that Math.round if Three.js is upgraded.
+
+Galaxy textures
+---------------
+The galaxy theme ships two sets of images. Both allow redistribution
+under Creative Commons Attribution 4.0. The About panel credits them
+the same way.
+
+Milky Way backdrop, assets/milkyway-eso0932a-2048.webp (2048x1024):
+
+  ESO/S. Brunier
+  https://www.eso.org/public/images/eso0932a/
+  Licence: CC BY 4.0
+  https://creativecommons.org/licenses/by/4.0/
+
+Planet, moon, and small-world surfaces (512x256 each), from Solar
+System Scope (INOVE), https://www.solarsystemscope.com/textures/ :
+
+  assets/dust-mars-512.webp
+  assets/gas-jupiter-512.webp
+  assets/ice-neptune-512.webp
+  assets/rock-mercury-512.webp
+  assets/moon-moon-512.webp
+  assets/dwarf-ceres_fictional-512.webp
+
+  Licence: CC BY 4.0 (confirmed on the Solar System Scope textures page)
+  https://creativecommons.org/licenses/by/4.0/
+
+The black hole, star limb darkening, nebula, arm dust, and starfield
+are procedural and have no extra licence.

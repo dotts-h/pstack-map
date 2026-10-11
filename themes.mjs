@@ -1,10 +1,12 @@
-// Theme worlds for the pstack map. Sphere stays the v3 shells (layout.mjs).
+// Theme worlds for the pstack map. Galaxy is the default.
 // Kitchen, circuit, earth, and brain follow design/concepts mockups.
+// The sphere shells remain in layout.mjs for the graph layout check only.
 import * as THREE from 'three';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { galaxyTheme, galaxyGlyph } from './galaxy.mjs';
 
-export const THEME_IDS = ['sphere', 'kitchen', 'circuit', 'earth', 'brain'];
+export const THEME_IDS = ['galaxy', 'kitchen', 'circuit', 'earth', 'brain'];
 
 const clean = (s) => (s && s !== 'None' ? s : null);
 const lathe = (pts, seg, rot = 0) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg, rot);
@@ -136,11 +138,25 @@ function brainGlyph(k, s, c) {
   return glyphWrap(s, body);
 }
 
+const GALAXY_KEY = {
+  title: '<span>Bodies</span> <span>size = importance</span>',
+  edgeLabel: 'Connection types',
+  rows: [
+    ['router', ['router'], 'Core', 'Start here', ''],
+    ['playbook', ['playbook'], 'Stars', 'Workflows', ''],
+    ['skill', ['skill', 'agent'], 'Planets', 'Tools · Assistants', ''],
+    ['automation', ['automation'], 'Small worlds', 'Routines', ''],
+    ['principle', ['principle'], 'Rule worlds', 'Rules', ''],
+    ['reference', ['reference', 'script'], 'Moons', 'Docs · Helpers', ''],
+  ],
+};
+
 const META = {
-  sphere: {
-    em: null, placeholder: 'Search workflows, tools, rules…',
-    hintBold: 'Click any planet to explore', hintSmall: '· drag to turn, scroll to zoom',
-    role: null, key: null, glyph: null, wideKey: false, showShape: true,
+  galaxy: {
+    em: 'galaxy', placeholder: 'Search stars, planets, rules…',
+    hintBold: 'Click any star to explore', hintSmall: '· drag to turn, scroll to zoom',
+    role: { router: 'Core', playbook: 'Star', skill: 'Planet', agent: 'Planet', automation: 'Small world', principle: 'Rule world', reference: 'Moon', script: 'Moon', other: 'Body' },
+    key: GALAXY_KEY, glyph: galaxyGlyph, wideKey: true, showShape: false,
   },
   kitchen: {
     em: 'kitchen', placeholder: 'Search dishes, stations, techniques…',
@@ -166,7 +182,7 @@ const META = {
 };
 
 export function themeMeta(id) {
-  return META[id] || META.sphere;
+  return META[id] || META.galaxy;
 }
 
 function merge(parts) {
@@ -190,36 +206,12 @@ function merge(parts) {
   return o;
 }
 
-// Circuit columns on a plane that faces the camera: left/right along camera right, rows along camera up.
-function tidyAt(C, h, side, lane, Rc, Rv, Uv, j) {
-  return C.clone()
-    .addScaledVector(Rv, side * (lane + Rc * (0.55 + 0.4 * (j % 2))))
-    .addScaledVector(Uv, -h * Rc * 1.35);
-}
-
 export function createTheme(id, ctx) {
-  const { G, byId, kindOf, nm, deg, SHAPE, homePositions } = ctx;
-  if (id === 'sphere') {
-    const homes = homePositions(G, SHAPE);
-    return {
-      id,
-      homes,
-      RMAX: SHAPE === 'rhombus' ? 244 : 192,
-      YS: SHAPE === 'rhombus' ? 1.15 : 1,
-      sceneC: new THREE.Vector3(),
-      homeCam: SHAPE === 'rhombus' ? { az: 0.42, el: 0.16 } : { az: 0.42, el: 0.34 },
-      gkeep: 0,
-      pulse: { speed: 1.4, per: 3, size: 0.65, color: '#FFF4DA' },
-      homeVX: 0,
-      showSel: true,
-      slotPos: (C, h, side, lane, rho, r, psi, Rc, Rv, Uv, Dv, j) => tidyAt(C, h, side, lane, Rc, Rv, Uv, j),
-    };
-  }
   if (id === 'kitchen') return kitchenTheme(ctx);
   if (id === 'circuit') return circuitTheme(ctx);
   if (id === 'earth') return earthTheme(ctx);
   if (id === 'brain') return brainTheme(ctx);
-  return createTheme('sphere', ctx);
+  return galaxyTheme(ctx);
 }
 
 function kitchenTheme({ G, byId, kindOf, nm, deg }) {

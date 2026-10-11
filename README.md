@@ -1,8 +1,8 @@
 # pstack map
 
-An interactive 3D map of the [pstack](https://github.com/cursor/plugins/tree/main/pstack) Cursor plugin. The sphere opens on the Start here star, with workflows, tools, rules, and docs on nested shells. Click a body to fly to it and open its card; chips travel onward and leave a breadcrumb trail. A Rhombus shape is available from the control at the bottom right.
+An interactive 3D map of the [pstack](https://github.com/cursor/plugins/tree/main/pstack) Cursor plugin. Galaxy is the default: workflows are stars on five spiral arms, and the tools, rules, and docs that belong to them orbit those stars. Click a body to fly to it and open its card beside the system; chips travel onward and leave a breadcrumb trail. A workflow with several steps can play them from the card. Nothing starts playing on its own.
 
-The header theme menu also opens Kitchen, Circuit, Earth, and Brain. `?theme=sphere|kitchen|circuit|earth|brain` is a shareable link and stays put while you travel. On the sphere, focus lays neighbours in tidy columns and sends a pulse along each highlighted link.
+The header theme menu also opens Kitchen, Circuit, Earth, and Brain. `?theme=galaxy|kitchen|circuit|earth|brain` is a shareable link and stays put while you travel. `?theme=sphere` and any unknown theme open Galaxy.
 
 **Live:** https://dotts-h.github.io/pstack-map/
 
@@ -30,6 +30,8 @@ python3 -m http.server 8765
 
 pstack is by [Lauren Tan](https://github.com/cursor/plugins/tree/main/pstack), MIT license. This map reads that content; it does not replace it.
 
-The 3D view uses [Three.js](https://github.com/mrdoob/three.js) r169 (MIT), vendored in `vendor/`. `vendor/CSS2DRenderer.js` keeps a one-line patch that rounds label positions to whole pixels. See `NOTICE`.
+The 3D view uses [Three.js](https://github.com/mrdoob/three.js) r169 (MIT), vendored in `vendor/`. `vendor/CSS2DRenderer.js` keeps a one-line patch that rounds label positions to whole pixels.
+
+Galaxy planet surfaces are from [Solar System Scope](https://www.solarsystemscope.com/textures/) (INOVE), CC BY 4.0. The Milky Way backdrop is [ESO/S. Brunier](https://www.eso.org/public/images/eso0932a/), CC BY 4.0. See `NOTICE`.
 
 Code in this repository is MIT licensed. See `LICENSE`.
