@@ -1,6 +1,5 @@
-// pstack map v3. Sphere shells by default, rhombus kept as a toggle.
-// Interaction follows design/mockup.html; DESIGN.md v3 wins where they differ
-// (overview hover dims neighbours, card close leaves focus, friendly names).
+// pstack map. Sphere shells by default; kitchen, circuit, earth, and brain are themes.
+// The card, chip travel, breadcrumbs, and Back are the same in every theme.
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
@@ -8,10 +7,14 @@ import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { homePositions } from './layout.mjs';
 import { FRIENDLY, EWORD, KINDS, ETYPES, kindOf, etype, plainName, oneLiner } from './copy.mjs';
+import { THEME_IDS, themeMeta, createTheme, rankBadge } from './themes.mjs';
 
 const qs = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || qs.has('reduced');
 const SHAPE = qs.get('shape') === 'rhombus' ? 'rhombus' : 'sphere';
+const themeName = (qs.get('theme') || '').toLowerCase();
+const THEME = THEME_IDS.includes(themeName) ? themeName : 'sphere';
+const META = themeMeta(THEME);
 const mobile = () => innerWidth < 760;
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -45,16 +48,18 @@ const nm = (id) => NAME.get(id) || id;
 const trunc = (s, m = 24) => (s.length > m ? s.slice(0, m - 1).trimEnd() + '…' : s);
 const deg = (id) => byId.get(id)?.degree?.total ?? 0;
 
+let theme;
 let homes;
 try {
-  homes = homePositions(G, SHAPE);
+  theme = createTheme(THEME, { G, byId, kindOf, nm, deg, SHAPE, homePositions, css });
+  homes = theme.homes;
 } catch (e) {
   showError(e.message || 'The map data is unavailable.');
   throw e;
 }
 
 const lathe = (pts, seg, rot = 0) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg, rot);
-const GEO = {
+const SPHERE_GEO = {
   playbook: () => lathe([[0, -1.35], [1, 0], [0, 1.35]], 4, Math.PI / 4),
   skill: () => lathe([[0, -0.95], [0.55, -0.42], [1, 0.02], [0.84, 0.24], [0.62, 0.42], [0, 0.42]], 16),
   principle: () => lathe([[0, -0.8], [1, 0], [0, 0.8]], 6),
@@ -64,9 +69,10 @@ const GEO = {
   reference: () => lathe([[0, -0.9], [0.55, 0], [0, 0.9]], 4),
   other: () => new THREE.IcosahedronGeometry(0.9, 0),
 };
+const GEO = theme.GEO || SPHERE_GEO;
 const KMUL = { router: 1, playbook: 1, skill: 1, principle: 1, agent: 1, automation: 1, script: 0.75, reference: 0.62, other: 0.8 };
 const maxDeg = Math.max(1, ...G.nodes.filter((n) => n.kind !== 'router').map((n) => deg(n.id)));
-const radiusOf = (n) => (n.kind === 'router' ? 13 : KMUL[kindOf(n.kind)] * (2 + 6.2 * Math.sqrt(deg(n.id) / maxDeg)));
+const radiusOf = theme.radiusOf || ((n) => (n.kind === 'router' ? 13 : KMUL[kindOf(n.kind)] * (2 + 6.2 * Math.sqrt(deg(n.id) / maxDeg))));
 const vec = (p) => new THREE.Vector3(p.x, p.y, p.z);
 
 const host = document.getElementById('scene');
@@ -90,11 +96,15 @@ document.getElementById('labels').appendChild(labelR.domElement);
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(css('--bg'), 300, 650);
 const camera = new THREE.PerspectiveCamera(40, W() / Math.max(1, H()), 1, 6000);
-scene.add(new THREE.AmbientLight(0x9AA8C8, 1.1));
-const sunLight = new THREE.PointLight(0xFFE2B0, 2.4, 0, 0);
-scene.add(sunLight);
-const fill = new THREE.DirectionalLight(0xC8D4EA, 1.1);
-scene.add(fill);
+let sunLight = null;
+let fill = null;
+if (theme.id === 'sphere') {
+  scene.add(new THREE.AmbientLight(0x9AA8C8, 1.1));
+  sunLight = new THREE.PointLight(0xFFE2B0, 2.4, 0, 0);
+  scene.add(sunLight);
+  fill = new THREE.DirectionalLight(0xC8D4EA, 1.1);
+  scene.add(fill);
+}
 
 function haloTex() {
   const c = document.createElement('canvas');
@@ -114,7 +124,7 @@ function haloTex() {
   return t;
 }
 const HALO = haloTex();
-{
+if (theme.stars !== false) {
   const Nstar = 1800;
   const p = new Float32Array(Nstar * 3);
   const c = new Float32Array(Nstar * 3);
@@ -143,16 +153,16 @@ const mkLineMat = (o) => {
   return m;
 };
 
-const RMAX = SHAPE === 'rhombus' ? 244 : 192;
-const YS = SHAPE === 'rhombus' ? 1.15 : 1;
-const guides = [];
-if (SHAPE === 'rhombus') {
+const RMAX = theme.RMAX;
+const YS = theme.YS || 1;
+let guides = [];
+if (theme.id === 'sphere' && SHAPE === 'rhombus') {
   const f = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#7FA6E0', transparent: true, opacity: 0.035, side: THREE.DoubleSide, depthWrite: false, fog: false }));
   f.scale.set(RMAX, RMAX * YS, RMAX);
   scene.add(f);
   guides.push(f);
 }
-{
+if (theme.id === 'sphere') {
   const a = [];
   const col = [];
   const gc = new THREE.Color(css('--guide'));
@@ -200,9 +210,15 @@ if (SHAPE === 'rhombus') {
     scene.add(limb);
     guides.push(limb);
   }
+} else {
+  const lit = theme.scenery(scene, { HALO, mkLineMat, css });
+  sunLight = lit.sunLight;
+  fill = lit.fill;
+  guides = lit.guides || [];
 }
 
-function gemMaterial() {
+function gemMaterial(k) {
+  if (theme.material) return theme.material(k);
   const m = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true, metalness: 0.1, roughness: 0.42, emissive: 0x141a26 });
   m.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace(
@@ -226,11 +242,11 @@ function mkNode(n, k, im, i) {
     n, id: n.id, k, i, im, r, base: new THREE.Color(color(k)),
     pos: home.clone(), from: home.clone(), to: home.clone(),
     sc: r, scFrom: r, scTo: r, dim: 0, dimFrom: 0, dimTo: 0, t0: 0, dur: 0, dimT0: 0, dimDur: 0, prog: 1,
-    rot: new THREE.Euler((k === 'skill' || k === 'principle') ? 0.25 : 0, (i * 2.399) % 6.28, 0),
+    rot: theme.rotation ? theme.rotation(n, k, i) : new THREE.Euler((k === 'skill' || k === 'principle') ? 0.25 : 0, (i * 2.399) % 6.28, 0),
   };
 }
 Object.entries(byKind).forEach(([k, list]) => {
-  const im = new THREE.InstancedMesh(GEO[k](), gemMaterial(), list.length);
+  const im = new THREE.InstancedMesh(GEO[k](), gemMaterial(k), list.length);
   im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   im.frustumCulled = false;
   scene.add(im);
@@ -238,13 +254,19 @@ Object.entries(byKind).forEach(([k, list]) => {
   list.forEach((n, i) => N.push(mkNode(n, k, im, i)));
 });
 const router = G.nodes.find((n) => n.kind === 'router');
-const starMat = new THREE.ShaderMaterial({
-  uniforms: { core: { value: new THREE.Color('#FFF3D6') }, edge: { value: new THREE.Color('#E9A748') }, dim: { value: 0 } },
-  vertexShader: 'varying vec3 vN;varying vec3 vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}',
-  fragmentShader: 'uniform vec3 core;uniform vec3 edge;uniform float dim;varying vec3 vN;varying vec3 vV;void main(){float mu=clamp(dot(normalize(vN),normalize(vV)),0.,1.);vec3 c=mix(edge,core,pow(mu,.55));gl_FragColor=vec4(mix(c,vec3(.15,.17,.22),dim*.8),1.);}',
-});
-const starMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), starMat);
-scene.add(starMesh);
+let starMat = null;
+let starMesh;
+if (theme.routerMesh) {
+  starMesh = theme.routerMesh;
+} else {
+  starMat = new THREE.ShaderMaterial({
+    uniforms: { core: { value: new THREE.Color('#FFF3D6') }, edge: { value: new THREE.Color('#E9A748') }, dim: { value: 0 } },
+    vertexShader: 'varying vec3 vN;varying vec3 vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}',
+    fragmentShader: 'uniform vec3 core;uniform vec3 edge;uniform float dim;varying vec3 vN;varying vec3 vV;void main(){float mu=clamp(dot(normalize(vN),normalize(vV)),0.,1.);vec3 c=mix(edge,core,pow(mu,.55));gl_FragColor=vec4(mix(c,vec3(.15,.17,.22),dim*.8),1.);}',
+  });
+  starMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), starMat);
+  scene.add(starMesh);
+}
 const starNode = mkNode(router, 'router', null, 0);
 starNode.mesh = starMesh;
 N.push(starNode);
@@ -255,18 +277,22 @@ const mkHalo = (col, size, op) => {
   scene.add(s);
   return s;
 };
-const decor = [
-  { o: starNode, s: mkHalo('#F6CF85', 1, 0.85), f: 3.4, op: 0.85 },
-  { o: starNode, s: mkHalo('#F2B85A', 1, 0.2), f: 11, op: 0.2 },
-];
-N.filter((o) => o.k !== 'router' && deg(o.id) >= 15).forEach((o) => decor.push({ o, s: mkHalo(color(o.k), 1, 0.16), f: 4.2, op: 0.16 }));
 const pring = [];
-N.filter((o) => o.k !== 'router' && deg(o.id) >= 20).forEach((o, j) => {
+const decor = theme.decor
+  ? theme.decor(starNode, N, mkHalo, color)
+  : [
+    { o: starNode, s: mkHalo('#F6CF85', 1, 0.85), f: 3.4, op: 0.85 },
+    { o: starNode, s: mkHalo('#F2B85A', 1, 0.2), f: 11, op: 0.2 },
+  ];
+if (!theme.decor) {
+  N.filter((o) => o.k !== 'router' && deg(o.id) >= 15).forEach((o) => decor.push({ o, s: mkHalo(color(o.k), 1, 0.16), f: 4.2, op: 0.16 }));
+  N.filter((o) => o.k !== 'router' && deg(o.id) >= 20).forEach((o, j) => {
   const m = new THREE.Mesh(new THREE.RingGeometry(1.55, 2.05, 128), new THREE.MeshBasicMaterial({ color: color(o.k), transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false }));
   m.rotation.set(Math.PI / 2 - 0.42, 0, 0.18 * (j % 2 ? 1 : -1));
   scene.add(m);
   pring.push({ o, m });
-});
+  });
+}
 const selRing = new THREE.Mesh(new THREE.RingGeometry(1.32, 1.42, 128), new THREE.MeshBasicMaterial({ color: 0xE6EAF2, transparent: true, opacity: 0, depthWrite: false }));
 scene.add(selRing);
 
@@ -298,11 +324,12 @@ const idle = {};
   if (!list.length) return;
   const g = new LineSegmentsGeometry();
   g.setPositions(new Float32Array(list.length * SEG * 6));
-  const m = mkLineMat({ color: ecolor(t), linewidth: 1.25, opacity: EALPHA[t], dashed: t === 'imports', dashSize: 1.6, gapSize: 1.2 });
+  const baseOp = theme.edgeBase ? theme.edgeBase(t, EALPHA) : EALPHA[t];
+  const m = mkLineMat({ color: ecolor(t), linewidth: 1.25, opacity: baseOp, dashed: t === 'imports', dashSize: 1.6, gapSize: 1.2 });
   const l = new LineSegments2(g, m);
   l.frustumCulled = false;
   scene.add(l);
-  idle[t] = { l, g, list, base: EALPHA[t] };
+  idle[t] = { l, g, list, base: baseOp };
 });
 const hl = { l: null, g: null, list: [] };
 function setHighlight(list) {
@@ -338,17 +365,66 @@ const arrows = new THREE.InstancedMesh(new THREE.ConeGeometry(0.55, 1.8, 16), ne
 arrows.count = 0;
 arrows.frustumCulled = false;
 scene.add(arrows);
+const PULSE_N = 320;
+const pulses = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), PULSE_N);
+pulses.count = 0;
+pulses.frustumCulled = false;
+pulses.renderOrder = 3;
+scene.add(pulses);
+function drawPulses(now) {
+  const spec = theme.pulse;
+  if (!spec || !hl.l || reduced || !FOCUS) {
+    pulses.count = 0;
+    return;
+  }
+  const t = now / 1000;
+  let pi = 0;
+  pulses.material.color.set(spec.color);
+  hl.list.forEach((x, i) => {
+    trimmed(x);
+    const side = x.e.source === FOCUS ? 1 : -1;
+    const len = A.distanceTo(B);
+    for (let k = 0; k < spec.per && pi < PULSE_N; k++) {
+      const u = ((t * spec.speed * 40) / Math.max(len, 20) + i * 0.377 + k / spec.per) % 1;
+      curve(A, B, u, P0, 'focus', side);
+      const sz = spec.size * (0.55 + 0.45 * Math.sin(u * Math.PI));
+      M4.compose(P0, Q.identity(), S.setScalar(sz));
+      pulses.setMatrixAt(pi, M4);
+      pi += 1;
+    }
+  });
+  pulses.count = pi;
+  pulses.material.opacity = 1 - idleAlpha;
+  pulses.instanceMatrix.needsUpdate = true;
+}
+function paintLabel(o, text) {
+  if (theme.id === 'kitchen') {
+    const html = rankBadge(o.k) + esc(text);
+    if (o._h !== html) {
+      o.el.innerHTML = html;
+      o._h = html;
+    }
+    return;
+  }
+  if (o._h !== text) {
+    o.el.textContent = text;
+    o._h = text;
+  }
+}
 
 const vf = THREE.MathUtils.degToRad(40);
-const HOMECAM = SHAPE === 'rhombus' ? { az: 0.42, el: 0.16 } : { az: 0.42, el: 0.34 };
-const vertExtent = SHAPE === 'rhombus' ? RMAX * YS : RMAX;
-const fitDist = () => {
-  const usable = H() - (mobile() ? 140 : 96);
-  const ppu = (usable / 2) / (vertExtent * 1.04);
-  return H() / (2 * Math.tan(vf / 2) * ppu) + RMAX * 0.18;
-};
-const cam = { target: new THREE.Vector3(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el, min: 60, max: 1400 };
-let viewX = 0;
+const HOMECAM = theme.homeCam;
+const vertExtent = theme.id === 'sphere' && SHAPE === 'rhombus' ? RMAX * YS : RMAX;
+const fitDist = () => (theme.fitDist
+  ? theme.fitDist(W(), H(), mobile(), vf)
+  : (() => {
+    const usable = H() - (mobile() ? 140 : 96);
+    const ppu = (usable / 2) / (vertExtent * 1.04);
+    return H() / (2 * Math.tan(vf / 2) * ppu) + RMAX * 0.18;
+  })());
+const homeViewX = () => (mobile() ? 0 : (theme.homeVX || 0));
+const cam = { target: theme.sceneC.clone(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el, min: 60, max: 1400 };
+let viewX = homeViewX();
 let viewY = 0;
 const DAMP = 0.08;
 let spinAz = 0;
@@ -362,7 +438,11 @@ function applyCam() {
   camera.position.set(t.x + d * Math.cos(el) * Math.sin(az), t.y + d * Math.sin(el), t.z + d * Math.cos(el) * Math.cos(az));
   camera.lookAt(t);
   camera.setViewOffset(W(), H(), viewX, viewY, W(), H());
-  if (FOCUS && FS) {
+  if (theme.fog && !(FOCUS && FS && theme.id !== 'kitchen')) {
+    const f = theme.fog(d, !!(FOCUS && FS), FS);
+    scene.fog.near = f.near;
+    scene.fog.far = f.far;
+  } else if (FOCUS && FS) {
     scene.fog.near = d + FS.Rb * 0.6;
     scene.fog.far = FS.shell * 1.35;
   } else {
@@ -625,13 +705,76 @@ function sideSlots(list, side, Rc, Rv, Uv, Dv, C, lane) {
     const psi = (((j * GOLD) % (2 * FL.PSI_MAX)) + 2 * FL.PSI_MAX) % (2 * FL.PSI_MAX) - FL.PSI_MAX;
     const r = Rc * (j % 2 ? FL.SHELL_OUT : FL.SHELL_IN);
     const rho = Math.sqrt(Math.max(0, 1 - h * h));
-    s.p = C.clone()
-      .addScaledVector(Uv, h * Rc)
-      .addScaledVector(Rv, side * (lane + rho * r * Math.cos(psi) * FL.X_SCALE))
-      .addScaledVector(Dv, rho * r * Math.sin(psi));
+    s.p = theme.slotPos
+      ? theme.slotPos(C, h, side, lane, rho, r, psi, Rc, Rv, Uv, Dv, j)
+      : C.clone()
+        .addScaledVector(Uv, h * Rc)
+        .addScaledVector(Rv, side * (lane + rho * r * Math.cos(psi) * FL.X_SCALE))
+        .addScaledVector(Dv, rho * r * Math.sin(psi));
     j++;
   });
   return { slots, more };
+}
+function plateKitchen(id, C) {
+  const Rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+  const Dv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 2).normalize();
+  const Rh = new THREE.Vector3(Rv.x, 0, Rv.z);
+  if (Rh.lengthSq() < 1e-8) Rh.set(1, 0, 0);
+  Rh.normalize();
+  const Df = new THREE.Vector3(Dv.x, 0, Dv.z);
+  if (Df.lengthSq() < 1e-8) Df.set(0, 0, 1);
+  Df.normalize();
+  const Y = new THREE.Vector3(0, 1, 0);
+  const m = mobile();
+  const { inc, out } = neighbours(id);
+  const sortK = (list) => list.sort((a, b) => KINDS.indexOf(kindOf(byId.get(a.id).kind)) - KINDS.indexOf(kindOf(byId.get(b.id).kind)) || deg(b.id) - deg(a.id));
+  const catOf = (nid) => {
+    const k = kindOf(byId.get(nid).kind);
+    return (k === 'reference' || k === 'script') ? 'ing' : k === 'principle' ? 'tech' : 'sta';
+  };
+  const grp = { ing: [], tech: [], sta: [] };
+  sortK(out).forEach((x) => grp[catOf(x.id)].push(x));
+  const up = sortK(inc).slice(0, 9);
+  Object.keys(grp).forEach((key) => { grp[key] = grp[key].slice(0, 14); });
+  const r1 = Math.max(20, (grp.ing.length * 9) / (2 * Math.PI));
+  const r2 = Math.max(r1 + 15, (grp.tech.length * 10) / (2 * Math.PI));
+  const r3 = Math.max(r2 + 15, (grp.sta.length * 12) / Math.PI);
+  const at = (a, r, y) => C.clone().addScaledVector(Rh, Math.sin(a) * r).addScaledVector(Df, Math.cos(a) * r).addScaledVector(Y, y);
+  const member = new Map([[id, { p: C.clone(), side: 0 }]]);
+  const ringPlace = (list, r, y, a0, span, full) => list.forEach((x, i) => {
+    const n = list.length;
+    const a = full ? a0 + (i / n) * Math.PI * 2 : (n === 1 ? a0 + span / 2 : a0 + (span * i) / (n - 1));
+    member.set(x.id, { p: at(a, r, y), side: 0 });
+  });
+  ringPlace(grp.ing, r1, -1, Math.PI / 2 + 0.35, 0, true);
+  ringPlace(grp.tech, r2, 6, Math.PI / 2 + 0.35 + Math.PI / Math.max(1, grp.tech.length), 0, true);
+  ringPlace(grp.sta, r3, 20, Math.PI * 0.55, Math.PI * 0.9, false);
+  const upY = r3 * 0.5 + 22;
+  const upW = Math.max(Math.min(r3, ((up.length - 1) * 16) / 2), ((up.length - 1) * 13) / 2);
+  up.forEach((x, i) => {
+    const t = up.length === 1 ? 0 : -upW + (2 * upW * i) / (up.length - 1);
+    const st = up.length > 5 && i % 2 ? 1 : 0;
+    member.set(x.id, { p: C.clone().addScaledVector(Rh, t).addScaledVector(Df, -r3 * 0.35 - st * 10).addScaledVector(Y, upY + st * 13), side: 0 });
+  });
+  const hw = Math.max(r3, upW) + 6;
+  const el = cam.el;
+  const top = Math.max((upY + (up.length > 5 ? 13 : 0)) * Math.cos(el) + r3 * 0.35 * Math.sin(el), r3 * Math.sin(el) + 14 * Math.cos(el)) + 8;
+  const bot = Math.max(r2 * Math.sin(el) + 6, r1 * Math.sin(el) + 8);
+  const visW = m ? W() - 24 : W() - 32 - 320 - 28;
+  const ppu = Math.min((m ? H() * 0.54 : H() - 130) / (top + bot), (visW / 2 - (m ? 84 : 120)) / hw);
+  const Rb = Math.hypot(hw, upY) + 4;
+  const shell = THREE.MathUtils.clamp(Rb * FL.DISPERSE_K, FL.SHELL_MIN, FL.SHELL_MAX);
+  const dist = H() / (2 * Math.tan(vf / 2) * ppu);
+  theme._plateR = r1;
+  if (theme.plate) {
+    theme.plate.position.copy(C).add(new THREE.Vector3(0, -1 - Math.min(6, 32 / Math.max(ppu, 0.001)) * 0.62, 0));
+    theme.plate.scale.set(r1 * 0.78, 1, r1 * 0.78);
+  }
+  return {
+    member, inc, out, Rb, shell, dist, ppu, r3, Rh,
+    viewX: m ? 0 : Math.round((320 + 28) / 2),
+    viewY: m ? Math.round(H() / 2 - H() * 0.28) : Math.round((-(top - bot) / 2) * ppu) + 10,
+  };
 }
 function focus(id, dur) {
   if (!NB.has(id)) return;
@@ -639,36 +782,72 @@ function focus(id, dur) {
   FOCUS = id;
   hoverApplied = undefined;
   const C = NB.get(id).pos.clone();
-  const Rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
-  const Uv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).normalize();
-  const Dv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 2).normalize();
-  const m = mobile();
-  const visW = W() - 32;
-  const visH = m ? H() * 0.5 - 24 : H() - 56 - 24;
-  FL.CAP = Math.floor((visH * 0.86) / FL.ROW_PX);
-  const { inc, out } = neighbours(id);
-  const nMax = Math.min(FL.CAP, Math.max(inc.length, out.length));
-  const Rc = FL.R0 + FL.R_PER * nMax;
-  const Xr = Rc * FL.SHELL_OUT * FL.X_SCALE + FL.R_MAX;
-  const hs = FL.H_SPAN * Rc + FL.R_MAX + 4;
-  let lane = 0;
-  let ppu = 0;
-  for (let it = 0; it < 5; it++) {
-    ppu = Math.min(
-      (m ? H() * FL.SHEET_ANCHOR - 64 : H() * FL.CARD_ANCHOR - 64) / hs,
-      (visW / 2 - (m ? FL.LABEL_PX_M : FL.LABEL_PX)) / (lane + Xr),
-    );
-    lane = m ? 0 : FL.CARD_HALF / ppu;
+  let Rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+  let Uv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+  let Dv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 2).normalize();
+  let faz = cam.az;
+  let fel = cam.el;
+  if (theme.focusBasis) {
+    const basis = theme.focusBasis(C, cam);
+    Rv = basis.Rv;
+    Uv = basis.Uv;
+    Dv = basis.Dv;
+    faz = basis.az;
+    fel = basis.el;
   }
-  const L = sideSlots(inc, -1, Rc, Rv, Uv, Dv, C, lane);
-  const Rt = sideSlots(out, 1, Rc, Rv, Uv, Dv, C, lane);
-  const member = new Map([[id, { p: C.clone(), side: 0 }]]);
-  [[L, -1], [Rt, 1]].forEach(([S, side]) => S.slots.forEach((s) => { if (s.id) member.set(s.id, { p: s.p, side }); }));
-  const Rb = Rc * FL.SHELL_OUT + lane + FL.R_MAX;
-  const shell = THREE.MathUtils.clamp(Rb * FL.DISPERSE_K, FL.SHELL_MIN, FL.SHELL_MAX);
-  const dist = H() / (2 * Math.tan(vf / 2) * ppu);
-  FS = { Rc, Rb, shell, dist, Rv: Rv.clone(), C };
-  cam.min = Math.max(Rb * 1.15, 40);
+  const m = mobile();
+  let inc;
+  let out;
+  let member;
+  let L = null;
+  let Rt = null;
+  let Rb;
+  let shell;
+  let dist;
+  let ppu = 1;
+  if (theme.id === 'kitchen') {
+    const plated = plateKitchen(id, C);
+    inc = plated.inc;
+    out = plated.out;
+    member = plated.member;
+    Rb = plated.Rb;
+    shell = plated.shell;
+    dist = plated.dist;
+    ppu = plated.ppu;
+    viewX = plated.viewX;
+    viewY = plated.viewY;
+    theme._plateOn = kindOf(byId.get(id).kind) === 'playbook';
+    FS = { Rc: plated.r3, Rb, shell, dist, Rv: plated.Rh.clone(), C };
+  } else {
+    theme._plateOn = false;
+    const visW = W() - 32;
+    const visH = m ? H() * 0.5 - 24 : H() - 56 - 24;
+    FL.CAP = Math.floor((visH * 0.86) / FL.ROW_PX);
+    ({ inc, out } = neighbours(id));
+    const nMax = Math.min(FL.CAP, Math.max(inc.length, out.length));
+    const Rc = FL.R0 + FL.R_PER * nMax;
+    const Xr = Rc * FL.SHELL_OUT * FL.X_SCALE + FL.R_MAX;
+    const hs = FL.H_SPAN * Rc + FL.R_MAX + 4;
+    let lane = 0;
+    for (let it = 0; it < 5; it++) {
+      ppu = Math.min(
+        (m ? H() * FL.SHEET_ANCHOR - 64 : H() * FL.CARD_ANCHOR - 64) / hs,
+        (visW / 2 - (m ? FL.LABEL_PX_M : FL.LABEL_PX)) / (lane + Xr),
+      );
+      lane = m ? 0 : FL.CARD_HALF / ppu;
+    }
+    L = sideSlots(inc, -1, Rc, Rv, Uv, Dv, C, lane);
+    Rt = sideSlots(out, 1, Rc, Rv, Uv, Dv, C, lane);
+    member = new Map([[id, { p: C.clone(), side: 0 }]]);
+    [[L, -1], [Rt, 1]].forEach(([S, side]) => S.slots.forEach((s) => { if (s.id) member.set(s.id, { p: s.p, side }); }));
+    Rb = Rc * FL.SHELL_OUT + lane + FL.R_MAX;
+    shell = THREE.MathUtils.clamp(Rb * FL.DISPERSE_K, FL.SHELL_MIN, FL.SHELL_MAX);
+    dist = H() / (2 * Math.tan(vf / 2) * ppu);
+    FS = { Rc, Rb, shell, dist, Rv: Rv.clone(), C };
+    viewX = 0;
+    viewY = Math.round(H() / 2 - H() * (m ? FL.SHEET_ANCHOR : FL.CARD_ANCHOR));
+  }
+  cam.min = Math.max(Rb * (theme.id === 'kitchen' ? 1.1 : 1.15), 40);
   cam.max = Math.min(dist * 2, shell * 0.6);
   const fe = [...inc, ...out].filter((x) => member.has(x.id)).map((x) => E.find((y) => y.e === x.e)).filter(Boolean);
   setHighlight(fe);
@@ -676,9 +855,11 @@ function focus(id, dur) {
   for (const o of N) {
     const mm = member.get(o.id);
     if (mm) {
-      const sc = o.id === id
-        ? Math.min(Math.max(FL.R_SEL, o.k === 'router' ? 7 : 0), FL.SEL_PX / ppu)
-        : THREE.MathUtils.clamp(o.r * 0.8, FL.R_MIN, FL.R_MAX);
+      const sc = theme.id === 'kitchen'
+        ? (o.id === id ? Math.min(o.k === 'router' ? 7 : 6, 32 / ppu) : THREE.MathUtils.clamp(o.r * 0.75, 2, 3.4))
+        : (o.id === id
+          ? Math.min(Math.max(FL.R_SEL, o.k === 'router' ? 7 : 0), FL.SEL_PX / ppu)
+          : THREE.MathUtils.clamp(o.r * 0.8, FL.R_MIN, FL.R_MAX));
       tweenNode(o, mm.p, sc, 0, o.id === id ? 0 : Math.min(FL.STAGGER * (++k), FL.STAGGER_MAX), dur);
       o.lmode = o.id === id ? 'sel' : 'mem';
     } else {
@@ -686,23 +867,26 @@ function focus(id, dur) {
       if (v.lengthSq() < 1) v.set(0, 1, 0);
       v.normalize();
       const j = 1 + 0.25 * ((((o.i || 0) * 0.618 + o.k.length * 0.13) % 1));
-      tweenNode(o, C.clone().addScaledVector(v, shell * j), o.r * 1.2, 1, 0, FL.DISPERSE);
+      if (theme.disperse) {
+        const d = theme.disperse(o, C, v, shell * j);
+        tweenNode(o, d.p, d.sc, 1, 0, FL.DISPERSE);
+      } else tweenNode(o, C.clone().addScaledVector(v, shell * j), o.r * 1.2, 1, 0, FL.DISPERSE);
       o.lmode = 'hide';
     }
   }
   moreLbls.forEach((h) => scene.remove(h.lo));
   moreLbls = [];
-  [[L, -1], [Rt, 1]].forEach(([S, side]) => {
-    const items = S.slots.filter((s) => s.id);
-    if (!S.more || !items.length) return;
-    const h = mkLabel('more-lbl', `+${S.more} more`, side < 0 ? 'ml' : 'mr');
-    h.node = NB.get(items.at(-1).id);
-    h.side = side;
-    moreLbls.push(h);
-  });
-  viewX = 0;
-  viewY = Math.round(H() / 2 - H() * (m ? FL.SHEET_ANCHOR : FL.CARD_ANCHOR));
-  camTo(C, dist, cam.az, cam.el, dur);
+  if (L && Rt) {
+    [[L, -1], [Rt, 1]].forEach(([S, side]) => {
+      const items = S.slots.filter((s) => s.id);
+      if (!S.more || !items.length) return;
+      const h = mkLabel('more-lbl', `+${S.more} more`, side < 0 ? 'ml' : 'mr');
+      h.node = NB.get(items.at(-1).id);
+      h.side = side;
+      moreLbls.push(h);
+    });
+  }
+  camTo(C, dist, faz, fel, dur);
   idleTw = { from: idleAlpha, to: 0, t0: performance.now(), dur: reduced ? 0 : 300 };
   document.body.classList.add('focus');
   document.body.classList.remove('key-open');
@@ -727,9 +911,10 @@ function exitFocus() {
   });
   cam.min = 60;
   cam.max = 1400;
-  viewX = 0;
+  viewX = homeViewX();
   viewY = 0;
-  const c = savedCam || { target: new THREE.Vector3(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el };
+  theme._plateOn = false;
+  const c = savedCam || { target: theme.sceneC.clone(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el };
   camTo(c.target, c.dist, cam.az, c.el, FL.EXIT);
   idleTw = { from: idleAlpha, to: 1, t0: performance.now() + (reduced ? 0 : FL.EXIT * 0.4), dur: reduced ? 0 : 400 };
   document.body.classList.remove('focus');
@@ -785,6 +970,8 @@ let cardId = null;
 const moreBags = new Map();
 let moreN = 0;
 function glyph(k, s = 14) {
+  const kind = kindOf(k);
+  if (META.glyph) return META.glyph(kind, s, color(k));
   const c = color(k);
   const h = s / 2;
   const p = {
@@ -840,7 +1027,12 @@ function showCard(id, { focusTitle = false } = {}) {
   const uses = uniq(out);
   const used = uniq(inc);
   const mx = uses.length && used.length ? CHIP_MAX_BOTH : CHIP_MAX;
-  pop.innerHTML = `<div class="caret"></div><div class="pop-scroll"><div class="pop-head"><div class="eyebrow">${glyph(n.kind, 12)}${esc(FRIENDLY[k][0])}</div>
+  const role = META.role?.[k];
+  const badge = theme.id === 'kitchen' ? rankBadge(k) : '';
+  const eye = role
+    ? `${glyph(n.kind, 12)}${badge}${esc(role)} <span style="color:var(--text-3)">· ${esc(FRIENDLY[k][0])}</span>`
+    : `${glyph(n.kind, 12)}${esc(FRIENDLY[k][0])}`;
+  pop.innerHTML = `<div class="caret"></div><div class="pop-scroll"><div class="pop-head"><div class="eyebrow">${eye}</div>
     <button class="x" type="button" aria-label="Close (Esc)"><svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
     <h2 id="popTitle" tabindex="-1">${esc(nm(id))}</h2></div><p class="what">${esc(oneLiner(n, G))}</p>${tryIt}
     ${chipGroup('Uses', uses, mx)}${chipGroup('Used by', used, mx)}
@@ -947,6 +1139,7 @@ const P0 = new THREE.Vector3();
 const P1 = new THREE.Vector3();
 const T = new THREE.Vector3();
 function curve(a, b, t, out, mode, side) {
+  if (theme.curve) return theme.curve(a, b, t, out, mode, side, FS);
   if (mode === 'focus' && FS) {
     const len = a.distanceTo(b);
     const c1 = a.clone();
@@ -1072,7 +1265,8 @@ function frameBody(now) {
     if (o.mesh) {
       o.mesh.position.copy(o.pos);
       o.mesh.scale.setScalar(hid ? 0 : o.sc);
-      starMat.uniforms.dim.value = o.dim;
+      if (theme.routerDim) theme.routerDim(o.dim, DIM);
+      else if (starMat) starMat.uniforms.dim.value = o.dim;
       continue;
     }
     Q.setFromEuler(o.rot);
@@ -1099,11 +1293,15 @@ function frameBody(now) {
     p.m.visible = !(hiddenKinds.has(p.o.k) && !FOCUS);
   });
   guides.forEach((l) => {
-    l.material.opacity = l.isLineSegments2 ? idleAlpha : 0.035 * idleAlpha;
-    l.visible = idleAlpha > 0.01;
-    if (l.userData.limb) l.quaternion.copy(camera.quaternion);
+    const ga = (theme.gkeep || 0) + (1 - (theme.gkeep || 0)) * idleAlpha;
+    const base = l.userData?.op ?? (l.isLineSegments2 ? 1 : 0.035);
+    if (l.material) l.material.opacity = base * ga;
+    l.visible = ga > 0.01;
+    if (l.userData?.limb) l.quaternion.copy(camera.quaternion);
   });
-  if (FOCUS) {
+  theme.tick?.(idleAlpha);
+  if (theme.plate) theme.plate.visible = !!(FOCUS && theme._plateOn);
+  if (FOCUS && theme.showSel !== false) {
     const f = NB.get(FOCUS);
     selRing.position.copy(f.pos);
     selRing.quaternion.copy(camera.quaternion);
@@ -1148,6 +1346,7 @@ function frameBody(now) {
   arrows.material.opacity = hl.l ? (FOCUS ? 1 - idleAlpha : 1) : 0;
   arrows.instanceMatrix.needsUpdate = true;
   if (arrows.instanceColor) arrows.instanceColor.needsUpdate = true;
+  drawPulses(now);
   const camDir = T.copy(camera.position).sub(cam.target).normalize().clone();
   const fd = fitDist();
   const cx = FOCUS ? NB.get(FOCUS).pos.clone().project(camera).x : 0;
@@ -1162,7 +1361,7 @@ function frameBody(now) {
       const left = v.x < cx;
       setAnchor(o, left ? 'l' : 'r');
       o.el.className = 'lbl' + (SMALLK.includes(o.k) ? ' small' : '') + (o === hovered ? ' hover' : '');
-      o.el.textContent = trunc(nm(o.id), mobile() ? 16 : 30);
+      paintLabel(o, trunc(nm(o.id), mobile() ? 16 : 30));
       const rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
       o.lo.position.copy(o.pos).addScaledVector(rv, (left ? -1 : 1) * (o.sc * 1.2 + 0.8));
       o.anc.style.opacity = (o.prog > 0.6 || reduced) ? 1 : 0;
@@ -1170,9 +1369,9 @@ function frameBody(now) {
       setAnchor(o, 'c');
       o.anc.style.opacity = 1;
       o.el.className = 'lbl ' + (o.k === 'router' ? 'router' : SMALLK.includes(o.k) ? 'small' : '') + (o === hovered ? ' hover' : '');
-      o.el.textContent = trunc(nm(o.id));
-      const front = o.pos.dot(camDir) > -0.15 * o.pos.length();
-      const tier = o.k === 'router' || o === hovered ? 0 : o.k === 'playbook' || deg(o.id) >= 14 ? 1 : SMALLK.includes(o.k) ? 3 : 2;
+      paintLabel(o, trunc(nm(o.id)));
+      const front = theme.front ? theme.front(o, camDir) : o.pos.dot(camDir) > -0.15 * o.pos.length();
+      const tier = theme.labelTier ? theme.labelTier(o, hovered) : (o.k === 'router' || o === hovered ? 0 : o.k === 'playbook' || deg(o.id) >= 14 ? 1 : SMALLK.includes(o.k) ? 3 : 2);
       const zoomOk = tier <= 1 || (tier === 2 && cam.dist < fd * 0.62) || (tier === 3 && cam.dist < fd * 0.42);
       o.lo.visible = !hiddenKinds.has(o.k) && (o.k === 'router' || o === hovered || (front && zoomOk));
       o.lo.position.copy(o.pos);
@@ -1254,19 +1453,27 @@ const edgeGlyph = (t) => {
   return `<svg width="16" height="14" style="flex:none" aria-hidden="true"><line x1="1" y1="7" x2="15" y2="7" stroke="${c}" stroke-width="2" ${dash}/></svg>`;
 };
 const key = document.getElementById('key');
-key.innerHTML = '<h3>Map key <span>centre → outside</span></h3>'
-  + KINDS.filter((k) => counts[k]).map((k) => `<button class="krow" type="button" aria-pressed="true" data-k="${k}" ${k === 'router' ? 'disabled' : ''}>${glyph(k)}<span class="name">${FRIENDLY[k][1]}</span><span class="count">${counts[k]}</span></button>`).join('')
-  + '<div class="kdiv"></div><button class="kmore" type="button" aria-expanded="false" aria-controls="kedges">Connection types <span>▾</span></button><div class="kedges" id="kedges">'
-  + [...ETYPES, 'other'].filter((t) => ecounts[t]).map((t) => `<button class="krow" type="button" aria-pressed="true" data-e="${t}">${edgeGlyph(t)}<span class="name">${EWORD[t]}</span><span class="count">${ecounts[t]}</span></button>`).join('')
-  + '</div>';
+const edgeWords = META.eword || EWORD;
+if (META.key) {
+  key.innerHTML = `<h3>${META.key.title}</h3>`
+    + META.key.rows.map(([g, ks, rank, plain, line]) => `<button class="krow tall" type="button" aria-pressed="true" data-k="${ks.join(',')}" ${g === 'router' ? 'disabled' : ''}>${glyph(g, 16)}<span class="name">${theme.id === 'kitchen' ? rankBadge(g) : ''}${esc(rank)} <span style="color:var(--text-3);font-weight:400">· ${esc(plain)}</span><span class="ksub">${esc(line)}</span></span><span class="count">${ks.reduce((a, k) => a + (counts[k] || 0), 0)}</span></button>`).join('')
+    + `<div class="kdiv"></div><button class="kmore" type="button" aria-expanded="false" aria-controls="kedges">${esc(META.key.edgeLabel)} <span>▾</span></button><div class="kedges" id="kedges">`
+    + [...ETYPES, 'other'].filter((t) => ecounts[t]).map((t) => `<button class="krow" type="button" aria-pressed="true" data-e="${t}">${edgeGlyph(t)}<span class="name">${esc(edgeWords[t])}</span><span class="count">${ecounts[t]}</span></button>`).join('')
+    + '</div>';
+} else {
+  key.innerHTML = '<h3>Map key <span>centre → outside</span></h3>'
+    + KINDS.filter((k) => counts[k]).map((k) => `<button class="krow" type="button" aria-pressed="true" data-k="${k}" ${k === 'router' ? 'disabled' : ''}>${glyph(k)}<span class="name">${FRIENDLY[k][1]}</span><span class="count">${counts[k]}</span></button>`).join('')
+    + '<div class="kdiv"></div><button class="kmore" type="button" aria-expanded="false" aria-controls="kedges">Connection types <span>▾</span></button><div class="kedges" id="kedges">'
+    + [...ETYPES, 'other'].filter((t) => ecounts[t]).map((t) => `<button class="krow" type="button" aria-pressed="true" data-e="${t}">${edgeGlyph(t)}<span class="name">${EWORD[t]}</span><span class="count">${ecounts[t]}</span></button>`).join('')
+    + '</div>';
+}
 key.querySelectorAll('.krow[data-k]').forEach((b) => {
   b.onclick = () => {
     if (b.disabled) return;
-    const k = b.dataset.k;
+    const ks = b.dataset.k.split(',');
     const on = b.getAttribute('aria-pressed') !== 'true';
     b.setAttribute('aria-pressed', String(on));
-    if (on) hiddenKinds.delete(k);
-    else hiddenKinds.add(k);
+    ks.forEach((k) => { if (on) hiddenKinds.delete(k); else hiddenKinds.add(k); });
     hoverApplied = undefined;
     dirty = true;
   };
@@ -1305,10 +1512,27 @@ seg.innerHTML = '<span>Shape</span>' + ['rhombus', 'sphere'].map((s) => {
   const current = s === SHAPE ? ' aria-current="true"' : '';
   return `<a href="?${params}"${current}>${s === 'rhombus' ? 'Rhombus' : 'Sphere'}</a>`;
 }).join('');
+if (!META.showShape) seg.hidden = true;
+const brandWord = document.getElementById('brandWord');
+if (META.em && brandWord) brandWord.innerHTML = `pstack <em>${esc(META.em)}</em>`;
+document.title = META.em ? `pstack ${META.em}` : 'pstack map';
+const themePick = document.getElementById('themePick');
+if (themePick) {
+  themePick.value = THEME;
+  themePick.onchange = () => {
+    const params = new URLSearchParams(location.search);
+    params.set('theme', themePick.value);
+    location.search = params.toString();
+  };
+}
+const hintBold = document.querySelector('#hint b');
+const hintSmall = document.querySelector('#hint small');
+if (hintBold) hintBold.textContent = META.hintBold;
+if (hintSmall) hintSmall.textContent = META.hintSmall;
 document.getElementById('reset').onclick = () => {
   stopSpin();
   if (FOCUS) exitFocus();
-  else camTo(new THREE.Vector3(), fitDist(), HOMECAM.az, HOMECAM.el, 700);
+  else camTo(theme.sceneC.clone(), fitDist(), HOMECAM.az, HOMECAM.el, 700);
 };
 document.getElementById('keyBtn').onclick = () => {
   const on = document.body.classList.toggle('key-open');
@@ -1322,6 +1546,7 @@ document.getElementById('searchBtn').onclick = () => {
 };
 
 const qEl = document.getElementById('q');
+qEl.placeholder = META.placeholder;
 const resEl = document.getElementById('results');
 let res = [];
 let ri = 0;
@@ -1465,6 +1690,7 @@ window.__go = go;
 window.__back = back;
 window.__exit = exitFocus;
 window.__pstack = {
+  theme: THEME,
   shape: SHAPE,
   get focus() { return FOCUS; },
   get trail() { return trail.slice(); },

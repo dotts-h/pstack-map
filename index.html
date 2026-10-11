@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.dataset.theme=(['sphere','kitchen','circuit','earth','brain'].includes(new URLSearchParams(location.search).get('theme'))?new URLSearchParams(location.search).get('theme'):'sphere');</script>
 <title>pstack map</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='4' fill='%23F2C46B'/%3E%3C/svg%3E">
 <style>
@@ -20,7 +21,44 @@
   --shadow-1:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
   --shadow-2:0 2px 4px rgba(0,0,0,.45),0 16px 40px rgba(0,0,0,.5);
   --label-bg:rgba(8,11,18,.74);
+  --header-bg:rgba(10,13,20,.86);
   --ease:cubic-bezier(.2,.7,.2,1);
+}
+html[data-theme=kitchen]{
+  --bg:#0D0A08; --surface:#17120E; --surface-2:#211A14; --surface-3:#2B221A; --border:#33281E; --border-strong:#4A3B2C;
+  --text:#F1E9DC; --text-2:#C9BBA6; --text-3:#A3937D; --focus:#E8C27A; --brass:#C9A15F;
+  --k-router:#E2BB72; --k-playbook:#CFD5DD; --k-skill:#C98258; --k-principle:#8FB27C;
+  --k-agent:#D9A06E; --k-automation:#8C9DB8; --k-script:#C0705F; --k-reference:#C9A86E; --k-other:#8A7F72;
+  --e-loads:#E2BB72; --e-applies:#8FB27C; --e-runs:#C98258; --e-imports:#C98258; --e-references:#7A6A58; --e-references-hl:#CDBFAA; --e-other:#5E5245;
+  --guide:#3A2E20; --guide-outer:#6B5533; --dim:#2A231C;
+  --glass:rgba(23,18,14,.94); --label-bg:rgba(13,10,8,.76); --header-bg:rgba(13,10,8,.88);
+}
+html[data-theme=circuit]{
+  --bg:#050807; --surface:#0C1210; --surface-2:#121A17; --surface-3:#18221E; --border:#1F2C27; --border-strong:#2E3F38;
+  --text:#E6ECE8; --text-2:#B2BEB8; --text-3:#8F9C96; --focus:#9ED9BE;
+  --k-router:#E2C27A; --k-playbook:#8FB4D9; --k-skill:#D9A27A; --k-principle:#6FCFA8;
+  --k-agent:#C9CED6; --k-automation:#A397E6; --k-script:#9AA6B2; --k-reference:#D8B45C; --k-other:#7D8594;
+  --e-loads:#E2C27A; --e-applies:#6FCFA8; --e-runs:#A397E6; --e-imports:#A397E6; --e-references:#B5733F; --e-references-hl:#E8A872; --e-other:#5C4A3A;
+  --guide:#1E3A2F; --guide-outer:#C9D3CC; --dim:#18211D;
+  --glass:rgba(12,18,16,.94); --label-bg:rgba(5,8,7,.76); --header-bg:rgba(5,8,7,.86);
+}
+html[data-theme=earth]{
+  --bg:#04070C; --surface:#0C121B; --surface-2:#121A25; --surface-3:#18222F; --border:#1F2A38; --border-strong:#2E3B4D;
+  --text:#E8ECF2; --text-2:#B0BAC8; --text-3:#8E99A9; --focus:#8EC1F0;
+  --k-router:#F2C46B; --k-playbook:#F3DDB0; --k-skill:#E9A46A; --k-principle:#7FD1B2;
+  --k-agent:#E8907C; --k-automation:#B7A4EA; --k-script:#97A3B4; --k-reference:#9DB6D2; --k-other:#7D8594;
+  --e-loads:#F2C46B; --e-applies:#7FD1B2; --e-runs:#B7A4EA; --e-imports:#B7A4EA; --e-references:#5E7590; --e-references-hl:#B9C9DC; --e-other:#4F5D70;
+  --guide:#1A2A3C; --guide-outer:#2B4058; --dim:#1D2632;
+  --glass:rgba(12,18,27,.94); --label-bg:rgba(4,7,12,.74); --header-bg:rgba(4,7,12,.86);
+}
+html[data-theme=brain]{
+  --bg:#06070C; --surface:#0E1018; --surface-2:#141722; --surface-3:#1A1E2B; --border:#222738; --border-strong:#323950;
+  --text:#E8EAF2; --text-2:#B3B8CA; --text-3:#9097AB; --focus:#A9B8F2;
+  --k-router:#F2C46B; --k-playbook:#7FB2F0; --k-skill:#E39AC6; --k-principle:#5FCBA8;
+  --k-agent:#F0A07A; --k-automation:#A99AF0; --k-script:#A8B3C2; --k-reference:#D2BC8E; --k-other:#7D8594;
+  --e-loads:#F2C46B; --e-applies:#5FCBA8; --e-runs:#A99AF0; --e-imports:#A99AF0; --e-references:#5F6884; --e-references-hl:#B8BED4; --e-other:#4E566C;
+  --guide:#232A40; --guide-outer:#3A4466; --dim:#20242F;
+  --glass:rgba(14,16,24,.94); --label-bg:rgba(6,7,12,.74); --header-bg:rgba(6,7,12,.86);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/20px var(--font-sans);-webkit-font-smoothing:antialiased;overflow:hidden}
@@ -30,8 +68,25 @@ a{color:inherit}
 #scene{position:fixed;inset:var(--header-h) 0 0 0;z-index:0;touch-action:none}
 #scene::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.45) 100%)}
 #labels{position:fixed;inset:var(--header-h) 0 0 0;z-index:1;pointer-events:none}
-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);z-index:30;display:grid;grid-template-columns:1fr minmax(240px,400px) 1fr;align-items:center;gap:16px;padding:0 16px;background:rgba(10,13,20,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+header{position:fixed;top:0;left:0;right:0;height:var(--header-h);z-index:30;display:grid;grid-template-columns:1fr minmax(240px,400px) 1fr;align-items:center;gap:16px;padding:0 16px;background:var(--header-bg);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
 .brand{font-weight:600;font-size:16px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.brand em{font-style:normal}
+html[data-theme=kitchen] .brand em{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:17px;color:var(--brass);letter-spacing:.01em}
+html[data-theme=circuit] .brand em{font-family:var(--font-mono);font-size:14px;color:#D8B45C;letter-spacing:.04em}
+html[data-theme=earth] .brand em{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:17px;color:#9DB6D2}
+html[data-theme=brain] .brand em{font-weight:300;font-size:16px;color:#A9B8F2;letter-spacing:.02em}
+.theme-pick{height:32px;border-radius:16px;border:1px solid var(--border);background-color:var(--surface);color:var(--text);font:13px/20px var(--font-sans);padding:0 26px 0 12px;cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-3) 50%),linear-gradient(135deg,var(--text-3) 50%,transparent 50%);background-position:calc(100% - 14px) 13px,calc(100% - 9px) 13px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+html:not([data-theme=sphere]) .key{width:292px}
+.ksub{display:block;color:var(--text-3);font-size:12px;line-height:16px;font-weight:400;margin-top:2px}
+.krow.tall{height:auto;min-height:28px;padding-top:6px;padding-bottom:6px;align-items:flex-start}
+.krow.tall .name{text-decoration:none!important}
+.krow.tall svg{margin-top:2px}
+.rank{display:inline-flex;gap:2px;margin-right:5px;vertical-align:-1px}
+.rank i{display:block;width:3px;height:10px;border-radius:1px;background:var(--brass,#C9A15F)}
+.lbl.router .rank i{background:#1A1208}
+.rank.ring i{background:none;border:1px solid var(--brass,#C9A15F);width:6px;height:6px;border-radius:50%;margin-top:2px}
+html[data-theme=earth] .lbl.router::before{content:'★ '}
+html:not([data-theme=sphere]) #seg{display:none}
 .brand i{width:10px;height:10px;border-radius:50%;background:var(--k-router);box-shadow:0 0 0 4px rgba(242,196,107,.16),0 0 12px rgba(242,196,107,.5)}
 .search{position:relative}
 .search input{width:100%;height:36px;border:1px solid var(--border);border-radius:18px;background:var(--surface);font:14px var(--font-sans);color:var(--text);padding:0 40px 0 36px;outline:none}
@@ -183,7 +238,7 @@ body.focus .trail{display:flex}
 </head>
 <body>
 <header id="top">
-  <span class="brand"><i></i>pstack map</span>
+  <span class="brand"><i></i><span id="brandWord">pstack map</span></span>
   <div class="search" role="search">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8D96A8" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg>
     <input id="q" placeholder="Search workflows, tools, rules…" autocomplete="off" aria-label="Search the map" role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
@@ -191,6 +246,13 @@ body.focus .trail{display:flex}
     <ul class="results" id="results" role="listbox"></ul>
   </div>
   <div class="hright">
+    <select id="themePick" class="theme-pick" aria-label="Theme">
+      <option value="sphere">Sphere</option>
+      <option value="kitchen">Kitchen</option>
+      <option value="circuit">Circuit</option>
+      <option value="earth">Earth</option>
+      <option value="brain">Brain</option>
+    </select>
     <span class="attr"><a id="srcLink" href="#">pstack</a> by Lauren Tan · <a id="licLink" href="#">MIT</a></span>
     <button class="ghost-btn" id="searchBtn" type="button" aria-label="Search" aria-expanded="false" aria-controls="q"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg></button>
     <button class="ghost-btn" id="aboutBtn" type="button" aria-expanded="false" aria-controls="about"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.2v3.8" stroke-linecap="round"/><circle cx="8" cy="5" r=".6" fill="currentColor"/></svg><span class="about-txt">About</span></button>
