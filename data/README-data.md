@@ -36,6 +36,61 @@ node scripts/validate-graph.mjs data/graph.json
 | references | 294 |
 | runs | 6 |
 
+## Edge modes
+
+Every edge has `mode` (`always`, `conditional` or `step`) and `when` (a verbatim quote from the source, or null). Step edges also have `order`, the playbook step number. Each evidence line carries its own `mode`/`when`/`order` too, and the edge takes the strongest one (see rules).
+
+| Mode | Count |
+| --- | --- |
+| always | 249 |
+| conditional | 66 |
+| step | 98 |
+
+| Source kind | always | conditional | step |
+| --- | --- | --- | --- |
+| agent | 3 | 0 | 0 |
+| automation | 35 | 1 | 0 |
+| playbook | 28 | 1 | 98 |
+| principle | 16 | 0 | 0 |
+| reference | 52 | 0 | 0 |
+| router | 4 | 59 | 0 |
+| script | 3 | 0 | 0 |
+| skill | 108 | 5 | 0 |
+
+Principle nodes also have `appliesWhen`: the first sentence of their frontmatter description when it starts with "Apply" (24 of 24).
+
+Sample conditional edges (evenly spaced through the sorted list):
+
+| Source | Target | when |
+| --- | --- | --- |
+| `architect` | `why` | If the design redefines ownership or layering |
+| `poteto-mode` | `architect` | Code crossing a function boundary |
+| `poteto-mode` | `no-comments` | Before review |
+| `poteto-mode` | `playbook:bug-fix` | A reported defect to reproduce, root-cause, and fix with runtime evidence |
+| `poteto-mode` | `playbook:opening-a-pr` | Invoked at the end of every other playbook |
+| `poteto-mode` | `playbook:runtime-forensics` | Diagnose a runtime symptom (leak, idle-CPU spin, glitch) from live instrumentation |
+| `poteto-mode` | `principle-attack-the-premise` | Two or more fixes that share one premise have failed the same gate |
+| `poteto-mode` | `principle-explain-the-number` | Before you trust, report, or act on a number you measured (a speedup, a regression, a throughput, a latency, or an eval result) |
+| `poteto-mode` | `principle-migrate-callers-then-delete-legacy-apis` | Introducing a new internal API while old callers exist |
+| `poteto-mode` | `principle-redesign-from-first-principles` | Integrating a new requirement into an existing design |
+
+Mode rules, highest priority first:
+1. Router principle and playbook index entries (`- **Title.** text`), for the entry's own target: conditional, when = first sentence of the entry text.
+2. Router trigger bullets `- <situation> → <target>`, for targets after the arrow: conditional, when = the text before the arrow.
+3. Router sentences of the form "<X> routes to <target>": conditional, when = X.
+4. Playbook numbered steps (and their indented sub-lines): step, order = the step number. when is the step's opening clause up to the first comma if the step starts with If/When/Unless/Before/After/Only, else null.
+5. Router, skill, principle, playbook and automation-skill lines: a sentence that starts with If/When/Unless/Before/After/Only and has a comma before the target is conditional, when = the text up to that comma.
+6. Everything else, including frontmatter and code fences: always, when null.
+
+Mode caveats from this run:
+- 0 router trigger mention(s) sat before the arrow, so they were left `always`.
+- 1 mention(s) were in a sentence starting with If/When/... but with no comma before the target. With no clean clause to quote, they were left `always`.
+- 11 playbook mention(s) inside code fences (templates and skeletons) were left `always` rather than tied to a step.
+- 8 edge(s) have evidence lines with different modes. The edge shows the highest-priority one, and every evidence line keeps its own.
+- A trigger line's `when` covers every target after its arrow. For example, "Parallel fan-out" is the when for both swarm and arena, though the line scopes arena further in its own words.
+- `when` is verbatim apart from trimmed whitespace, stray `**` at the ends and trailing punctuation, so inline markdown (backticks, bold) is kept.
+- Sentences are split on ". " before a capital or markup, so abbreviations could split a sentence early. Spot-check new quotes after upstream changes.
+
 ## Most connected nodes
 
 Degree counts distinct edges (one per source, target and type), not mentions. Ties at the cutoff are all listed.
