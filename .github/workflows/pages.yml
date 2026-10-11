@@ -1,0 +1,70 @@
+name: Refresh graph and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Checkout cursor/plugins
+        run: git clone --depth 1 --quiet https://github.com/cursor/plugins.git "$RUNNER_TEMP/plugins"
+
+      - name: Extract graph
+        run: node scripts/extract-graph.mjs "$RUNNER_TEMP/plugins/pstack" --out data/graph.json --readme data/README-data.md
+
+      - name: Validate graph
+        run: node scripts/validate-graph.mjs data/graph.json
+
+      - name: Check layout
+        run: node scripts/check-layout.mjs data/graph.json
+
+      - name: Commit graph if it changed
+        id: commit
+        run: |
+          if git diff --quiet -- data/graph.json data/README-data.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/graph.json data/README-data.md
+            sha=$(node --input-type=module -e "import fs from 'node:fs'; const g=JSON.parse(fs.readFileSync('data/graph.json','utf8')); process.stdout.write(g.upstream.commitShort)")
+            git commit -m "Update pstack graph from cursor/plugins (${sha})"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure Pages
+        if: github.event_name != 'schedule' || steps.commit.outputs.changed == 'true'
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'schedule' || steps.commit.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+          include-hidden-files: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: github.event_name != 'schedule' || steps.commit.outputs.changed == 'true'
+        uses: actions/deploy-pages@v5
