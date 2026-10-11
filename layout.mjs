@@ -1,139 +1,202 @@
 // Home layout for the pstack map. Pure data: the page and scripts/check-layout.mjs share it
-// so the ring check runs on the same positions the scene draws.
-// Radii and ordering follow DESIGN.md v2.1 §5.
+// so the shell check runs on the same positions the scene draws.
+// DESIGN.md v3 §5. The rhombus fold matches the prototype: when y < 0, x and z fold
+// onto the lower half and y is left negative (it is not recomputed).
 
-const KINDS = ['router', 'playbook', 'skill', 'principle', 'agent', 'automation', 'script', 'reference'];
-const KMUL = { router: 1, playbook: 1, skill: 1, principle: 1, agent: 1, automation: 1, script: 0.75, reference: 0.62, other: 0.8 };
-const GROUP_ORDER = ['core', 'architecture', 'verification', 'delegation', 'meta'];
+import { kindOf, plainName } from './copy.mjs';
 
-export const RINGS = {
-  playbook: { r: 62, y: 0 },
-  middle: { r: 108, y: -22 },
-  principle: { r: 152, y: 14 },
+export const SHELLS = {
+  sphere: [62, 108, 150, 192],
+  rhombus: [96, 148, 196, 244],
 };
 
-export function kindOf(kind) {
-  return KINDS.includes(kind) ? kind : 'other';
+const LAYERS = [
+  { kinds: ['playbook'] },
+  { kinds: ['skill', 'agent', 'automation', 'other'] },
+  { kinds: ['principle'] },
+  { kinds: ['reference', 'script'] },
+];
+
+const GOLD = Math.PI * (3 - Math.sqrt(5));
+const YS = 1.15;
+
+function v(x = 0, y = 0, z = 0) {
+  return { x, y, z };
 }
 
-function clean(s) {
-  return s && s !== 'None' ? s : null;
+function add(a, b) {
+  return v(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+function scale(a, s) {
+  return v(a.x * s, a.y * s, a.z * s);
+}
+
+function len(a) {
+  return Math.hypot(a.x, a.y, a.z);
+}
+
+function normalize(a) {
+  const l = len(a);
+  return l ? scale(a, 1 / l) : v();
+}
+
+function dot(a, b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+function fib(n, phase) {
+  const slots = [];
+  for (let i = 0; i < n; i++) {
+    const y = 1 - (2 * (i + 0.5)) / n;
+    const s = Math.sqrt(Math.max(0, 1 - y * y));
+    const t = i * GOLD + phase;
+    slots.push(normalize(v(Math.cos(t) * s, y * 0.92, Math.sin(t) * s)));
+  }
+  return slots;
+}
+
+// Unit octahedron. y stays negative on the folded corners, matching the prototype.
+function octa(n, phase) {
+  const slots = [];
+  for (let i = 0; i < n; i++) {
+    let x = (2 * (i + 0.5)) / n - 1;
+    let z = 2 * ((i * 0.6180339887 + phase) % 1) - 1;
+    const y = 1 - Math.abs(x) - Math.abs(z);
+    if (y < 0) {
+      const x2 = (1 - Math.abs(z)) * Math.sign(x);
+      const z2 = (1 - Math.abs(x)) * Math.sign(z);
+      x = x2;
+      z = z2;
+    }
+    slots.push(v(x, y, z));
+  }
+  return slots;
+}
+
+const OCTA_VERTICES = [
+  v(1, 0, 0), v(-1, 0, 0), v(0, 1, 0), v(0, -1, 0), v(0, 0, 1), v(0, 0, -1),
+];
+const OCTA_EDGES = [[0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3], [1, 4], [1, 5], [2, 4], [4, 3], [3, 5], [5, 2]];
+
+function lerp(a, b, t) {
+  return v(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+}
+
+function octaEdges(n) {
+  const k = Math.ceil(n / 12);
+  const slots = [];
+  for (let j = 0; j < k; j++) {
+    for (const [p, q] of OCTA_EDGES) slots.push(lerp(OCTA_VERTICES[p], OCTA_VERTICES[q], (j + 0.5) / k));
+  }
+  return slots;
+}
+
+function toShell(slot, radius, shape) {
+  const p = scale(slot, radius);
+  if (shape === 'rhombus') p.y *= YS;
+  return p;
 }
 
 function deg(node) {
   return node.degree?.total ?? 0;
 }
 
-function v(x = 0, y = 0, z = 0) {
-  return { x, y, z };
+function clean(s) {
+  return s && s !== 'None' ? s : null;
 }
 
-function radiusOf(node, maxDeg) {
-  if (node.kind === 'router') return 10;
-  const frac = maxDeg ? deg(node) / maxDeg : 0;
-  return KMUL[kindOf(node.kind)] * (1.3 + 4.4 * Math.sqrt(frac));
-}
-
-export function homePositions(graph) {
+export function homePositions(graph, shape = 'sphere') {
+  const mode = shape === 'rhombus' ? 'rhombus' : 'sphere';
+  const radii = SHELLS[mode];
   const nodes = graph.nodes ?? [];
   const edges = graph.edges ?? [];
-  const byId = new Map(nodes.map((n) => [n.id, n]));
   const router = nodes.find((n) => n.kind === 'router');
   if (!router) throw new Error('no router node');
 
-  const maxDeg = Math.max(0, ...nodes.filter((n) => n.kind !== 'router').map(deg));
+  const names = new Map(nodes.map((n) => [n.id, plainName(n)]));
   const home = new Map();
+  const dirOf = new Map();
   home.set(router.id, v());
 
-  function ring(list, radius, y, offset = 0) {
-    if (!list.length) return;
-    list.forEach((n, i) => {
-      const a = offset + (i / list.length) * Math.PI * 2;
-      home.set(n.id, v(Math.cos(a) * radius, y, Math.sin(a) * radius));
-    });
-  }
+  const layers = LAYERS.map((layer, i) => ({ ...layer, r: radii[i] }));
+  for (let li = 0; li < layers.length; li++) {
+    const layer = layers[li];
+    const list = nodes.filter((n) => layer.kinds.includes(kindOf(n.kind)));
+    const slots = mode === 'sphere'
+      ? fib(list.length, li * 1.1 + 0.35)
+      : li === layers.length - 1
+        ? octaEdges(list.length)
+        : octa(list.length, li * 0.31 + 0.17);
+    const free = slots.map(() => true);
 
-  function angOf(id) {
-    const p = home.get(id);
-    return Math.atan2(p.z, p.x);
-  }
-
-  function meanAngle(id) {
-    let sx = 0;
-    let sy = 0;
-    for (const e of edges) {
-      const other = e.source === id ? e.target : e.target === id ? e.source : null;
-      if (other && other !== router.id && home.has(other)) {
-        const a = angOf(other);
-        sx += Math.cos(a);
-        sy += Math.sin(a);
+    function target(node) {
+      let sum = v();
+      for (const edge of edges) {
+        const other = edge.source === node.id ? edge.target : edge.target === node.id ? edge.source : null;
+        if (other && dirOf.has(other)) sum = add(sum, dirOf.get(other));
       }
+      const owner = clean(node.owner);
+      if (owner && dirOf.has(owner)) sum = add(sum, scale(dirOf.get(owner), 3));
+      return len(sum) > 1e-6 ? normalize(sum) : null;
     }
-    return sx || sy ? Math.atan2(sy, sx) : 0;
-  }
 
-  ring(nodes.filter((n) => n.kind === 'playbook'), RINGS.playbook.r, RINGS.playbook.y);
+    const order = list.slice().sort((a, b) => (
+      (target(b) ? 1 : 0) - (target(a) ? 1 : 0)
+      || deg(b) - deg(a)
+      || names.get(a.id).localeCompare(names.get(b.id))
+    ));
 
-  const mids = nodes.filter((n) => ['skill', 'agent', 'automation', 'other'].includes(kindOf(n.kind)));
-  mids.sort((a, b) => meanAngle(a.id) - meanAngle(b.id));
-  ring(mids, RINGS.middle.r, RINGS.middle.y);
-
-  const principles = nodes.filter((n) => n.kind === 'principle');
-  principles.sort((a, b) => (GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group)) || (meanAngle(a.id) - meanAngle(b.id)));
-  ring(principles, RINGS.principle.r, RINGS.principle.y, 0.07);
-
-  const moons = new Map();
-  for (const n of nodes) {
-    if (n.kind !== 'script' && n.kind !== 'reference') continue;
-    const owner = clean(n.owner) || router.id;
-    if (!moons.has(owner)) moons.set(owner, []);
-    moons.get(owner).push(n.id);
-  }
-
-  for (const [owner, list] of moons) {
-    const op = home.get(owner) || v();
-    if (owner === router.id) {
-      list.forEach((id, i) => {
-        const a = (i / list.length) * Math.PI * 2 + 0.4;
-        home.set(id, v(Math.cos(a) * 19, -13, Math.sin(a) * 19));
-      });
-      continue;
+    let next = 0;
+    for (const node of order) {
+      const aim = target(node);
+      let best = -1;
+      if (aim) {
+        let bestDot = -9;
+        slots.forEach((slot, i) => {
+          if (!free[i]) return;
+          const d = dot(normalize(slot), aim);
+          if (d > bestDot) {
+            bestDot = d;
+            best = i;
+          }
+        });
+      } else {
+        while (next < free.length && !free[next]) next++;
+        best = next;
+      }
+      if (best < 0 || best >= slots.length) throw new Error(`no free slot for ${node.id}`);
+      free[best] = false;
+      dirOf.set(node.id, normalize(slots[best]));
+      home.set(node.id, toShell(slots[best], layer.r, mode));
     }
-    const len = Math.hypot(op.x, op.z) || 1;
-    const out = { x: op.x / len, z: op.z / len };
-    const tan = { x: -out.z, z: out.x };
-    const ownerNode = byId.get(owner);
-    const orr = ownerNode ? radiusOf(ownerNode, maxDeg) : 2;
-    list.forEach((id, i) => {
-      const row = Math.floor(i / 4);
-      const col = i % 4;
-      const m = Math.min(4, list.length - row * 4);
-      const radial = orr + 6 + row * 4.5;
-      const tangential = (col - (m - 1) / 2) * 4.2;
-      home.set(id, v(op.x + out.x * radial + tan.x * tangential, op.y - 5, op.z + out.z * radial + tan.z * tangential));
-    });
   }
 
-  for (const n of nodes) if (!home.has(n.id)) home.set(n.id, v(0, 40, 0));
+  for (const node of nodes) {
+    if (!home.has(node.id)) home.set(node.id, v(0, 40, 0));
+  }
   return home;
 }
 
-function onRing(positions, nodes, kind, radius, y, errors) {
-  for (const n of nodes) {
-    if (n.kind !== kind) continue;
-    const p = positions.get(n.id);
-    if (!p) {
-      errors.push(`${n.id} has no position`);
-      continue;
-    }
-    const r = Math.hypot(p.x, p.z);
-    if (Math.abs(r - radius) > 0.05 || Math.abs(p.y - y) > 0.05) {
-      errors.push(`${n.id} (${kind}) at r=${r.toFixed(2)} y=${p.y.toFixed(2)}, expected r=${radius} y=${y}`);
-    }
-  }
+function finitePos(p) {
+  return !!p && [p.x, p.y, p.z].every((n) => Number.isFinite(n));
 }
 
-// Acceptance check 3: router at the centre, playbooks on the inner ring, principles on the outer ring.
+function radiusOf(p) {
+  return Math.hypot(p.x, p.y, p.z);
+}
+
+const SPHERE_RADIUS = {
+  playbook: SHELLS.sphere[0],
+  skill: SHELLS.sphere[1],
+  agent: SHELLS.sphere[1],
+  automation: SHELLS.sphere[1],
+  other: SHELLS.sphere[1],
+  principle: SHELLS.sphere[2],
+  reference: SHELLS.sphere[3],
+  script: SHELLS.sphere[3],
+};
+
 export function checkLayout(graph) {
   const errors = [];
   const nodes = graph.nodes ?? [];
@@ -141,35 +204,55 @@ export function checkLayout(graph) {
   const ids = nodes.map((n) => n.id);
   if (new Set(ids).size !== ids.length) errors.push('duplicate node id');
 
-  let positions = null;
+  let sphere = null;
+  let rhombus = null;
   try {
-    positions = homePositions(graph);
+    sphere = homePositions(graph, 'sphere');
+    rhombus = homePositions(graph, 'rhombus');
   } catch (e) {
     errors.push(e.message);
-    return { ok: false, errors, positions, summary: e.message };
+    return { ok: false, errors, positions: sphere, summary: e.message };
   }
 
-  if (positions.size !== nodes.length) errors.push(`positions ${positions.size} != nodes ${nodes.length}`);
-  for (const n of nodes) if (!positions.has(n.id)) errors.push(`missing position for ${n.id}`);
+  for (const [label, positions] of [['sphere', sphere], ['rhombus', rhombus]]) {
+    if (positions.size !== nodes.length) errors.push(`${label}: positions ${positions.size} != nodes ${nodes.length}`);
+    for (const node of nodes) {
+      const p = positions.get(node.id);
+      if (!p) errors.push(`${label}: missing position for ${node.id}`);
+      else if (!finitePos(p)) errors.push(`${label}: non-finite position for ${node.id}`);
+    }
+  }
 
   const routers = nodes.filter((n) => n.kind === 'router');
   if (routers.length !== 1) errors.push(`expected 1 router, found ${routers.length}`);
   else {
-    const p = positions.get(routers[0].id);
-    if (Math.hypot(p.x, p.y, p.z) > 1e-6) errors.push('router is not at the centre');
+    for (const positions of [sphere, rhombus]) {
+      const p = positions.get(routers[0].id);
+      if (radiusOf(p) > 1e-6) errors.push('router is not at the centre');
+    }
   }
 
-  onRing(positions, nodes, 'playbook', RINGS.playbook.r, RINGS.playbook.y, errors);
-  onRing(positions, nodes, 'principle', RINGS.principle.r, RINGS.principle.y, errors);
+  for (const node of nodes) {
+    const expected = SPHERE_RADIUS[kindOf(node.kind)];
+    if (expected == null) continue;
+    const r = radiusOf(sphere.get(node.id));
+    if (Math.abs(r - expected) > 1e-4) {
+      errors.push(`${node.id} (${node.kind}) sphere r=${r.toFixed(3)}, expected ${expected}`);
+    }
+  }
+
+  const playbooks = nodes.filter((n) => n.kind === 'playbook');
+  if (playbooks.length) {
+    const widened = playbooks.some((n) => Math.abs(radiusOf(rhombus.get(n.id)) - SHELLS.sphere[0]) > 1);
+    if (!widened) errors.push('rhombus playbooks are still on the sphere shell');
+  }
 
   const idSet = new Set(ids);
-  for (const [i, e] of edges.entries()) {
-    if (!idSet.has(e.source)) errors.push(`edges[${i}] source ${e.source} is not a node`);
-    if (!idSet.has(e.target)) errors.push(`edges[${i}] target ${e.target} is not a node`);
+  for (const [i, edge] of edges.entries()) {
+    if (!idSet.has(edge.source)) errors.push(`edges[${i}] source ${edge.source} is not a node`);
+    if (!idSet.has(edge.target)) errors.push(`edges[${i}] target ${edge.target} is not a node`);
   }
 
-  const playbooks = nodes.filter((n) => n.kind === 'playbook').length;
-  const principles = nodes.filter((n) => n.kind === 'principle').length;
-  const summary = `${nodes.length} nodes, ${edges.length} edges, router centred, ${playbooks} playbooks on r=${RINGS.playbook.r}, ${principles} principles on r=${RINGS.principle.r}`;
-  return { ok: errors.length === 0, errors, positions, summary };
+  const summary = `${nodes.length} nodes, ${edges.length} edges, router centred, sphere shells ${SHELLS.sphere.join('/')}`;
+  return { ok: errors.length === 0, errors, positions: sphere, summary };
 }

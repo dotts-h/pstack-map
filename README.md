@@ -1,6 +1,6 @@
 # pstack map
 
-An interactive 3D map of the [pstack](https://github.com/cursor/plugins/tree/main/pstack) Cursor plugin: the `/poteto-mode` router, playbooks, principles, skills, and the scripts and references that connect them.
+An interactive 3D map of the [pstack](https://github.com/cursor/plugins/tree/main/pstack) Cursor plugin. The sphere opens on the Start here star, with workflows, tools, rules, and docs on nested shells. Click a body to fly to it and open its card; chips travel onward and leave a breadcrumb trail. A Rhombus shape is available from the control at the bottom right.
 
 **Live:** https://dotts-h.github.io/pstack-map/
 
