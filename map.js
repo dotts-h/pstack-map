@@ -1,4 +1,4 @@
-// pstack map. Sphere shells by default; kitchen, circuit, earth, and brain are themes.
+// pstack map. Galaxy is the default; kitchen, circuit, earth, and brain are themes.
 // The card, chip travel, breadcrumbs, and Back are the same in every theme.
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/CSS2DRenderer.js';
@@ -8,12 +8,13 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { homePositions } from './layout.mjs';
 import { FRIENDLY, EWORD, KINDS, ETYPES, kindOf, etype, plainName, oneLiner } from './copy.mjs';
 import { THEME_IDS, themeMeta, createTheme, rankBadge } from './themes.mjs';
+import { CREDITS_HTML, stepsOf } from './galaxy.mjs';
 
 const qs = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || qs.has('reduced');
-const SHAPE = qs.get('shape') === 'rhombus' ? 'rhombus' : 'sphere';
+const SHAPE = 'sphere';
 const themeName = (qs.get('theme') || '').toLowerCase();
-const THEME = THEME_IDS.includes(themeName) ? themeName : 'sphere';
+const THEME = themeName === 'sphere' || !THEME_IDS.includes(themeName) ? 'galaxy' : themeName;
 const META = themeMeta(THEME);
 const mobile = () => innerWidth < 760;
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -51,7 +52,7 @@ const deg = (id) => byId.get(id)?.degree?.total ?? 0;
 let theme;
 let homes;
 try {
-  theme = createTheme(THEME, { G, byId, kindOf, nm, deg, SHAPE, homePositions, css });
+  theme = createTheme(THEME, { G, byId, kindOf, nm, deg, SHAPE, homePositions, css, reduced });
   homes = theme.homes;
 } catch (e) {
   showError(e.message || 'The map data is unavailable.');
@@ -270,6 +271,7 @@ if (theme.routerMesh) {
 const starNode = mkNode(router, 'router', null, 0);
 starNode.mesh = starMesh;
 N.push(starNode);
+theme.paintBases?.(N);
 const NB = new Map(N.map((o) => [o.id, o]));
 const mkHalo = (col, size, op) => {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO, color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -315,8 +317,8 @@ N.forEach((o) => {
   Object.assign(o, { lo: L.lo, anc: L.a, el: L.l, lmode: 'home' });
 });
 
-const SEG = 16;
-const SEG_HL = 32;
+const SEG = theme.edgeSeg || 16;
+const SEG_HL = theme.edgeSegHl || 32;
 const E = G.edges.filter((e) => NB.has(e.source) && NB.has(e.target)).map((e) => ({ e, t: etype(e.type) }));
 const idle = {};
 [...ETYPES, 'other'].forEach((t) => {
@@ -371,6 +373,28 @@ pulses.count = 0;
 pulses.frustumCulled = false;
 pulses.renderOrder = 3;
 scene.add(pulses);
+let PLAY = null;
+const STEPCUR = new Set();
+const STEP_MS = 2200;
+const IC_PLAY = '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2l7 4-7 4z"/></svg>';
+const IC_PAUSE = '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2h2v8H3zM7 2h2v8H7z"/></svg>';
+const IC_BACK = '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 2h1.6v8H2zM10 2v8L4 6z"/></svg>';
+function pulseGate(x, t, i) {
+  if (PLAY && PLAY.k >= 0 && FOCUS === PLAY.id) {
+    const cur = PLAY.S[PLAY.k][0];
+    return x.e.mode === 'step' && x.e.order === cur && x.e.source === PLAY.id ? 1.7 : 0.22;
+  }
+  if (x.e.mode === 'conditional') {
+    const s = Math.sin(t * 0.55 + i * 1.7);
+    return s > 0 ? s ** 1.5 : 0;
+  }
+  return 1;
+}
+function pausePlay() {
+  if (!PLAY) return;
+  PLAY.playing = false;
+  clearTimeout(PLAY.t);
+}
 function drawPulses(now) {
   const spec = theme.pulse;
   if (!spec || !hl.l || reduced || !FOCUS) {
@@ -387,7 +411,9 @@ function drawPulses(now) {
     for (let k = 0; k < spec.per && pi < PULSE_N; k++) {
       const u = ((t * spec.speed * 40) / Math.max(len, 20) + i * 0.377 + k / spec.per) % 1;
       curve(A, B, u, P0, 'focus', side);
-      const sz = spec.size * (0.55 + 0.45 * Math.sin(u * Math.PI));
+      const gate = theme.id === 'galaxy' ? pulseGate(x, t, i) : 1;
+      if (gate <= 0.02) continue;
+      const sz = spec.size * (0.55 + 0.45 * Math.sin(u * Math.PI)) * Math.min(gate, 1.7);
       M4.compose(P0, Q.identity(), S.setScalar(sz));
       pulses.setMatrixAt(pi, M4);
       pi += 1;
@@ -438,7 +464,7 @@ function applyCam() {
   camera.position.set(t.x + d * Math.cos(el) * Math.sin(az), t.y + d * Math.sin(el), t.z + d * Math.cos(el) * Math.cos(az));
   camera.lookAt(t);
   camera.setViewOffset(W(), H(), viewX, viewY, W(), H());
-  if (theme.fog && !(FOCUS && FS && theme.id !== 'kitchen')) {
+  if (theme.fog && (theme.id === 'kitchen' || theme.id === 'galaxy' || !(FOCUS && FS))) {
     const f = theme.fog(d, !!(FOCUS && FS), FS);
     scene.fog.near = f.near;
     scene.fog.far = f.far;
@@ -650,6 +676,7 @@ const FL = {
   R0: 34, R_PER: 1.5, SHELL_IN: 0.82, SHELL_OUT: 1.12, H_SPAN: 0.9, STEP_MAX: 0.2, PSI_MAX: (55 * Math.PI) / 180, X_SCALE: 0.75, ROW_PX: 22, CAP: 36,
   R_MIN: 1.8, R_MAX: 3.2, R_SEL: 6.5, LABEL_PX: 170, DISPERSE_K: 4.5, SHELL_MIN: 520, SHELL_MAX: 1100, CARD_HALF: 176,
   REGROUP: 900, TRAVEL: 900, EXIT: 700, STAGGER: 14, STAGGER_MAX: 260, DISPERSE: 800, CARD_IN: 0.7, CARD_ANCHOR: 0.42, SHEET_ANCHOR: 0.27, SEL_PX: 28, LABEL_PX_M: 104,
+  ...(theme.motion || {}),
 };
 function neighbours(id) {
   const inc = [];
@@ -820,6 +847,22 @@ function focus(id, dur) {
     FS = { Rc: plated.r3, Rb, shell, dist, Rv: plated.Rh.clone(), C };
   } else {
     theme._plateOn = false;
+    if (theme.focusLayout) {
+      const laid = theme.focusLayout({
+        id, C, cam, camera, neighbours: neighbours(id),
+        mobile: m, W: W(), H: H(), vf, byId, kindOf, deg, KINDS,
+      });
+      inc = laid.inc;
+      out = laid.out;
+      member = laid.member;
+      Rb = laid.Rb;
+      shell = laid.shell;
+      dist = laid.dist;
+      ppu = laid.ppu;
+      viewX = laid.viewX;
+      viewY = laid.viewY;
+      FS = { Rc: laid.rOut || laid.Rb, Rb, shell, dist, Rv: laid.Rv.clone(), C, hwPx: laid.hwPx };
+    } else {
     const visW = W() - 32;
     const visH = m ? H() * 0.5 - 24 : H() - 56 - 24;
     FL.CAP = Math.floor((visH * 0.86) / FL.ROW_PX);
@@ -846,20 +889,29 @@ function focus(id, dur) {
     FS = { Rc, Rb, shell, dist, Rv: Rv.clone(), C };
     viewX = 0;
     viewY = Math.round(H() / 2 - H() * (m ? FL.SHEET_ANCHOR : FL.CARD_ANCHOR));
+    }
   }
-  cam.min = Math.max(Rb * (theme.id === 'kitchen' ? 1.1 : 1.15), 40);
-  cam.max = Math.min(dist * 2, shell * 0.6);
+  if (theme.camLimits) {
+    const lim = theme.camLimits(Rb, dist, shell);
+    cam.min = lim.min;
+    cam.max = lim.max;
+  } else {
+    cam.min = Math.max(Rb * (theme.id === 'kitchen' ? 1.1 : 1.15), 40);
+    cam.max = Math.min(dist * 2, shell * 0.6);
+  }
   const fe = [...inc, ...out].filter((x) => member.has(x.id)).map((x) => E.find((y) => y.e === x.e)).filter(Boolean);
   setHighlight(fe);
   let k = 0;
   for (const o of N) {
     const mm = member.get(o.id);
     if (mm) {
-      const sc = theme.id === 'kitchen'
-        ? (o.id === id ? Math.min(o.k === 'router' ? 7 : 6, 32 / ppu) : THREE.MathUtils.clamp(o.r * 0.75, 2, 3.4))
-        : (o.id === id
-          ? Math.min(Math.max(FL.R_SEL, o.k === 'router' ? 7 : 0), FL.SEL_PX / ppu)
-          : THREE.MathUtils.clamp(o.r * 0.8, FL.R_MIN, FL.R_MAX));
+      const sc = theme.focusScale
+        ? theme.focusScale(o, ppu, id)
+        : theme.id === 'kitchen'
+          ? (o.id === id ? Math.min(o.k === 'router' ? 7 : 6, 32 / ppu) : THREE.MathUtils.clamp(o.r * 0.75, 2, 3.4))
+          : (o.id === id
+            ? Math.min(Math.max(FL.R_SEL, o.k === 'router' ? 7 : 0), FL.SEL_PX / ppu)
+            : THREE.MathUtils.clamp(o.r * 0.8, FL.R_MIN, FL.R_MAX));
       tweenNode(o, mm.p, sc, 0, o.id === id ? 0 : Math.min(FL.STAGGER * (++k), FL.STAGGER_MAX), dur);
       o.lmode = o.id === id ? 'sel' : 'mem';
     } else {
@@ -887,7 +939,7 @@ function focus(id, dur) {
     });
   }
   camTo(C, dist, faz, fel, dur);
-  idleTw = { from: idleAlpha, to: 0, t0: performance.now(), dur: reduced ? 0 : 300 };
+  idleTw = { from: idleAlpha, to: 0, t0: performance.now(), dur: reduced ? 0 : (theme.idleMs ?? 300) };
   document.body.classList.add('focus');
   document.body.classList.remove('key-open');
   document.getElementById('keyBtn').setAttribute('aria-expanded', 'false');
@@ -914,6 +966,7 @@ function exitFocus() {
   viewX = homeViewX();
   viewY = 0;
   theme._plateOn = false;
+  theme.clearFocus?.();
   const c = savedCam || { target: theme.sceneC.clone(), dist: fitDist(), az: HOMECAM.az, el: HOMECAM.el };
   camTo(c.target, c.dist, cam.az, c.el, FL.EXIT);
   idleTw = { from: idleAlpha, to: 1, t0: performance.now() + (reduced ? 0 : FL.EXIT * 0.4), dur: reduced ? 0 : 400 };
@@ -924,6 +977,7 @@ function exitFocus() {
 let trail = [];
 function go(id, { push = true, focusTitle = false } = {}) {
   if (!NB.has(id)) return;
+  theme.onReset?.();
   dismissHint();
   stopSpin();
   const first = !FOCUS;
@@ -994,12 +1048,54 @@ function chipButton(id) {
   if (!node) return '';
   return `<button class="chip" type="button" data-id="${esc(id)}" title="${esc(nm(id))}">${glyph(node.kind, 10)}<span>${esc(nm(id))}</span></button>`;
 }
+function normQuote(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function routerRepeats(when, node) {
+  const w = normQuote(when);
+  if (w.length < 24 || !node) return false;
+  return [node.description, oneLiner(node, G)].map(normQuote).filter((b) => b.length >= 24)
+    .some((b) => b === w || b.startsWith(w) || w.startsWith(b));
+}
+function whenOf(card, other) {
+  const e = G.edges.find((edge) => (
+    ((edge.source === card && edge.target === other) || (edge.source === other && edge.target === card))
+    && edge.mode === 'conditional' && edge.when
+  ));
+  if (!e) return null;
+  const fromRouter = kindOf(byId.get(e.source)?.kind) === 'router' || kindOf(byId.get(e.target)?.kind) === 'router';
+  const workflow = kindOf(byId.get(card)?.kind) === 'playbook' ? byId.get(card)
+    : kindOf(byId.get(other)?.kind) === 'playbook' ? byId.get(other) : null;
+  if (fromRouter && routerRepeats(e.when, workflow)) return null;
+  return e.when;
+}
+const lcWhen = (w) => (/^[A-Z][a-z]/.test(w) ? w[0].toLowerCase() + w.slice(1) : w);
+const COND_ICON = '<svg width="16" height="8" viewBox="0 0 16 8" aria-hidden="true"><path d="M1 6Q8 0 15 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.2 2.2" stroke-linecap="round"/></svg>';
 function chipGroup(title, ids, max) {
   if (!ids.length) return '';
   const sorted = ids.slice().sort((a, b) => (
     KINDS.indexOf(kindOf(byId.get(a)?.kind)) - KINDS.indexOf(kindOf(byId.get(b)?.kind))
     || deg(b) - deg(a)
   ));
+  if (theme.id === 'galaxy') {
+    const cond = sorted.filter((id) => whenOf(cardId, id));
+    const plain = sorted.filter((id) => !whenOf(cardId, id));
+    const nC = Math.min(cond.length, 3);
+    const shown = plain.slice(0, Math.max(nC ? 2 : 0, max - nC));
+    const rest = [...plain.slice(shown.length), ...cond.slice(nC)];
+    let more = '';
+    if (rest.length) {
+      const key = String(++moreN);
+      moreBags.set(key, rest);
+      more = `<button class="chip more" type="button" data-more="${key}">+${rest.length} more</button>`;
+    }
+    const rows = cond.slice(0, nC).map((id) => {
+      const w = whenOf(cardId, id);
+      return `<div class="crow"><span class="w" title="${esc(w)}">${COND_ICON}When ${esc(trunc(lcWhen(w), 74))} →</span>${chipButton(id)}</div>`;
+    }).join('');
+    const chips = (shown.length || rest.length) ? `<div class="chips">${shown.map(chipButton).join('')}${more}</div>` : '';
+    return `<div class="grp"><h3>${title}<span>${ids.length}</span></h3>${chips}${rows}</div>`;
+  }
   const shown = sorted.slice(0, max);
   const rest = sorted.slice(max);
   let more = '';
@@ -1014,6 +1110,55 @@ function whenLine(text, tag = 'span') {
   if (!text) return '';
   const label = /^(when|if|unless|before|after|only|apply)\b/i.test(text) ? '' : '<span class="k">When</span> ';
   return `<${tag} class="when">${label}${esc(text)}</${tag}>`;
+}
+function updPlay() {
+  if (!PLAY) return;
+  const b = pop.querySelector('#playBtn');
+  const st = pop.querySelector('#pstat');
+  if (!b || !st) return;
+  const { S, k } = PLAY;
+  const label = PLAY.playing ? 'Pause' : k >= S.length - 1 ? 'Replay' : k >= 0 ? 'Resume' : 'Play steps';
+  b.innerHTML = `${PLAY.playing ? IC_PAUSE : IC_PLAY}<span>${label}</span>`;
+  st.innerHTML = k < 0
+    ? `${S.length} steps`
+    : `<b>Step ${esc(String(S[k][0]))}</b> · ${esc(S[k][1].map((id) => nm(id)).slice(0, 2).join(', '))}${S[k][1].length > 2 ? ` +${S[k][1].length - 2}` : ''} <span class="pk">${k + 1}/${S.length}</span>`;
+  dirty = true;
+}
+function advance() {
+  if (!PLAY || !PLAY.playing) return;
+  PLAY.k += 1;
+  if (PLAY.k >= PLAY.S.length - 1) PLAY.playing = false;
+  else PLAY.t = setTimeout(advance, reduced ? STEP_MS : STEP_MS);
+  updPlay();
+}
+function bindPlay(id) {
+  const b = pop.querySelector('#playBtn');
+  if (!b) {
+    PLAY = null;
+    return;
+  }
+  const S = stepsOf(G, id);
+  PLAY = { id, S, k: -1, playing: false, t: null };
+  b.onclick = (e) => {
+    e.stopPropagation();
+    if (!PLAY) return;
+    if (PLAY.playing) pausePlay();
+    else {
+      if (PLAY.k >= PLAY.S.length - 1) PLAY.k = -1;
+      PLAY.playing = true;
+      advance();
+    }
+    updPlay();
+  };
+  const back = pop.querySelector('#stepBack');
+  if (back) back.onclick = (e) => {
+    e.stopPropagation();
+    if (!PLAY) return;
+    pausePlay();
+    PLAY.k = Math.max(0, PLAY.k - 1);
+    updPlay();
+  };
+  updPlay();
 }
 function showCard(id, { focusTitle = false } = {}) {
   const n = byId.get(id);
@@ -1037,9 +1182,14 @@ function showCard(id, { focusTitle = false } = {}) {
   const eye = role
     ? `${glyph(n.kind, 12)}${badge}${esc(role)} <span style="color:var(--text-3)">· ${esc(FRIENDLY[k][0])}</span>`
     : `${glyph(n.kind, 12)}${esc(FRIENDLY[k][0])}`;
+  const applies = theme.id === 'galaxy' && n.appliesWhen ? `<p class="applies">${esc(n.appliesWhen)}</p>` : '';
+  const steps = theme.id === 'galaxy' ? stepsOf(G, n.id) : [];
+  const player = steps.length > 1
+    ? `<div class="play"><button class="pbtn" id="playBtn" type="button">${IC_PLAY}<span>Play steps</span></button><button class="pico" id="stepBack" type="button" aria-label="Step back" title="Step back">${IC_BACK}</button><span class="pstat" id="pstat" aria-live="polite">${steps.length} steps</span></div>`
+    : '';
   pop.innerHTML = `<div class="caret"></div><div class="pop-scroll"><div class="pop-head"><div class="eyebrow">${eye}</div>
     <button class="x" type="button" aria-label="Close (Esc)"><svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
-    <h2 id="popTitle" tabindex="-1">${esc(nm(id))}</h2></div><p class="what">${esc(oneLiner(n, G))}</p>${tryIt}
+    <h2 id="popTitle" tabindex="-1">${esc(nm(id))}</h2></div><p class="what">${esc(oneLiner(n, G))}</p>${applies}${player}${tryIt}
     ${chipGroup('Uses', uses, mx)}${chipGroup('Used by', used, mx)}
     <div class="pop-foot"><button class="link" id="detBtn" type="button" aria-expanded="false" aria-controls="det">Details <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4.5 6 7.5 9 4.5"/></svg></button>
       <span style="font-size:12px;color:var(--text-3)">${inc.length + out.length} connections</span></div>
@@ -1052,6 +1202,7 @@ function showCard(id, { focusTitle = false } = {}) {
       }).join('')}
       ${conn.length > 8 ? `<div class="conn"><span class="t" style="grid-column:1/3">+${conn.length - 8} more connections</span></div>` : ''}
       <a class="btn src" href="${esc(src)}" target="_blank" rel="noopener">View source <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a></div></div>`;
+  if (theme.id === 'galaxy') bindPlay(id);
   if (qs.get('details') === '1' && !showCard.openedDetails) {
     showCard.openedDetails = true;
     pop.classList.add('expanded');
@@ -1071,11 +1222,18 @@ function revealDetails() {
   sc.scrollTo({ top: d.offsetTop - head.offsetHeight - foot.offsetHeight - 16, behavior: reduced ? 'auto' : 'smooth' });
 }
 function hideCard() {
+  pausePlay();
+  PLAY = null;
+  STEPCUR.clear();
   pop.classList.remove('show', 'expanded');
   cardId = null;
 }
 function placeCard() {
   if (!cardId || mobile()) return;
+  if (theme.dockCard) {
+    theme.dockCard({ pop, screenOf, cardId, NB, FS, THREE });
+    return;
+  }
   const o = NB.get(cardId);
   if (!o) return;
   const s = screenOf(o);
@@ -1185,9 +1343,10 @@ function writeEdges(list, geo, mode) {
   list.forEach((x, i) => {
     const { so, to } = trimmed(x);
     const side = mode === 'focus' ? (x.e.source === FOCUS ? 1 : -1) : 0;
-    const hide = mode === 'home' && (hiddenKinds.has(so.k) || hiddenKinds.has(to.k) || hiddenE.has(x.t));
+    const hide = mode === 'home' && (hiddenKinds.has(so.k) || hiddenKinds.has(to.k) || hiddenE.has(x.t) || theme.hideHomeEdge?.(x));
+    const dash = !!theme.dashEdge?.(x);
     for (let s = 0; s < SG; s++) {
-      if (hide) {
+      if (hide || (dash && s % 3)) {
         arr.fill(0, (i * SG + s) * 6, (i * SG + s) * 6 + 6);
         continue;
       }
@@ -1257,6 +1416,7 @@ function frameBody(now) {
     if (p >= 1 && now >= idleTw.t0) idleTw = null;
     anyAnim = true;
   }
+  theme.beforeCam?.();
   applyCam();
   for (const o of N) {
     const p = o.dur ? THREE.MathUtils.clamp((now - o.t0) / o.dur, 0, 1) : 1;
@@ -1366,7 +1526,7 @@ function frameBody(now) {
       const v = o.pos.clone().project(camera);
       const left = v.x < cx;
       setAnchor(o, left ? 'l' : 'r');
-      o.el.className = 'lbl' + (SMALLK.includes(o.k) ? ' small' : '') + (o === hovered ? ' hover' : '');
+      o.el.className = 'lbl' + (SMALLK.includes(o.k) ? ' small' : '') + ((o === hovered || STEPCUR.has(o.id)) ? ' hover' : '');
       paintLabel(o, trunc(nm(o.id), mobile() ? 16 : 30));
       const rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
       o.lo.position.copy(o.pos).addScaledVector(rv, (left ? -1 : 1) * (o.sc * 1.2 + 0.8));
@@ -1379,11 +1539,13 @@ function frameBody(now) {
       const front = theme.front ? theme.front(o, camDir) : o.pos.dot(camDir) > -0.15 * o.pos.length();
       const tier = theme.labelTier ? theme.labelTier(o, hovered) : (o.k === 'router' || o === hovered ? 0 : o.k === 'playbook' || deg(o.id) >= 14 ? 1 : SMALLK.includes(o.k) ? 3 : 2);
       const zoomOk = tier <= 1 || (tier === 2 && cam.dist < fd * 0.62) || (tier === 3 && cam.dist < fd * 0.42);
-      o.lo.visible = !hiddenKinds.has(o.k) && (o.k === 'router' || o === hovered || (front && zoomOk));
+      const zoneOk = theme.inZone ? theme.inZone(o) : true;
+      o.lo.visible = !hiddenKinds.has(o.k) && zoneOk && (o.k === 'router' || o === hovered || (front && zoomOk));
       o.lo.position.copy(o.pos);
       o.lo.position.y -= o.sc * 1.35;
     }
   }
+  theme.syncSteps?.({ focus: FOCUS, play: PLAY, nodes: NB, camera, idleAlpha, hot: STEPCUR });
   moreLbls.forEach((h) => {
     if (!h.node) return;
     const rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
@@ -1499,10 +1661,19 @@ key.querySelector('.kmore').onclick = (e) => {
   const o = document.getElementById('kedges').classList.toggle('open');
   e.currentTarget.setAttribute('aria-expanded', String(o));
 };
+if (theme.keyExtras) {
+  const extra = theme.keyExtras(E);
+  if (extra.head) key.insertAdjacentHTML('afterbegin', extra.head);
+  const more = key.querySelector('.kmore');
+  if (extra.beforeMore && more) more.insertAdjacentHTML('beforebegin', extra.beforeMore);
+  key.querySelectorAll('[data-z]').forEach((b) => {
+    b.onclick = () => theme.flyZone(b.dataset.z);
+  });
+}
 const dt = new Date(U.commitDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 document.getElementById('about').innerHTML = `<p>A map of how the pstack skills library fits together: workflows, the tools and rules they use, and the docs behind them.</p>
   <dl><dt>Version</dt><dd>pstack ${esc(U.version)}</dd><dt>Data from</dt><dd>${esc(dt)}</dd><dt>Commit</dt><dd><a href="${esc(U.url + '/commit/' + U.commit)}" style="font-family:var(--font-mono)">${esc(U.commitShort)}</a></dd>
-  <dt>Source</dt><dd><a href="${esc(U.url + '/tree/' + U.commit + '/' + U.pluginPath)}">cursor/plugins</a></dd><dt>License</dt><dd><a href="${esc(U.licenseUrl)}">MIT</a> · © Lauren Tan</dd></dl>`;
+  <dt>Source</dt><dd><a href="${esc(U.url + '/tree/' + U.commit + '/' + U.pluginPath)}">cursor/plugins</a></dd><dt>License</dt><dd><a href="${esc(U.licenseUrl)}">MIT</a> · © Lauren Tan</dd></dl>${CREDITS_HTML}`;
 const ab = document.getElementById('aboutBtn');
 ab.onclick = () => {
   const o = document.getElementById('about').classList.toggle('open');
@@ -1510,15 +1681,8 @@ ab.onclick = () => {
 };
 document.getElementById('srcLink').href = `${U.url}/tree/${U.commit}/${U.pluginPath}`;
 document.getElementById('licLink').href = U.licenseUrl;
-const base = new URLSearchParams(location.search);
 const seg = document.getElementById('seg');
-seg.innerHTML = '<span>Shape</span>' + ['rhombus', 'sphere'].map((s) => {
-  const params = new URLSearchParams(base);
-  params.set('shape', s);
-  const current = s === SHAPE ? ' aria-current="true"' : '';
-  return `<a href="?${params}"${current}>${s === 'rhombus' ? 'Rhombus' : 'Sphere'}</a>`;
-}).join('');
-if (!META.showShape) seg.hidden = true;
+if (seg) seg.hidden = true;
 const brandWord = document.getElementById('brandWord');
 if (META.em && brandWord) brandWord.innerHTML = `pstack <em>${esc(META.em)}</em>`;
 document.title = META.em ? `pstack ${META.em}` : 'pstack map';
@@ -1527,6 +1691,7 @@ if (themePick) {
   themePick.value = THEME;
   themePick.onchange = () => {
     const params = new URLSearchParams(location.search);
+    params.delete('shape');
     params.set('theme', themePick.value);
     location.search = params.toString();
   };
@@ -1537,8 +1702,11 @@ if (hintBold) hintBold.textContent = META.hintBold;
 if (hintSmall) hintSmall.textContent = META.hintSmall;
 document.getElementById('reset').onclick = () => {
   stopSpin();
+  theme.onReset?.();
+  viewX = homeViewX();
+  viewY = 0;
   if (FOCUS) exitFocus();
-  else camTo(theme.sceneC.clone(), fitDist(), HOMECAM.az, HOMECAM.el, 700);
+  else camTo(theme.sceneC.clone(), fitDist(), HOMECAM.az, HOMECAM.el, theme.motion?.EXIT || 700);
 };
 document.getElementById('keyBtn').onclick = () => {
   const on = document.body.classList.toggle('key-open');
@@ -1662,6 +1830,22 @@ const wantHint = qs.get('hint') === '1' || (qs.get('hint') !== '0' && (() => {
 })());
 
 const hashId = decodeURIComponent((location.hash.match(/^#node=(.+)$/) || [])[1] || '');
+theme.bindRuntime?.({
+  get focus() { return FOCUS; },
+  get camTw() { return camTw; },
+  get drag() { return drag; },
+  cam,
+  camera,
+  NB,
+  dirty() { dirty = true; },
+  exit: exitFocus,
+  camTo,
+  mobile,
+  W,
+  H,
+  vf,
+  viewX(v) { viewX = v; },
+});
 applyCam();
 requestAnimationFrame(frame);
 if (wantHint && !qs.has('focus') && !qs.has('trail') && !hashId) {
@@ -1672,20 +1856,28 @@ if (wantHint && !qs.has('focus') && !qs.has('trail') && !hashId) {
   }, reduced ? 0 : 600);
 }
 const delay = +(qs.get('delay') || 300);
+const hop = (theme.motion?.REGROUP || 900) + 400;
 const seq = qs.get('trail') ? qs.get('trail').split(',') : qs.get('focus') ? [qs.get('focus')] : hashId ? [hashId] : [];
 const sq = seq.filter((id) => NB.has(id));
 pending += sq.length + (qs.get('orbit') ? 1 : 0);
 sq.forEach((id, i) => setTimeout(() => {
   go(id, { push: true, focusTitle: false });
   pending--;
-}, delay + i * 1400));
+}, delay + i * hop));
+if (qs.get('zone') && theme.flyZone) {
+  pending++;
+  setTimeout(() => {
+    theme.flyZone(qs.get('zone'));
+    pending--;
+  }, delay);
+}
 if (qs.get('orbit')) {
   setTimeout(() => {
     const d = THREE.MathUtils.degToRad(+qs.get('orbit'));
     if (camTw) camTw.e.az += d;
     else cam.az += d;
     pending--;
-  }, delay + Math.max(0, sq.length - 1) * 1400 + 50);
+  }, delay + Math.max(0, sq.length - 1) * hop + 50);
 }
 if (qs.get('q')) {
   qEl.focus();
@@ -1712,4 +1904,7 @@ window.__pstack = {
     };
   },
   name: nm,
+  get calls() { return renderer.info.render.calls; },
+  get tris() { return renderer.info.render.triangles; },
+  get play() { return PLAY && { id: PLAY.id, k: PLAY.k, playing: PLAY.playing, n: PLAY.S.length, order: PLAY.k >= 0 ? PLAY.S[PLAY.k][0] : null }; },
 };
