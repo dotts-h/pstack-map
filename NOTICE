@@ -1,0 +1,48 @@
+pstack-map
+Copyright (c) 2026 Horia C. Rădulescu
+
+This project's own code is under the MIT license in the LICENSE file.
+
+pstack
+-------
+The map is derived from pstack, a Cursor plugin by Lauren Tan.
+pstack's content (skills, playbooks, principles, scripts, and references)
+and its license are Lauren Tan's.
+
+  Copyright (c) 2026 Lauren Tan
+  License: MIT
+  Source: https://github.com/cursor/plugins/tree/main/pstack
+  License text: https://github.com/cursor/plugins/blob/main/pstack/LICENSE
+
+data/graph.json is generated from that tree. It is not a copy of the
+skill files; those stay in cursor/plugins. The live page links back to
+the pinned commit.
+
+Three.js
+--------
+vendor/ contains Three.js r169 (0.169.0), MIT license.
+
+  Copyright 2010-2024 Three.js Authors
+  https://github.com/mrdoob/three.js
+  https://github.com/mrdoob/three.js/blob/r169/LICENSE
+
+Vendored files, unchanged from three.js r169 except for the patch noted below:
+
+  vendor/three.module.min.js
+  vendor/CSS2DRenderer.js
+  vendor/lines/Line2.js
+  vendor/lines/LineGeometry.js
+  vendor/lines/LineMaterial.js
+  vendor/lines/LineSegments2.js
+  vendor/lines/LineSegmentsGeometry.js
+
+CSS2DRenderer.js includes a one-line pstack-map patch, marked in the source.
+Upstream r169 writes fractional CSS pixel offsets. This copy wraps those
+offsets in Math.round so labels sit on whole pixels:
+
+  element.style.transform = 'translate(' + ( - 100 * object.center.x ) + '%,'
+    + ( - 100 * object.center.y ) + '%)' + 'translate('
+    + Math.round( _vector.x * _widthHalf + _widthHalf ) + 'px,'
+    + Math.round( - _vector.y * _heightHalf + _heightHalf ) + 'px)';
+
+Keep that Math.round if Three.js is upgraded.
