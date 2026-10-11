@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>document.documentElement.dataset.theme=(function(){const t=(new URLSearchParams(location.search).get('theme')||'').toLowerCase();return ['galaxy','kitchen','circuit','earth','brain'].includes(t)?t:'galaxy';})();</script>
 <title>pstack map</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='4' fill='%23F2C46B'/%3E%3C/svg%3E">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
 :root{
   --bg:#080B12; --surface:#10141C; --surface-2:#161B26; --surface-3:#1C2230; --border:#232A38; --border-strong:#343D50;
@@ -58,7 +59,7 @@ html[data-theme=galaxy]{
   --k-agent:#A9CBEA; --k-automation:#C7BBA6; --k-script:#B9BCC4; --k-reference:#C9CCD3; --k-other:#9AA0AA;
   --e-loads:#FFD9A0; --e-applies:#9FD8C4; --e-runs:#C3B5F0; --e-imports:#C3B5F0; --e-references:#6C7894; --e-references-hl:#BCC6DA; --e-other:#56607A;
   --guide:#1A2134; --guide-outer:#2A3550; --dim:#1B2030;
-  --glass:rgba(9,11,19,.92); --label-bg:rgba(3,4,10,.72); --header-bg:rgba(3,4,10,.82);
+  --glass:rgba(9,11,19,.92); --label-bg:rgba(3,4,10,.84); --header-bg:rgba(3,4,10,.82);
 }
 html[data-theme=brain]{
   --bg:#06070C; --surface:#0E1018; --surface-2:#141722; --surface-3:#1A1E2B; --border:#222738; --border-strong:#323950;
@@ -221,8 +222,22 @@ html[data-theme=galaxy] .pop{max-height:580px}
 .pstat b{color:var(--text);font-weight:600}.pstat .pk{color:var(--text-3);margin-left:4px}
 .about .cred{font-size:12px;line-height:17px;color:var(--text-3);margin:12px 0 0;border-top:1px solid var(--border);padding-top:10px}
 .about .cred a{color:var(--text-2)}
-.zlbl{font:600 11px/16px var(--font-sans);letter-spacing:.16em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:7px;white-space:nowrap;text-shadow:0 1px 8px #000,0 0 2px #000}
+.zlbl{font:600 11px/16px var(--font-sans);letter-spacing:.16em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:7px;white-space:nowrap;text-shadow:0 1px 8px #000,0 0 2px #000;background:rgba(3,4,10,.86);padding:2px 9px 2px 8px;border-radius:10px}
 .zlbl i{width:6px;height:6px;border-radius:50%;display:block}
+.kpill{display:none}
+body.kclose:not(.kopen) .key{width:auto;padding:0}
+body.kclose:not(.kopen) .key>*:not(.kpill){display:none}
+body.kclose .kpill{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;font-size:13px;font-weight:600;color:var(--text-2);box-sizing:border-box}
+body.kclose.kopen .kpill{height:28px;padding:0 16px;font-size:12px;width:100%;justify-content:space-between}
+.kpill:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.about .gfx{display:flex;align-items:center;justify-content:space-between;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;font-size:13px;color:var(--text-2)}
+.gseg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:2px}
+.gseg button{all:unset;cursor:pointer;height:26px;padding:0 12px;border-radius:13px;font-size:12px;color:var(--text-2)}
+.gseg button[aria-pressed=true]{background:var(--surface-3);color:var(--text);box-shadow:inset 0 0 0 1px var(--border-strong)}
+.gseg button:focus-visible{outline:2px solid var(--focus)}
+.about .gnote{font-size:12px;line-height:17px;color:var(--text-3);margin:8px 0 0}
+.btn.icon{width:36px;padding:0;justify-content:center}
+#gfxDock{background:var(--glass);box-shadow:var(--shadow-1)}
 .stepno{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(3,4,10,.82);border:1px solid rgba(255,241,214,.5);color:#FFF1D6;font:600 11px/16px var(--font-sans);text-align:center;box-sizing:border-box;margin-bottom:5px;transition:transform .6s var(--ease),background-color .6s,color .6s,border-color .6s}
 .stepno.done{color:var(--text-2);border-color:rgba(255,241,214,.28)}
 .stepno.later{color:var(--text-3);border-color:var(--border-strong)}
