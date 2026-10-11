@@ -1039,10 +1039,12 @@ function showCard(id, { focusTitle = false } = {}) {
     <div class="pop-foot"><button class="link" id="detBtn" type="button" aria-expanded="false" aria-controls="det">Details <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4.5 6 7.5 9 4.5"/></svg></button>
       <span style="font-size:12px;color:var(--text-3)">${inc.length + out.length} connections</span></div>
     <div class="details" id="det"><dl><dt>Type</dt><dd>${esc(n.kind)}</dd><dt>ID</dt><dd>${esc(n.id)}</dd><dt>File</dt><dd title="${esc(n.path || '')}">${esc(file)}</dd><dt>Lines</dt><dd>${esc(lines)}</dd></dl>
+      ${n.appliesWhen ? `<p class="when"><span class="k">When</span>${esc(n.appliesWhen)}</p>` : ''}
       <h4>Connections</h4>${conn.slice(0, 8).map(({ e, o, dir }) => {
         const ev = e.evidence?.[0];
         const evHtml = ev ? `<span class="ev">${esc(String(ev.path || '').replace(/^pstack\//, ''))}:${esc(ev.line)}</span>` : '';
-        return `<div class="conn"><span class="t">${esc(dir)} ${esc(e.type)}</span><span class="n">${esc(nm(o))}</span>${evHtml}</div>`;
+        const whenHtml = e.when ? `<span class="when"><span class="k">When</span>${esc(e.when)}</span>` : '';
+        return `<div class="conn"><span class="t">${esc(dir)} ${esc(e.type)}</span><span class="n">${esc(nm(o))}</span>${whenHtml}${evHtml}</div>`;
       }).join('')}
       ${conn.length > 8 ? `<div class="conn"><span class="t" style="grid-column:1/3">+${conn.length - 8} more connections</span></div>` : ''}
       <a class="btn src" href="${esc(src)}" target="_blank" rel="noopener">View source <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a></div></div>`;

@@ -241,11 +241,35 @@ for (const pack of ls("automations").filter((p) => isDir(`automations/${p}`))) {
   }
 }
 
+// Quote helpers for edge conditions. Output is always a verbatim substring of the source line,
+// trimmed of whitespace, stray bold markers, and trailing punctuation.
+function trimQuote(t) {
+  let q = t.trim().replace(/^(?:\*\*)+|(?:\*\*)+$/g, "").trim().replace(/[\s.,:;]+$/, "").trim();
+  if ((q.match(/\*\*/g) || []).length % 2 === 1) q = q.replace(/\*\*/, "").trim();
+  return q || null;
+}
+function firstSentence(t) {
+  const s = t.trim();
+  const m = s.match(/^(.+?[.!?])(?=\s+[A-Z`*"(]|\s*$)/);
+  return trimQuote(m ? m[1] : s);
+}
+// Sentence spans of one line: [{ start, end }], split after . ! ? followed by space and a capital/markup.
+function sentences(line) {
+  const out = [];
+  let start = 0;
+  const re = /[.!?](?=\s+[A-Z`*"(])/g;
+  let m;
+  while ((m = re.exec(line))) { out.push({ start, end: m.index + 1 }); start = m.index + 1; }
+  out.push({ start, end: line.length });
+  return out;
+}
+
 // ---------- router metadata: principle groups and playbook index ----------
 const router = [...nodes.values()].find((n) => n.kind === "router");
 const routerFile = router ? router.path.slice(PREFIX ? PREFIX.length + 1 : 0) : null;
 const routerLines = router ? read(routerFile).split("\n") : [];
 const routerPlaybookLine = new Map(); // playbook id -> line number of its index entry
+const routerIndex = new Map(); // router line number -> { target, when } for principle and playbook index entries
 {
   let section = null, sub = null;
   routerLines.forEach((line, i) => {
@@ -260,13 +284,18 @@ const routerPlaybookLine = new Map(); // playbook id -> line number of its index
       const explicit = b[2].match(/\(\*\*(principle-[a-z0-9-]+)\*\*\)/);
       const id = explicit ? explicit[1] : `principle-${kebab(title)}`;
       const n = nodes.get(id);
-      if (n) { n.group = sub ? sub.toLowerCase() : "principles"; n.routerTitle = title; }
+      if (n) {
+        n.group = sub ? sub.toLowerCase() : "principles";
+        n.routerTitle = title;
+        routerIndex.set(i + 1, { target: id, when: firstSentence(b[2].replace(/^\s*\(\*\*principle-[a-z0-9-]+\*\*\)\.?/, "")) });
+      }
     } else if (section === "Playbooks") {
       const explicit = b[2].match(/File:\s*`playbooks\/([^`]+)\.md`/);
       const id = `playbook:${explicit ? explicit[1] : kebab(title)}`;
       const n = nodes.get(id);
       if (n) {
         routerPlaybookLine.set(id, i + 1);
+        routerIndex.set(i + 1, { target: id, when: firstSentence(b[2]) });
         n.routerTitle = title;
         const desc = b[2].replace(/\s*File:\s*`[^`]+`\.?\s*$/, "").trim();
         if (desc) { n.description = desc; n.descriptionSource = "router index"; }
@@ -357,6 +386,7 @@ function resolvePath(token, file) {
 }
 
 // ---------- edges ----------
+const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const edges = new Map();
 function edgeType(source, target) {
   const s = nodes.get(source), t = nodes.get(target);
@@ -365,17 +395,20 @@ function edgeType(source, target) {
   if (t.kind === "principle" && ["router", "playbook", "skill"].includes(s.kind)) return "applies";
   return "references";
 }
-function addEdge(source, target, file, line, text, how) {
+function addEdge(source, target, file, line, text, how, col = null) {
   if (!target || source === target) return;
   const type = edgeType(source, target);
   const key = `${source}\u0000${target}\u0000${type}`;
   if (!edges.has(key)) edges.set(key, { source, target, type, evidence: [] });
   const ev = edges.get(key).evidence;
   const p = repoPath(file);
-  if (!ev.some((e) => e.path === p && e.line === line)) {
+  let item = ev.find((e) => e.path === p && e.line === line);
+  if (!item) {
     const snippet = text.trim();
-    ev.push({ path: p, line, text: snippet.length > 240 ? `${snippet.slice(0, 237)}...` : snippet, match: how });
+    item = { path: p, line, text: snippet.length > 240 ? `${snippet.slice(0, 237)}...` : snippet, match: how, _file: file, _raw: text, _cols: [] };
+    ev.push(item);
   }
+  if (col !== null && !item._cols.includes(col)) item._cols.push(col);
 }
 for (const [source, files] of scanFiles) {
   for (const file of files) {
@@ -383,11 +416,15 @@ for (const [source, files] of scanFiles) {
     read(file).split("\n").forEach((line, i) => {
       for (const m of matchers) {
         m.re.lastIndex = 0;
-        if (m.re.test(line)) addEdge(source, m.target, file, i + 1, line, m.how);
+        let hit;
+        while ((hit = m.re.exec(line))) {
+          addEdge(source, m.target, file, i + 1, line, m.how, hit.index);
+          if (hit[0] === "") m.re.lastIndex++;
+        }
       }
       for (const pm of line.matchAll(PATH_RE)) {
         const target = resolvePath(pm[0], file);
-        if (target) addEdge(source, target, file, i + 1, line, "path");
+        if (target) addEdge(source, target, file, i + 1, line, "path", pm.index);
       }
     });
   }
@@ -395,10 +432,109 @@ for (const [source, files] of scanFiles) {
 // Router loads every playbook its index lists (index line is the evidence), even without a path token.
 for (const [id, ln] of routerPlaybookLine) addEdge(router.id, id, routerFile, ln, routerLines[ln - 1], "router playbook index");
 
+// ---------- edge modes ----------
+// mode: always | conditional | step. `when` quotes the source; `order` is the playbook step number.
+// Rank picks the edge-level mode when evidence lines disagree (lower wins, then earliest line).
+const caveats = { arrowBeforeTarget: 0, conditionalSentenceNoClause: 0, playbookFenceRefs: 0, mixedModeEdges: 0 };
+const lineInfoCache = new Map();
+function lineInfo(file) {
+  if (lineInfoCache.has(file)) return lineInfoCache.get(file);
+  const lines = read(file).split("\n");
+  const info = [];
+  let inFront = lines[0] === "---", fence = false, section = null, step = null;
+  lines.forEach((line, i) => {
+    if (inFront && i > 0 && line === "---") { info.push({ front: true }); inFront = false; return; }
+    if (inFront) { info.push({ front: true }); return; }
+    if (/^\s*```/.test(line)) { fence = !fence; info.push({ fence: true, section, step: null }); return; }
+    if (fence) { info.push({ fence: true, section, step: null }); return; }
+    const h = line.match(/^(#{1,6})\s+(.+)$/);
+    if (h) { if (h[1] === "##") section = h[2].trim(); step = null; info.push({ section, step: null }); return; }
+    const num = line.match(/^(\d+)\.\s+(.*)$/);
+    if (num) step = { n: Number(num[1]), text: num[2] };
+    else if (line.trim() && !/^\s/.test(line)) step = null;
+    info.push({ section, step });
+  });
+  lineInfoCache.set(file, info);
+  return info;
+}
+const COND_START = /^(If|When|Unless|Before|After|Only)\b/;
+function stripLead(t) {
+  const m = t.match(/^(\s*(?:[-*>]\s+|\d+\.\s+)?(?:\*\*)?)/);
+  return m[1].length;
+}
+// Condition clause of a sentence starting with If/When/...: text up to the first ", " before the target.
+function clauseOf(sentence, targetOffset) {
+  const lead = stripLead(sentence);
+  const body = sentence.slice(lead);
+  if (!COND_START.test(body)) return { starts: false };
+  const comma = body.indexOf(", ");
+  if (comma < 0 || lead + comma >= targetOffset) return { starts: true, when: null };
+  return { starts: true, when: trimQuote(body.slice(0, comma)) };
+}
+const CLAUSE_KINDS = new Set(["router", "skill", "principle", "playbook", "automation"]);
+function classify(source, target, ev) {
+  const s = nodes.get(source);
+  const info = lineInfo(ev._file)[ev.line - 1] || {};
+  const raw = ev._raw;
+  const cols = ev._cols.length ? ev._cols : [0];
+  if (info.front) return { mode: "always" };
+  if (s.kind === "router" && ev._file === routerFile) {
+    const idx = routerIndex.get(ev.line);
+    if (idx && idx.target === target) return { mode: "conditional", when: idx.when, rank: 0 };
+    const arrow = raw.match(/^- (.+?)\s(?:→|->)\s/);
+    if (arrow && !info.fence) {
+      const at = raw.indexOf(arrow[0]) + arrow[0].length;
+      if (cols.some((c) => c >= at)) return { mode: "conditional", when: trimQuote(arrow[1]), rank: 1 };
+      caveats.arrowBeforeTarget++;
+    }
+    for (const sp of sentences(raw)) {
+      const sent = raw.slice(sp.start, sp.end);
+      const r = sent.indexOf(" routes to ");
+      if (r > 0 && cols.some((c) => c >= sp.start + r && c < sp.end)) return { mode: "conditional", when: trimQuote(sent.slice(0, r)), rank: 2 };
+    }
+  }
+  if (s.kind === "playbook") {
+    if (info.fence) { caveats.playbookFenceRefs++; return { mode: "always" }; }
+    if (info.step) {
+      const c = clauseOf(info.step.text, Infinity);
+      return { mode: "step", order: info.step.n, when: c.when ?? null, rank: 3 };
+    }
+  }
+  if (CLAUSE_KINDS.has(s.kind) && !source.startsWith("automation:") && !info.fence) {
+    const col = Math.min(...cols);
+    const sp = sentences(raw).find((x) => col >= x.start && col < x.end) ?? { start: 0, end: raw.length };
+    const c = clauseOf(raw.slice(sp.start, sp.end), col - sp.start);
+    if (c.starts && c.when) return { mode: "conditional", when: c.when, rank: 4 };
+    if (c.starts) caveats.conditionalSentenceNoClause++;
+  }
+  return { mode: "always" };
+}
+for (const e of edges.values()) {
+  e.evidence.sort((a, b) => cmp(a.path, b.path) || a.line - b.line);
+  let best = null;
+  const modes = new Set();
+  for (const ev of e.evidence) {
+    const c = classify(e.source, e.target, ev);
+    modes.add(c.mode);
+    ev.mode = c.mode;
+    if (c.mode !== "always") ev.when = c.when ?? null;
+    if (c.mode === "step") ev.order = c.order;
+    if (c.mode !== "always" && (!best || c.rank < best.rank)) best = c;
+    delete ev._file; delete ev._raw; delete ev._cols;
+  }
+  if (modes.size > 1) caveats.mixedModeEdges++;
+  e.mode = best ? best.mode : "always";
+  e.when = best ? best.when ?? null : null;
+  if (e.mode === "step") e.order = best.order;
+}
+
 // ---------- assemble ----------
-const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const edgeList = [...edges.values()]
-  .map((e) => ({ ...e, evidence: e.evidence.sort((a, b) => cmp(a.path, b.path) || a.line - b.line), weight: e.evidence.length }))
+  .map((e) => {
+    const out = { source: e.source, target: e.target, type: e.type, mode: e.mode, when: e.when };
+    if (e.mode === "step") out.order = e.order;
+    return { ...out, evidence: e.evidence, weight: e.evidence.length };
+  })
   .sort((a, b) => cmp(a.source, b.source) || cmp(a.target, b.target) || cmp(a.type, b.type));
 const degree = new Map([...nodes.keys()].map((k) => [k, { in: 0, out: 0 }]));
 for (const e of edgeList) { degree.get(e.source).out++; degree.get(e.target).in++; }
@@ -407,6 +543,7 @@ const nodeList = [...nodes.values()]
     const d = degree.get(n.id);
     const out = { id: n.id, kind: n.kind, name: n.name, title: n.title, group: n.group, description: n.description };
     if (n.descriptionSource) out.descriptionSource = n.descriptionSource;
+    if (n.kind === "principle") out.appliesWhen = /^Apply\b/.test(n.description) ? firstSentence(n.description) : null;
     Object.assign(out, { path: n.path, owner: n.owner, lines: n.lines, flags: n.flags });
     if (n.files) out.files = n.files;
     out.degree = { in: d.in, out: d.out, total: d.in + d.out };
@@ -432,7 +569,7 @@ const graph = {
     author: plugin.author?.name ?? null,
   },
   generator: "scripts/extract-graph.mjs",
-  counts: { nodes: nodeList.length, edges: edgeList.length, nodesByKind: countBy(nodeList, "kind"), edgesByType: countBy(edgeList, "type") },
+  counts: { nodes: nodeList.length, edges: edgeList.length, nodesByKind: countBy(nodeList, "kind"), edgesByType: countBy(edgeList, "type"), edgesByMode: countBy(edgeList, "mode") },
   nodes: nodeList,
   edges: edgeList,
 };
@@ -471,6 +608,52 @@ ${Object.entries(graph.counts.nodesByKind).map(([k, v]) => `| ${k} | ${v} |`).jo
 | Edge type | Count |
 | --- | --- |
 ${Object.entries(graph.counts.edgesByType).map(([k, v]) => `| ${k} | ${v} |`).join("\n")}
+
+## Edge modes
+
+Every edge has \`mode\` (\`always\`, \`conditional\` or \`step\`) and \`when\` (a verbatim quote from the source, or null). Step edges also have \`order\`, the playbook step number. Each evidence line carries its own \`mode\`/\`when\`/\`order\` too, and the edge takes the strongest one (see rules).
+
+| Mode | Count |
+| --- | --- |
+${Object.entries(graph.counts.edgesByMode).map(([k, v]) => `| ${k} | ${v} |`).join("\n")}
+
+| Source kind | always | conditional | step |
+| --- | --- | --- | --- |
+${(() => {
+  const kindOf = new Map(nodeList.map((n) => [n.id, n.kind]));
+  const t = {};
+  for (const e of edgeList) { const k = kindOf.get(e.source); t[k] ??= { always: 0, conditional: 0, step: 0 }; t[k][e.mode]++; }
+  return Object.keys(t).sort().map((k) => `| ${k} | ${t[k].always} | ${t[k].conditional} | ${t[k].step} |`).join("\n");
+})()}
+
+Principle nodes also have \`appliesWhen\`: the first sentence of their frontmatter description when it starts with "Apply" (${nodeList.filter((n) => n.kind === "principle" && n.appliesWhen).length} of ${nodeList.filter((n) => n.kind === "principle").length}).
+
+Sample conditional edges (evenly spaced through the sorted list):
+
+| Source | Target | when |
+| --- | --- | --- |
+${(() => {
+  const c = edgeList.filter((e) => e.mode === "conditional");
+  const step = Math.max(1, Math.floor(c.length / 10));
+  return c.filter((_, i) => i % step === 0).slice(0, 10).map((e) => `| \`${e.source}\` | \`${e.target}\` | ${e.when.replace(/\|/g, "\\|")} |`).join("\n");
+})()}
+
+Mode rules, highest priority first:
+1. Router principle and playbook index entries (\`- **Title.** text\`), for the entry's own target: conditional, when = first sentence of the entry text.
+2. Router trigger bullets \`- <situation> → <target>\`, for targets after the arrow: conditional, when = the text before the arrow.
+3. Router sentences of the form "<X> routes to <target>": conditional, when = X.
+4. Playbook numbered steps (and their indented sub-lines): step, order = the step number. when is the step's opening clause up to the first comma if the step starts with If/When/Unless/Before/After/Only, else null.
+5. Router, skill, principle, playbook and automation-skill lines: a sentence that starts with If/When/Unless/Before/After/Only and has a comma before the target is conditional, when = the text up to that comma.
+6. Everything else, including frontmatter and code fences: always, when null.
+
+Mode caveats from this run:
+- ${caveats.arrowBeforeTarget} router trigger mention(s) sat before the arrow, so they were left \`always\`.
+- ${caveats.conditionalSentenceNoClause} mention(s) were in a sentence starting with If/When/... but with no comma before the target. With no clean clause to quote, they were left \`always\`.
+- ${caveats.playbookFenceRefs} playbook mention(s) inside code fences (templates and skeletons) were left \`always\` rather than tied to a step.
+- ${caveats.mixedModeEdges} edge(s) have evidence lines with different modes. The edge shows the highest-priority one, and every evidence line keeps its own.
+- A trigger line's \`when\` covers every target after its arrow. For example, "Parallel fan-out" is the when for both swarm and arena, though the line scopes arena further in its own words.
+- \`when\` is verbatim apart from trimmed whitespace, stray \`**\` at the ends and trailing punctuation, so inline markdown (backticks, bold) is kept.
+- Sentences are split on ". " before a capital or markup, so abbreviations could split a sentence early. Spot-check new quotes after upstream changes.
 
 ## Most connected nodes
 
