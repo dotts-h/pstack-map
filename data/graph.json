@@ -4,20 +4,20 @@
     "repo": "cursor/plugins",
     "url": "https://github.com/cursor/plugins",
     "pluginPath": "pstack",
-    "commit": "11713c683fe4add4fd403ea880580abbc9e0875f",
-    "commitShort": "11713c6",
-    "commitDate": "2026-10-11T08:14:38.000Z",
-    "version": "0.15.17",
-    "sourceUrlTemplate": "https://github.com/cursor/plugins/blob/11713c683fe4add4fd403ea880580abbc9e0875f/{path}",
+    "commit": "e5a02f8fb0409c2db7eb06eae9078b235a2b5009",
+    "commitShort": "e5a02f8",
+    "commitDate": "2026-10-12T05:48:48.000Z",
+    "version": "0.15.19",
+    "sourceUrlTemplate": "https://github.com/cursor/plugins/blob/e5a02f8fb0409c2db7eb06eae9078b235a2b5009/{path}",
     "license": "MIT",
-    "licenseUrl": "https://github.com/cursor/plugins/blob/11713c683fe4add4fd403ea880580abbc9e0875f/pstack/LICENSE",
+    "licenseUrl": "https://github.com/cursor/plugins/blob/e5a02f8fb0409c2db7eb06eae9078b235a2b5009/pstack/LICENSE",
     "copyright": "Copyright (c) 2026 Lauren Tan",
     "author": "Lauren Tan"
   },
   "generator": "scripts/extract-graph.mjs",
   "counts": {
-    "nodes": 128,
-    "edges": 413,
+    "nodes": 129,
+    "edges": 414,
     "nodesByKind": {
       "agent": 2,
       "automation": 4,
@@ -25,27 +25,27 @@
       "principle": 24,
       "reference": 41,
       "router": 1,
-      "script": 6,
+      "script": 7,
       "skill": 27
     },
     "edgesByType": {
       "applies": 88,
-      "imports": 2,
+      "imports": 3,
       "loads": 23,
       "references": 294,
       "runs": 6
     },
     "edgesByMode": {
-      "always": 249,
+      "always": 251,
       "conditional": 66,
-      "step": 98
+      "step": 97
     }
   },
   "nodes": [
     {
       "id": "agent:comment-sicko",
       "kind": "agent",
-      "name": "Comment Sicko",
+      "name": "comment-sicko",
       "title": "Comment Sicko",
       "group": "agents",
       "description": "A deranged comment-hater that savors deletion and condemns workaround code.",
@@ -65,7 +65,7 @@
       "name": "poteto-agent",
       "title": "Poteto subagent",
       "group": "agents",
-      "description": "Routing target for `/poteto-mode` and any request for poteto's style. Spawn a fresh `poteto-agent` for each new task, and resume one only in the strict cases that poteto-mode's Subagents section names. Reads the `poteto-mode` skill's `SKILL.md` in full before any work, including its inline Principles index. Substituting `generalPurpose` skips that read and drifts.",
+      "description": "Delegate subagent for code-writing and helper tasks spawned during a `/poteto-mode` run. Use for delegates, not as the runner for `/poteto-mode` itself. Spawn a fresh `poteto-agent` for each new task, and resume one only in the strict cases that poteto-mode's Subagents section names. Reads the `poteto-mode` skill's `SKILL.md` in full before any work, including its inline Principles index. Substituting `generalPurpose` skips that read and drifts.",
       "path": "pstack/agents/poteto-agent.md",
       "owner": null,
       "lines": 9,
@@ -234,7 +234,7 @@
       "descriptionSource": "router index",
       "path": "pstack/skills/poteto-mode/playbooks/babysit.md",
       "owner": "poteto-mode",
-      "lines": 27,
+      "lines": 23,
       "flags": {},
       "degree": {
         "in": 7,
@@ -558,7 +558,7 @@
       "descriptionSource": "router index",
       "path": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
       "owner": "poteto-mode",
-      "lines": 14,
+      "lines": 12,
       "flags": {},
       "degree": {
         "in": 1,
@@ -636,7 +636,7 @@
       "appliesWhen": "Apply when you catch yourself writing the same instruction a second time, or notice a recurring correction",
       "path": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
       "owner": null,
-      "lines": 28,
+      "lines": 11,
       "flags": {
         "disable-model-invocation": true
       },
@@ -656,7 +656,7 @@
       "appliesWhen": "Apply when facing a novel UI interaction or architectural decision with no precedent in the codebase",
       "path": "pstack/skills/principle-exhaust-the-design-space/SKILL.md",
       "owner": null,
-      "lines": 21,
+      "lines": 9,
       "flags": {
         "disable-model-invocation": true
       },
@@ -756,7 +756,7 @@
       "appliesWhen": "Apply when context is filling up: large outputs, long files, repeated reads, fan-out planning",
       "path": "pstack/skills/principle-guard-the-context-window/SKILL.md",
       "owner": null,
-      "lines": 16,
+      "lines": 12,
       "flags": {
         "disable-model-invocation": true
       },
@@ -776,7 +776,7 @@
       "appliesWhen": "Apply when refactoring, evaluating diff size, or tempted to add abstractions, layers, or signal threading",
       "path": "pstack/skills/principle-laziness-protocol/SKILL.md",
       "owner": null,
-      "lines": 18,
+      "lines": 10,
       "flags": {
         "disable-model-invocation": true
       },
@@ -1310,7 +1310,7 @@
       "description": "Build each explorer subagent's prompt from this template. Fill in the placeholders.",
       "path": "pstack/skills/how/references/explorer-prompt.md",
       "owner": "how",
-      "lines": 52,
+      "lines": 35,
       "flags": {},
       "degree": {
         "in": 1,
@@ -1599,7 +1599,7 @@
       "description": "- Commit history (messages, dates, authors, diffs) - PR descriptions, review comments, and discussion threads (via `gh`) - Inline code comments, TODOs, FIXMEs, deprecation notes - ADRs (architectural decision records) if the repo keeps them - Tests, whose names and assertions often encode the edge cases that motivated a change - Related files modified in the same commits (co-change signal) - CHANGELOG entries and release notes in the repo - Issue/ticket IDs in commit messages and PR bodies",
       "path": "pstack/skills/why/references/sources/code-archaeology.md",
       "owner": "why",
-      "lines": 86,
+      "lines": 51,
       "flags": {},
       "degree": {
         "in": 1,
@@ -1647,10 +1647,10 @@
       "name": "incident-postmortem.md",
       "title": "Incident & Postmortem Context",
       "group": "why",
-      "description": "Not a separate source, a **cross-cutting angle**. Incidents often motivate defensive code (\"we added this check after the X outage\"), so if the target looks defensive (null checks, retry logic, timeout handling, rate limiting, feature flags), specifically hunt for incident history across every available source:",
+      "description": "- **Linear**: look for tickets labeled `incident`, `sev-*`, `postmortem-action-item`, `reliability` - **Slack**: search `#sev-*` and `#incident-*` channels around the dates the target code was added - **Git**: commits with messages like \"fix for incident\", \"add defensive check\", \"revert\" followed by \"re-apply with...\" are strong signals",
       "path": "pstack/skills/why/references/sources/incident-postmortem.md",
       "owner": "why",
-      "lines": 15,
+      "lines": 5,
       "flags": {},
       "degree": {
         "in": 3,
@@ -1698,10 +1698,10 @@
       "name": "sentry.md",
       "title": "Sentry Error History",
       "group": "why",
-      "description": "For defensive, corrective, or error-handling code, Sentry often holds the direct motivation: the specific exceptions, stack traces, and frequencies that pushed someone to add a check, catch, retry, or fallback.",
+      "description": "Use the Sentry MCP.",
       "path": "pstack/skills/why/references/sources/sentry.md",
       "owner": "why",
-      "lines": 96,
+      "lines": 66,
       "flags": {},
       "degree": {
         "in": 1,
@@ -1715,10 +1715,10 @@
       "name": "slack.md",
       "title": "Slack Conversations",
       "group": "why",
-      "description": "- Real-time discussions of problems and decisions - Incident channels where fire-drill decisions were made - Design discussion threads where tradeoffs were debated - Questions answered by senior engineers that didn't make it into docs - Post-merge discussions that explain why something was revisited - DMs (usually not searchable, scope accordingly)",
+      "description": "Slack MCP tools vary. Check which Slack MCP is available and inspect its tool schema first. It may require `mcp_auth`. If authentication fails, stop and report the gap.",
       "path": "pstack/skills/why/references/sources/slack.md",
       "owner": "why",
-      "lines": 54,
+      "lines": 17,
       "flags": {},
       "degree": {
         "in": 1,
@@ -1792,11 +1792,28 @@
       "description": "",
       "path": "pstack/skills/poteto-mode/scripts/check-plan.mjs",
       "owner": "poteto-mode",
-      "lines": 185,
+      "lines": 205,
       "flags": {},
       "degree": {
-        "in": 1,
+        "in": 2,
         "out": 0,
+        "total": 2
+      }
+    },
+    {
+      "id": "script:poteto-mode/check-plan.test.ts",
+      "kind": "script",
+      "name": "check-plan.test.ts",
+      "title": null,
+      "group": "poteto-mode",
+      "description": "",
+      "path": "pstack/skills/poteto-mode/scripts/check-plan.test.ts",
+      "owner": "poteto-mode",
+      "lines": 96,
+      "flags": {},
+      "degree": {
+        "in": 0,
+        "out": 1,
         "total": 1
       }
     },
@@ -1831,7 +1848,7 @@
       "description": "",
       "path": "pstack/skills/poteto-mode/scripts/watch-pr",
       "owner": "poteto-mode",
-      "lines": 3504,
+      "lines": 3652,
       "flags": {},
       "files": [
         "pstack/skills/poteto-mode/scripts/watch-pr/cli.test.ts",
@@ -1862,7 +1879,7 @@
       "description": "Read-only worktree prune audit. Classifies every git worktree by size, merge state, uncommitted work, remote/PR state, and the most recent chat that operated in it. Emits a table sorted by size with a suggested bucket. Never deletes anything; deletion stays a human-gated step in the playbook.",
       "path": "pstack/skills/poteto-mode/scripts/worktree-audit.sh",
       "owner": "poteto-mode",
-      "lines": 86,
+      "lines": 117,
       "flags": {},
       "degree": {
         "in": 1,
@@ -2105,7 +2122,7 @@
       "description": "Catch the user up on everything in this chat since their last message, in plain words. Give each action item an executive summary with enough context to make the call. Use for /ketchup.",
       "path": "pstack/skills/ketchup/SKILL.md",
       "owner": null,
-      "lines": 23,
+      "lines": 27,
       "flags": {
         "disable-model-invocation": true
       },
@@ -2370,7 +2387,7 @@
       "name": "unslop",
       "title": "Unslop",
       "group": "skills",
-      "description": "Cut AI tells from any writing. Must always apply.",
+      "description": "Cut AI tells from any writing.",
       "path": "pstack/skills/unslop/SKILL.md",
       "owner": null,
       "lines": 62,
@@ -2448,15 +2465,15 @@
         {
           "path": "pstack/agents/poteto-agent.md",
           "line": 3,
-          "text": "description: Routing target for `/poteto-mode` and any request for poteto's style. Spawn a fresh `poteto-agent` for each new task, and resume one only in the strict cases that poteto-mode's Subagents section names. Reads the `poteto-mode...",
+          "text": "description: Delegate subagent for code-writing and helper tasks spawned during a `/poteto-mode` run. Use for delegates, not as the runner for `/poteto-mode` itself. Spawn a fresh `poteto-agent` for each new task, and resume one only in ...",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/agents/poteto-agent.md",
           "line": 9,
-          "text": "You are operating as poteto-mode's full agent style. Read the `poteto-mode` skill's `SKILL.md` in full before doing any work, including its inline Principles index. Navigate to a leaf `principle-*` skill whenever you apply that principle.",
-          "match": "name",
+          "text": "You are operating as poteto-mode's full agent style. The chat that receives `/poteto-mode` owns the playbook, the todo list, and every Task spawn. You are one of its delegates. Read the `poteto-mode` skill's `SKILL.md` in full before doi...",
+          "match": "slash-command",
           "mode": "always"
         }
       ],
@@ -3345,34 +3362,13 @@
       "evidence": [
         {
           "path": "pstack/skills/no-comments/SKILL.md",
-          "line": 3,
-          "text": "description: \"Spawn Comment Sicko, fix accepted findings, and offer encodings for claimed constraints.\"",
-          "match": "agent name",
-          "mode": "always"
-        },
-        {
-          "path": "pstack/skills/no-comments/SKILL.md",
-          "line": 9,
-          "text": "Spawn Comment Sicko. Act on accepted findings.",
-          "match": "agent name",
-          "mode": "always"
-        },
-        {
-          "path": "pstack/skills/no-comments/SKILL.md",
-          "line": 11,
-          "text": "Defer to Comment Sicko's fresh perspective.",
-          "match": "agent name",
-          "mode": "always"
-        },
-        {
-          "path": "pstack/skills/no-comments/SKILL.md",
           "line": 19,
-          "text": "1. Spawn `Task` with `subagent_type: \"Comment Sicko\"`. Pass the scope. Do not restate its rules.",
+          "text": "1. Spawn `Task` with `subagent_type: \"comment-sicko\"`. Pass the scope. Do not restate its rules.",
           "match": "agent name",
           "mode": "always"
         }
       ],
-      "weight": 4
+      "weight": 1
     },
     {
       "source": "no-comments",
@@ -3869,9 +3865,8 @@
       "source": "playbook:babysit",
       "target": "playbook:shipping",
       "type": "references",
-      "mode": "step",
+      "mode": "always",
       "when": null,
-      "order": 6,
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/babysit.md",
@@ -3882,22 +3877,13 @@
         },
         {
           "path": "pstack/skills/poteto-mode/playbooks/babysit.md",
-          "line": 18,
-          "text": "Watcher re-arms never authorize merging or arming merge-when-ready. Do not run `origin pr merge` or `gh pr merge` unless the user explicitly asked to merge, land, ship, or merge when ready. Route that request to `playbooks/shipping.md`. ...",
-          "match": "path",
-          "mode": "step",
-          "when": null,
-          "order": 6
-        },
-        {
-          "path": "pstack/skills/poteto-mode/playbooks/babysit.md",
-          "line": 25,
+          "line": 23,
           "text": "`drive` ends at merge-ready. Landing the stack is `playbooks/shipping.md`.",
           "match": "path",
           "mode": "always"
         }
       ],
-      "weight": 3
+      "weight": 2
     },
     {
       "source": "playbook:babysit",
@@ -3909,7 +3895,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/babysit.md",
-          "line": 22,
+          "line": 20,
           "text": "8. **Bugbot is triaged skeptically, always.** Verify each claim against the code per `../references/bugbot-triage.md`. Fix real findings with a red-first proof in the lowest PR that owns the code, never at the tip unless the owning PR ha...",
           "match": "path",
           "mode": "step",
@@ -3918,7 +3904,7 @@
         },
         {
           "path": "pstack/skills/poteto-mode/playbooks/babysit.md",
-          "line": 23,
+          "line": 21,
           "text": "9. **Stop at the human's line.** Owner approval is a wait, not a blocker to fix. Babysitting never authorizes merging. Only an explicit request to merge, land, ship, or merge when ready does. Route that request to Shipping. Surface the e...",
           "match": "path",
           "mode": "step",
@@ -5948,8 +5934,8 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
-          "line": 5,
-          "text": "1. Snapshot and audit. Record `df -h /`, then run `scripts/worktree-audit.sh` (principle-build-the-lever). It reads paths from `git worktree list`, never hand-typed, since a hand-typed `myrepo-worktrees/x` misses one that lives at `.curs...",
+          "line": 3,
+          "text": "1. Snapshot and audit. Record `df -h /`, then run `scripts/worktree-audit.sh [-b <pr-base-ref>] [repo-path]` (principle-build-the-lever). Without `-b` it checks `MERGED` against `origin/HEAD`, so pass `-b origin/<branch>` when PRs target...",
           "match": "name",
           "mode": "step",
           "when": null,
@@ -5968,8 +5954,8 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
-          "line": 5,
-          "text": "1. Snapshot and audit. Record `df -h /`, then run `scripts/worktree-audit.sh` (principle-build-the-lever). It reads paths from `git worktree list`, never hand-typed, since a hand-typed `myrepo-worktrees/x` misses one that lives at `.curs...",
+          "line": 3,
+          "text": "1. Snapshot and audit. Record `df -h /`, then run `scripts/worktree-audit.sh [-b <pr-base-ref>] [repo-path]` (principle-build-the-lever). Without `-b` it checks `MERGED` against `origin/HEAD`, so pass `-b origin/<branch>` when PRs target...",
           "match": "name",
           "mode": "step",
           "when": null,
@@ -5988,7 +5974,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
-          "line": 7,
+          "line": 5,
           "text": "3. Verify usage before deleting. For every `verify-recent-chat` row, or anything you doubt, fan subagents out to read the transcripts and report whether the chat is pinned or ongoing and which worktrees it touches (principle-guard-the-co...",
           "match": "name",
           "mode": "step",
@@ -6008,7 +5994,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
-          "line": 6,
+          "line": 4,
           "text": "2. The bucket is advice, not permission. The pinned and active chats are the real artifact (principle-prove-it-works). Get that set from the user or sidebar and cross-check every candidate. The lever has marked `safe` a worktree the user...",
           "match": "name",
           "mode": "step",
@@ -6028,8 +6014,8 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
-          "line": 5,
-          "text": "1. Snapshot and audit. Record `df -h /`, then run `scripts/worktree-audit.sh` (principle-build-the-lever). It reads paths from `git worktree list`, never hand-typed, since a hand-typed `myrepo-worktrees/x` misses one that lives at `.curs...",
+          "line": 3,
+          "text": "1. Snapshot and audit. Record `df -h /`, then run `scripts/worktree-audit.sh [-b <pr-base-ref>] [repo-path]` (principle-build-the-lever). Without `-b` it checks `MERGED` against `origin/HEAD`, so pass `-b origin/<branch>` when PRs target...",
           "match": "path",
           "mode": "step",
           "when": null,
@@ -6993,7 +6979,7 @@
         {
           "path": "pstack/skills/poteto-mode/SKILL.md",
           "line": 93,
-          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). `/poteto-mode` and `poteto-agent` route through the same wrapper. Routed workflow skills (`how`, `why`, `...",
+          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/poteto-mode` runs the playbook. Never spawn a `poteto-agent` to run the playbook...",
           "match": "agent name",
           "mode": "always"
         }
@@ -7104,7 +7090,7 @@
         {
           "path": "pstack/skills/poteto-mode/SKILL.md",
           "line": 93,
-          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). `/poteto-mode` and `poteto-agent` route through the same wrapper. Routed workflow skills (`how`, `why`, `...",
+          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/poteto-mode` runs the playbook. Never spawn a `poteto-agent` to run the playbook...",
           "match": "name (bold/code)",
           "mode": "always"
         },
@@ -7136,7 +7122,7 @@
         {
           "path": "pstack/skills/poteto-mode/SKILL.md",
           "line": 93,
-          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). `/poteto-mode` and `poteto-agent` route through the same wrapper. Routed workflow skills (`how`, `why`, `...",
+          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/poteto-mode` runs the playbook. Never spawn a `poteto-agent` to run the playbook...",
           "match": "name (bold/code)",
           "mode": "always"
         },
@@ -8082,7 +8068,7 @@
         {
           "path": "pstack/skills/poteto-mode/SKILL.md",
           "line": 93,
-          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). `/poteto-mode` and `poteto-agent` route through the same wrapper. Routed workflow skills (`how`, `why`, `...",
+          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/poteto-mode` runs the playbook. Never spawn a `poteto-agent` to run the playbook...",
           "match": "name (bold/code)",
           "mode": "always"
         },
@@ -8149,7 +8135,7 @@
         {
           "path": "pstack/skills/poteto-mode/SKILL.md",
           "line": 93,
-          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). `/poteto-mode` and `poteto-agent` route through the same wrapper. Routed workflow skills (`how`, `why`, `...",
+          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/poteto-mode` runs the playbook. Never spawn a `poteto-agent` to run the playbook...",
           "match": "name (bold/code)",
           "mode": "always"
         },
@@ -8209,7 +8195,7 @@
         {
           "path": "pstack/skills/poteto-mode/SKILL.md",
           "line": 93,
-          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). `/poteto-mode` and `poteto-agent` route through the same wrapper. Routed workflow skills (`how`, `why`, `...",
+          "text": "**Use `subagent_type: \"poteto-agent\"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/poteto-mode` runs the playbook. Never spawn a `poteto-agent` to run the playbook...",
           "match": "name (bold/code)",
           "mode": "always"
         },
@@ -9902,6 +9888,23 @@
           "line": 161,
           "text": "Use pstack's `how` skill to trace the action through the repository. Use `why` for regression history and defensive code. Form competing cause hypotheses and identify evidence that would separate them.",
           "match": "name (bold/code)",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:poteto-mode/check-plan.test.ts",
+      "target": "script:poteto-mode/check-plan.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/poteto-mode/scripts/check-plan.test.ts",
+          "line": 7,
+          "text": "const checker = join(import.meta.dir, \"check-plan.mjs\");",
+          "match": "path",
           "mode": "always"
         }
       ],
