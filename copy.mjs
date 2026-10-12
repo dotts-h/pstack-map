@@ -109,3 +109,13 @@ export function oneLiner(node, graph) {
   if (!source) return 'No description in the source yet.';
   return `${FRIENDLY[kindOf(node.kind)][0]} used by ${plainName(source)}.`;
 }
+
+export function stepsOf(graph, id) {
+  const m = new Map();
+  graph.edges.forEach((e) => {
+    if (e.source !== id || e.mode !== 'step' || !Number.isInteger(e.order)) return;
+    if (!m.has(e.order)) m.set(e.order, []);
+    if (!m.get(e.order).includes(e.target)) m.get(e.order).push(e.target);
+  });
+  return [...m.entries()].sort((a, b) => a[0] - b[0]);
+}
