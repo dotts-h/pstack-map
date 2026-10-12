@@ -36,6 +36,9 @@ jobs:
       - name: Check layout
         run: node scripts/check-layout.mjs data/graph.json
 
+      - name: Check curve endpoints
+        run: node scripts/check-curves.mjs data/graph.json
+
   deploy:
     needs: validate
     if: github.event_name != 'pull_request'

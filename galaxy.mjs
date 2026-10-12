@@ -32,7 +32,7 @@ const clean = (s) => (s && s !== 'None' ? s : null);
 const MID = new THREE.Vector3();
 const YV = new THREE.Vector3(0, 1, 0);
 
-export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
+export function galaxyTheme({ G, byId, kindOf, deg, css, reduced, nm }) {
   const router = G.nodes.find((n) => n.kind === 'router');
   const zoneOfStar = new Map();
   ZONES.forEach((z) => {
@@ -264,6 +264,228 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   let gLast = performance.now();
   let zView = null;
   let focusRings = null;
+  let frameCam = null;
+  let labelMeasure = null;
+  const truncLabel = (s, m) => (s.length > m ? s.slice(0, m - 1).trimEnd() + '…' : s);
+  function labelPx(text, small) {
+    if (typeof document === 'undefined' || !document.createElement) return text.length * 6.8 + 14;
+    if (!labelMeasure) {
+      const c = document.createElement('canvas');
+      labelMeasure = c && c.getContext ? c.getContext('2d') : null;
+    }
+    if (!labelMeasure || !document.body || typeof getComputedStyle !== 'function') return text.length * 6.8 + 14;
+    const family = getComputedStyle(document.body).getPropertyValue('--font-sans') || 'sans-serif';
+    labelMeasure.font = `500 ${small ? 11 : 12}px ${family}`;
+    return Math.ceil(labelMeasure.measureText(text).width) + (small ? 10 : 14);
+  }
+  function focusChrome(W, H, mobile) {
+    const header = typeof document !== 'undefined' ? document.querySelector('header') : null;
+    const hostEl = typeof document !== 'undefined' ? document.getElementById('scene') : null;
+    const narrow = !!mobile;
+    if (!header || !hostEl) {
+      const t = 112;
+      const b = narrow ? H * 0.54 : H;
+      const l = 0;
+      const r = narrow ? W : W - 336;
+      return chromeOf(l, t, r, b, { left: 0, top: 0, width: W, height: H });
+    }
+    const hb = header.getBoundingClientRect();
+    const host = hostEl.getBoundingClientRect();
+    const pop = document.getElementById('pop');
+    const trail = document.getElementById('trail');
+    const tb = trail && trail.firstElementChild ? trail.getBoundingClientRect().bottom : hb.bottom + 56;
+    const t = Math.max(hb.bottom, tb);
+    let l = host.left;
+    let r = host.right;
+    let b = host.bottom;
+    const shown = pop && pop.classList.contains('show');
+    if (narrow) b = shown ? pop.getBoundingClientRect().top : innerHeight * 0.54;
+    else r = shown ? pop.getBoundingClientRect().left : innerWidth - 16 - 320;
+    return chromeOf(l, t, r, b, host);
+  }
+  function chromeOf(l, t, r, b, host) {
+    const viewX = host.width / 2 - ((l + r) / 2 - host.left);
+    const viewY = host.height / 2 - ((t + b) / 2 - host.top);
+    let padX = (r - l) * 0.08;
+    let padY = (b - t) * 0.08;
+    const safe = { l: l + padX, t: t + padY, r: r - padX, b: b - padY };
+    if (safe.r - safe.l < 48) { safe.l = l + 8; safe.r = r - 8; }
+    if (safe.b - safe.t < 48) { safe.t = t + 8; safe.b = b - 8; }
+    return { viewX, viewY, host, safe };
+  }
+  function frameFocus({ id, C, member, radii, inc, out, nodes, kind, Rh, Df, mobile, W, H, vf, ppu, dist }) {
+    const chrome = focusChrome(W, H, mobile);
+    const az = rt?.cam?.az ?? homeCam.az;
+    const base = new Map();
+    member.forEach((m, nid) => base.set(nid, m.p.clone()));
+    const baseRadii = radii.slice();
+    const applySqueeze = (k) => {
+      member.forEach((m, nid) => {
+        const p = base.get(nid);
+        if (nid === id) m.p.copy(p);
+        else m.p.copy(C).addScaledVector(p.clone().sub(C), k);
+      });
+      for (let i = 0; i < radii.length; i++) radii[i] = baseRadii[i] * k;
+    };
+    const scratch = frameCam || (frameCam = new THREE.PerspectiveCamera(40, 1, 0.1, 20000));
+    const tmp = new THREE.Vector3();
+    const bodyOf = (nid) => {
+      const n = nodes.get(nid);
+      const k = kind(n.kind);
+      return { id: nid, k, r: radiusOf(n) };
+    };
+    const projectBox = (cam, ppuNow) => {
+      const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0);
+      const up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      let behind = false;
+      let selR = 0;
+      const screen = (p) => {
+        tmp.copy(p).project(cam);
+        if (tmp.z < -1 || tmp.z > 1) behind = true;
+        const x = chrome.host.left + (tmp.x + 1) * 0.5 * chrome.host.width;
+        const y = chrome.host.top + (1 - tmp.y) * 0.5 * chrome.host.height;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+        return { x, y };
+      };
+      const addSphere = (p, sc) => {
+        screen(p);
+        screen(tmp.copy(p).addScaledVector(right, sc));
+        screen(tmp.copy(p).addScaledVector(right, -sc));
+        screen(tmp.copy(p).addScaledVector(up, sc));
+        screen(tmp.copy(p).addScaledVector(up, -sc));
+      };
+      const sel = member.get(id);
+      const selSc = api.focusScale(bodyOf(id), ppuNow, id);
+      const selS = screen(sel.p);
+      addSphere(sel.p, selSc);
+      const selUp = tmp.copy(sel.p).addScaledVector(up, selSc).project(cam);
+      const selSy = chrome.host.top + (1 - selUp.y) * 0.5 * chrome.host.height;
+      selR = Math.abs(selSy - selS.y);
+      member.forEach((m, nid) => {
+        if (nid === id) return;
+        const o = bodyOf(nid);
+        const sc = api.focusScale(o, ppuNow, id);
+        const s = screen(m.p);
+        addSphere(m.p, sc);
+        const small = o.k === 'script' || o.k === 'reference';
+        const name = truncLabel((nm ? nm(nid) : (nodes.get(nid).title || nid)), mobile ? 16 : 30);
+        const wpx = labelPx(name, small);
+        const left = s.x < selS.x;
+        const anchor = screen(m.p.clone().addScaledVector(right, (left ? -1 : 1) * (sc * 1.2 + 0.8)));
+        const x0 = left ? anchor.x - wpx : anchor.x;
+        const x1 = left ? anchor.x : anchor.x + wpx;
+        minX = Math.min(minX, x0);
+        maxX = Math.max(maxX, x1);
+        minY = Math.min(minY, anchor.y - 11);
+        maxY = Math.max(maxY, anchor.y + 11);
+      });
+      const bow = (a, b, side) => {
+        const len = a.distanceTo(b);
+        const mid = a.clone().add(b).multiplyScalar(0.5);
+        mid.addScaledVector(YV, len * 0.22 + 2);
+        mid.addScaledVector(Rh, side * len * 0.12);
+        for (const t of [0.25, 0.5, 0.75]) {
+          const mt = 1 - t;
+          screen(tmp.set(
+            a.x * mt * mt + 2 * mid.x * mt * t + b.x * t * t,
+            a.y * mt * mt + 2 * mid.y * mt * t + b.y * t * t,
+            a.z * mt * mt + 2 * mid.z * mt * t + b.z * t * t,
+          ));
+        }
+      };
+      const link = (x) => {
+        const m = member.get(x.id);
+        if (!m) return;
+        bow(C, m.p, x.e && x.e.source === id ? 1 : -1);
+      };
+      inc.forEach(link);
+      out.forEach(link);
+      const steps = 12;
+      radii.forEach((r) => {
+        for (let i = 0; i < steps; i++) {
+          const a = (i / steps) * Math.PI * 2;
+          screen(C.clone().addScaledVector(Rh, Math.sin(a) * r).addScaledVector(Df, Math.cos(a) * r));
+        }
+      });
+      if (!Number.isFinite(minX)) { minX = 0; minY = 0; maxX = 1; maxY = 1; }
+      return { minX, minY, maxX, maxY, behind, selR };
+    };
+    let el = 1.18;
+    let squeeze = 1;
+    let fit = null;
+    const solve = (elev) => {
+      const target = new THREE.Vector3();
+      let n = 0;
+      member.forEach((m) => { target.add(m.p); n += 1; });
+      if (n) target.multiplyScalar(1 / n);
+      else target.copy(C);
+      let d = dist;
+      let box = { minX: 0, minY: 0, maxX: 1, maxY: 1, behind: false, selR: 30 };
+      const place = () => {
+        scratch.fov = THREE.MathUtils.radToDeg(vf);
+        scratch.aspect = W / Math.max(1, H);
+        scratch.near = 0.1;
+        scratch.far = 20000;
+        scratch.position.set(
+          target.x + d * Math.cos(elev) * Math.sin(az),
+          target.y + d * Math.sin(elev),
+          target.z + d * Math.cos(elev) * Math.cos(az),
+        );
+        scratch.up.set(0, 1, 0);
+        scratch.lookAt(target);
+        scratch.setViewOffset(Math.max(1, W), Math.max(1, H), chrome.viewX, chrome.viewY, Math.max(1, W), Math.max(1, H));
+        scratch.updateMatrixWorld(true);
+      };
+      for (let iter = 0; iter < 10; iter++) {
+        place();
+        const ppuNow = H / (2 * d * Math.tan(vf / 2));
+        box = projectBox(scratch, ppuNow);
+        const sw = Math.max(1, chrome.safe.r - chrome.safe.l);
+        const sh = Math.max(1, chrome.safe.b - chrome.safe.t);
+        const bw = Math.max(1, box.maxX - box.minX);
+        const bh = Math.max(1, box.maxY - box.minY);
+        const cx = (box.minX + box.maxX) / 2;
+        const cy = (box.minY + box.maxY) / 2;
+        const scx = (chrome.safe.l + chrome.safe.r) / 2;
+        const scy = (chrome.safe.t + chrome.safe.b) / 2;
+        const right = new THREE.Vector3().setFromMatrixColumn(scratch.matrixWorld, 0);
+        const upv = new THREE.Vector3().setFromMatrixColumn(scratch.matrixWorld, 1);
+        const worldPerPx = (2 * d * Math.tan(vf / 2)) / Math.max(1, H);
+        const dx = cx - scx;
+        const dy = cy - scy;
+        target.addScaledVector(right, dx * worldPerPx);
+        target.addScaledVector(upv, -dy * worldPerPx);
+        let scale = Math.max(bw / sw, bh / sh);
+        if (box.selR > 1 && box.selR / scale > 72) scale = Math.max(scale, box.selR / 72);
+        if (box.behind) scale = Math.max(scale, 1.15);
+        d = THREE.MathUtils.clamp(d * (scale ** 0.85), 36, 2200);
+        if (Math.abs(dx) < 3 && Math.abs(dy) < 3 && Math.abs(scale - 1) < 0.03 && !box.behind) break;
+      }
+      place();
+      box = projectBox(scratch, H / (2 * d * Math.tan(vf / 2)));
+      const overflow = box.behind || box.maxX > chrome.safe.r + 3 || box.minX < chrome.safe.l - 3
+        || box.maxY > chrome.safe.b + 3 || box.minY < chrome.safe.t - 3;
+      return { aim: target, dist: d, el: elev, az, selR: box.selR, overflow, squeeze };
+    };
+    for (let pass = 0; pass < 5; pass++) {
+      applySqueeze(squeeze);
+      fit = solve(el);
+      const tiny = fit.selR < (mobile ? 16 : 22);
+      if (!fit.overflow && !tiny) break;
+      if (pass === 0) { el = 1.28; continue; }
+      squeeze *= 0.8;
+    }
+    fit.squeeze = squeeze;
+    fit.ppu = H / (2 * Math.tan(vf / 2) * Math.max(fit.dist, 1));
+    return fit;
+  }
   let frMat = null;
   let diskMat = null;
   let bhMesh = null;
@@ -317,6 +539,30 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     return t;
   };
 
+  const poseAt = (time) => {
+    const memo = new Map();
+    const at = (id) => {
+      const hit = memo.get(id);
+      if (hit) return hit;
+      let p;
+      const o = ORB.get(id);
+      if (!o) p = homes.get(id).clone();
+      else {
+        const c = o.c === 'core' ? new THREE.Vector3() : at(o.c);
+        const ang = o.ph + o.w * time;
+        const v = new THREE.Vector3(Math.cos(ang) * o.r, 0, Math.sin(ang) * o.r).applyQuaternion(o.q);
+        const x = c.x + v.x;
+        const z = c.z + v.z;
+        p = new THREE.Vector3(x, surfaceY(x, z), z);
+      }
+      memo.set(id, p);
+      return p;
+    };
+    const out = new Map();
+    G.nodes.forEach((n) => out.set(n.id, at(n.id)));
+    return out;
+  };
+
   const api = {
     id: 'galaxy',
     homes,
@@ -332,8 +578,10 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     stars: false,
     GEO,
     radiusOf,
-    edgeSeg: 28,
-    edgeSegHl: 32,
+    poseAt,
+    edgeSeg: 48,
+    edgeSegHl: 64,
+    edgeSegMax: 192,
     idleMs: 700,
     motion: { REGROUP: 2000, TRAVEL: 1900, EXIT: 1800, STAGGER: 26, STAGGER_MAX: 520, DISPERSE: 1700 },
     zones: ZONES,
@@ -400,8 +648,11 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       const mt = 1 - t;
       const x = a.x * mt * mt + 2 * m.x * mt * t + b.x * t * t;
       const z = a.z * mt * mt + 2 * m.z * mt * t + b.z * t * t;
-      const lift = Math.sin(Math.PI * t) * Math.min(6, 0.9 + len * 0.018);
-      return out.set(x, surfaceY(x, z) + lift + 0.55, z);
+      const seat = Math.sin(Math.PI * t);
+      const lift = seat * Math.min(6, 0.9 + len * 0.018);
+      const ySheet = surfaceY(x, z) + lift + 0.55;
+      const yRim = a.y * mt + b.y * t;
+      return out.set(x, yRim + (ySheet - yRim) * seat, z);
     },
     disperse(o) {
       return { p: homes.get(o.id).clone().add(new THREE.Vector3(0, -160, 0)), sc: o.r * 0.12 };
@@ -555,7 +806,9 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       {
         const RG = RMAX * 1.08;
         const NL = 22;
-        const SUB = 48;
+        const cell = (2 * RG) / NL;
+        const PER = Math.max(24, Math.ceil(cell / 2.4));
+        const SUB = NL * PER;
         const a = [];
         const c = [];
         const base = new THREE.Color('#9BB6E4');
@@ -857,15 +1110,23 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         const st = up.length > 5 && i % 2 ? 1 : 0;
         member.set(x.id, { p: C.clone().addScaledVector(Rh, t).addScaledVector(Df, -rOut * 0.35 - st * 10 * SF).addScaledVector(Y, upY + st * 13 * SF) });
       });
-      const el = rt?.cam?.el ?? homeCam.el;
-      const hw = Math.max(rOut, upW) + 6;
-      const top = Math.max(up.length ? (upY + (up.length > 5 ? 13 : 0)) * Math.cos(el) + rOut * 0.35 * Math.sin(el) : 0, rOut * Math.sin(el)) + 10;
-      const bot = rOut * Math.sin(el) + 10;
+      const hw0 = Math.max(rOut, upW) + 6;
+      const guessEl = 1.18;
+      const top0 = Math.max(up.length ? (upY + (up.length > 5 ? 13 : 0)) * Math.cos(guessEl) + rOut * 0.35 * Math.sin(guessEl) : 0, rOut * Math.sin(guessEl)) + 10;
+      const bot0 = rOut * Math.sin(guessEl) + 10;
       const visW = mobile ? W - 24 : W - 32 - 320 - 28;
-      const ppu = Math.min((mobile ? H * 0.54 : H - 140) / (top + bot), (visW / 2 - (mobile ? 84 : 120)) / hw);
-      const Rb = Math.hypot(hw, upY) + 4;
+      let ppu = Math.min((mobile ? H * 0.54 : H - 140) / (top0 + bot0), (visW / 2 - (mobile ? 84 : 120)) / hw0);
+      let dist = H / (2 * Math.tan(vf / 2) * Math.max(ppu, 0.001));
+      const framed = frameFocus({
+        id, C, member, radii, inc, out, nodes, kind, Rh, Df, mobile, W, H, vf, ppu, dist,
+      });
+      ppu = framed.ppu;
+      dist = framed.dist;
+      let reach = 8;
+      member.forEach((m) => { reach = Math.max(reach, m.p.distanceTo(C)); });
+      const Rb = reach + 4;
       const shell = THREE.MathUtils.clamp(Rb * 4.5, 520, 1100);
-      const dist = H / (2 * Math.tan(vf / 2) * Math.max(ppu, 0.001));
+      const rFit = radii.length ? Math.max(...radii) : 15;
       if (radii.length && api._scene && api._mkLineMat) {
         const a = [];
         const S = 128;
@@ -881,11 +1142,16 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         focusRings = new LineSegments2(g, frMat);
         api._scene.add(focusRings);
       }
+      api.lastFrame = {
+        el: framed.el, az: framed.az, dist, squeeze: framed.squeeze, selR: framed.selR,
+        overflow: framed.overflow,
+      };
       return {
-        inc, out, member, Rb, shell, dist, ppu, rOut, Rv: Rh,
+        inc, out, member, Rb, shell, dist, ppu, rOut: rFit, Rv: Rh,
+        aim: framed.aim, az: framed.az, el: framed.el,
         viewX: mobile ? 0 : Math.round((320 + 28) / 2),
-        viewY: mobile ? Math.round(H / 2 - H * 0.28) : Math.round((-(top - bot) / 2) * ppu) + 10,
-        hwPx: hw * ppu,
+        viewY: 0,
+        hwPx: reach * ppu,
       };
     },
     clearFocus() {
