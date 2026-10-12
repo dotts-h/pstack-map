@@ -327,8 +327,10 @@ N.forEach((o) => {
   Object.assign(o, { lo: L.lo, anc: L.a, el: L.l, lmode: 'home' });
 });
 
-const SEG = theme.edgeSeg || 16;
-const SEG_HL = theme.edgeSegHl || 32;
+const SEG_MIN = Math.max(48, theme.edgeSeg || 16);
+const SEG_MAX = Math.max(SEG_MIN, theme.edgeSegMax || 192);
+const SEG = SEG_MIN;
+const SEG_HL = SEG_MIN;
 const E = G.edges.filter((e) => NB.has(e.source) && NB.has(e.target)).map((e) => ({ e, t: etype(e.type) }));
 const idle = {};
 [...ETYPES, 'other'].forEach((t) => {
@@ -336,6 +338,7 @@ const idle = {};
   if (!list.length) return;
   const g = new LineSegmentsGeometry();
   g.setPositions(new Float32Array(list.length * SEG * 6));
+  g.userData.cap = list.length * SEG;
   const baseOp = theme.edgeBase ? theme.edgeBase(t, EALPHA) : EALPHA[t];
   const m = mkLineMat({ color: ecolor(t), linewidth: 1.25, opacity: baseOp, dashed: t === 'imports', dashSize: 1.6, gapSize: 1.2 });
   const l = new LineSegments2(g, m);
@@ -363,12 +366,9 @@ function setHighlight(list) {
   }
   const g = new LineSegmentsGeometry();
   g.setPositions(new Float32Array(list.length * SEG_HL * 6));
-  const col = new Float32Array(list.length * SEG_HL * 6);
-  list.forEach((x, i) => {
-    const c = new THREE.Color(ecolor(x.t, true));
-    for (let s = 0; s < SEG_HL; s++) col.set([c.r, c.g, c.b, c.r, c.g, c.b], (i * SEG_HL + s) * 6);
-  });
-  g.setColors(col);
+  g.setColors(new Float32Array(list.length * SEG_HL * 6));
+  g.userData.cap = list.length * SEG_HL;
+  g.userData.colored = true;
   const m = mkLineMat({ vertexColors: true, linewidth: 2, opacity: 1 });
   const l = new LineSegments2(g, m);
   l.frustumCulled = false;
@@ -859,6 +859,9 @@ function focus(id, dur) {
     fel = basis.el;
   }
   const m = mobile();
+  let aim = C;
+  let aimAz = faz;
+  let aimEl = fel;
   let inc;
   let out;
   let member;
@@ -898,6 +901,11 @@ function focus(id, dur) {
       if (!theme.centreTarget) {
         viewX = laid.viewX;
         viewY = laid.viewY;
+      }
+      if (laid.aim) {
+        aim = laid.aim;
+        if (Number.isFinite(laid.az)) aimAz = laid.az;
+        if (Number.isFinite(laid.el)) aimEl = laid.el;
       }
       FS = { Rc: laid.rOut || laid.Rb, Rb, shell, dist, Rv: laid.Rv.clone(), C, hwPx: laid.hwPx };
     } else {
@@ -976,7 +984,7 @@ function focus(id, dur) {
       moreLbls.push(h);
     });
   }
-  camTo(C, dist, faz, fel, dur);
+  camTo(aim, dist, aimAz, aimEl, dur);
   idleTw = { from: idleAlpha, to: 0, t0: performance.now(), dur: reduced ? 0 : (theme.idleMs ?? 300) };
   document.body.classList.add('focus');
   document.body.classList.remove('key-open');
@@ -1370,32 +1378,65 @@ function curve(a, b, t, out, mode, side) {
 function trimmed(x) {
   const so = NB.get(x.e.source);
   const to = NB.get(x.e.target);
-  const d = new THREE.Vector3().copy(to.pos).sub(so.pos);
+  const d = T.copy(to.pos).sub(so.pos);
   if (d.lengthSq() < 1e-8) d.set(1, 0, 0);
-  d.normalize();
-  A.copy(so.pos).addScaledVector(d, so.sc * 1.05);
-  B.copy(to.pos).addScaledVector(d, -to.sc * 1.05);
+  else d.normalize();
+  A.copy(so.pos).addScaledVector(d, so.sc);
+  B.copy(to.pos).addScaledVector(d, -to.sc);
   return { so, to };
 }
+function segCount(len) {
+  const ppu = (H() || 1) / (2 * Math.tan(vf / 2) * Math.max(cam.dist, 1));
+  const n = Math.ceil((len * ppu) / 12);
+  return Math.max(SEG_MIN, Math.min(SEG_MAX, n || SEG_MIN));
+}
+function fitLineGeo(geo, count) {
+  const cap = geo.userData.cap || 0;
+  if (count <= cap) return;
+  const n = Math.max(count, cap ? Math.ceil(cap * 1.5) : count);
+  geo.setPositions(new Float32Array(n * 6));
+  if (geo.userData.colored) geo.setColors(new Float32Array(n * 6));
+  geo.userData.cap = n;
+}
 function writeEdges(list, geo, mode) {
+  if (!list.length) return;
+  const counts = new Array(list.length);
+  let total = 0;
+  for (let i = 0; i < list.length; i++) {
+    const x = list[i];
+    const so = NB.get(x.e.source);
+    const to = NB.get(x.e.target);
+    const len = so && to ? so.pos.distanceTo(to.pos) : 0;
+    counts[i] = segCount(len);
+    total += counts[i];
+  }
+  fitLineGeo(geo, total);
   const arr = geo.attributes.instanceStart.data.array;
-  const SG = mode === 'focus' ? SEG_HL : SEG;
+  const colAttr = geo.userData.colored ? geo.attributes.instanceColorStart : null;
+  const col = colAttr ? colAttr.data.array : null;
+  let cursor = 0;
   list.forEach((x, i) => {
+    const SG = counts[i];
     const { so, to } = trimmed(x);
     const side = mode === 'focus' ? (x.e.source === FOCUS ? 1 : -1) : 0;
     const hide = mode === 'home' && (hiddenKinds.has(so.k) || hiddenKinds.has(to.k) || hiddenE.has(x.t) || theme.hideHomeEdge?.(x));
     const dash = !!theme.dashEdge?.(x);
+    const c = col ? new THREE.Color(ecolor(x.t, true)) : null;
     for (let s = 0; s < SG; s++) {
-      if (hide || (dash && s % 3)) {
-        arr.fill(0, (i * SG + s) * 6, (i * SG + s) * 6 + 6);
-        continue;
+      const o = cursor * 6;
+      if (hide || (dash && s % 3)) arr.fill(0, o, o + 6);
+      else {
+        curve(A, B, s / SG, P0, mode, side);
+        curve(A, B, (s + 1) / SG, P1, mode, side);
+        arr.set([P0.x, P0.y, P0.z, P1.x, P1.y, P1.z], o);
       }
-      curve(A, B, s / SG, P0, mode, side);
-      curve(A, B, (s + 1) / SG, P1, mode, side);
-      arr.set([P0.x, P0.y, P0.z, P1.x, P1.y, P1.z], (i * SG + s) * 6);
+      if (col && c) col.set([c.r, c.g, c.b, c.r, c.g, c.b], o);
+      cursor += 1;
     }
   });
+  geo.instanceCount = Math.max(cursor, 0);
   geo.attributes.instanceStart.data.needsUpdate = true;
+  if (colAttr) colAttr.data.needsUpdate = true;
 }
 let lastBusy = 0;
 let pending = 0;
@@ -1556,11 +1597,11 @@ function frameBody(now) {
   } else selRing.material.opacity = 0;
   const mode = edgeMode();
   if (anyAnim || dirty) {
-    let stamp = edgeGen + '|' + mode + '|' + (FOCUS || '');
+    let stamp = edgeGen + '|' + mode + '|' + (FOCUS || '') + '|' + Math.round(Math.log(Math.max(cam.dist, 1)) * 10);
     hiddenKinds.forEach((k) => { stamp += '|' + k; });
     for (let i = 0; i < N.length; i++) {
       const p = N[i].pos;
-      stamp += '|' + Math.round(p.x * 4) + ',' + Math.round(p.y * 4) + ',' + Math.round(p.z * 4);
+      stamp += '|' + Math.round(p.x * 32) + ',' + Math.round(p.y * 32) + ',' + Math.round(p.z * 32);
     }
     if (stamp !== edgeStamp) {
       edgeStamp = stamp;
@@ -2070,6 +2111,7 @@ window.__pstack = {
   get calls() { return theme.lastStats?.calls ?? renderer.info.render.calls; },
   get tris() { return theme.lastStats?.tris ?? renderer.info.render.triangles; },
   get gfx() { return theme.gfx ? theme.gfx() : null; },
+  get frame() { return theme.lastFrame || null; },
   get bend() {
     const core = NB.get(G.nodes.find((n) => n.kind === 'router').id);
     const star = N.find((o) => o.k === 'playbook');
