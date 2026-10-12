@@ -19,48 +19,132 @@ export const bbHex = (t) => '#' + bbLin(t).getHexString();
 export const ZONE_T = { build: 14000, research: 7000, ship: 4800, fix: 3300, run: 2100 };
 
 const GFX_KEY = 'pstackMap.gfx';
+const ADAPT_RES = [1, 0.85, 0.72];
+const params = new URLSearchParams(location.search);
+let gpuName = '';
+function readGpu() {
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl', { failIfMajorPerformanceCaveat: false });
+    if (!gl) return '';
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || '') : '';
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return name;
+  } catch { return ''; }
+}
+function isWindows() {
+  const plat = navigator.userAgentData?.platform || navigator.platform || '';
+  return /win/i.test(plat) || /windows/i.test(navigator.userAgent || '');
+}
+function isIntegratedGpu(name) {
+  if (!name) return false;
+  if (/swiftshader|llvmpipe|softpipe|microsoft basic render/i.test(name)) return true;
+  if (/nvidia|geforce|quadro|\brtx\b|\bgtx\b|radeon\s(rx|pro|r[579])|amd radeon rx/i.test(name)) return false;
+  return /intel|uhd graphics|iris|hd graphics|mali|adreno|apple gpu|powervr|videocore/i.test(name);
+}
 function initialGfx() {
-  const q = new URLSearchParams(location.search).get('gfx');
+  const q = params.get('gfx');
   if (q === 'high' || q === 'balanced') return q;
   try {
     const s = localStorage.getItem(GFX_KEY);
     if (s === 'high' || s === 'balanced') return s;
   } catch { /* private mode */ }
+  gpuName = readGpu();
+  if (isWindows() || isIntegratedGpu(gpuName)) return 'balanced';
   const coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
   return (innerWidth < 720 || coarse) ? 'balanced' : 'high';
 }
 let GFX = initialGfx();
+if (!gpuName) gpuName = readGpu();
+let adapt = { res: 0, bloom: 0, bh: 0 };
+const adaptOff = params.get('adapt') === '0';
 const listeners = [];
+function emit() { listeners.forEach((fn) => fn(GFX)); }
 export function getGfx() { return GFX; }
 export function onGfx(fn) { listeners.push(fn); }
 export function setGfx(g) {
   if (g !== 'high' && g !== 'balanced') return;
   GFX = g;
+  adapt = { res: 0, bloom: 0, bh: 0 };
   try { localStorage.setItem(GFX_KEY, g); } catch { /* private mode */ }
-  listeners.forEach((fn) => fn(g));
+  emit();
 }
 export function dprOf(renderer) {
-  const d = renderer ? renderer.getPixelRatio() : Math.min(devicePixelRatio || 1, 2);
+  const d = renderer ? renderer.getPixelRatio() : targetPixelRatio();
   return d >= 1.5 ? 2 : 1;
+}
+export function targetPixelRatio() {
+  const cap = GFX === 'high' ? 1.5 : 1;
+  const base = Math.min(devicePixelRatio || 1, cap);
+  return Math.max(0.5, Math.round(base * ADAPT_RES[adapt.res] * 100) / 100);
 }
 export function quality(renderer) {
   const high = GFX === 'high';
   const dpr = dprOf(renderer);
+  const bhMax = high ? 96 : 56;
+  const bhMul = [1, 0.78, 0.58][adapt.bh];
   return {
     high,
     dpr,
-    bloomDiv: high ? 2 : 4,
-    bloomLv: high ? 6 : 5,
+    bloomDiv: (high ? 2 : 4) * (adapt.bloom >= 2 ? 2 : 1),
+    bloomLv: Math.max(2, (high ? 4 : 3) - (adapt.bloom >= 1 ? 1 : 0)),
     lensHalf: !high,
     stars: high ? 1 : 0.45,
     dust: high ? 1 : 0.6,
     glow: high ? 1 : 0.55,
     gran: high ? 1 : 0,
-    bhSteps: high ? (dpr >= 2 ? 100 : 150) : 70,
+    bhSteps: Math.max(32, Math.round(bhMax * bhMul)),
+    bhStepsMax: bhMax,
+    bhScale: 0.5,
     bhLite: high ? 0 : 1,
     msaa: high ? 4 : 2,
     hii: high ? 1 : 0.5,
     spikes: high ? 1 : 0,
+    adapt: { res: adapt.res, bloom: adapt.bloom, bh: adapt.bh },
+  };
+}
+let frameAcc = 0;
+let frameN = 0;
+let frameSpan = 0;
+let frameLast = 0;
+let frameWindows = 0;
+let frameAvg = 0;
+let frameLastMs = 0;
+function stepDown() {
+  if (adapt.res < ADAPT_RES.length - 1) adapt.res += 1;
+  else if (adapt.bloom < 2) adapt.bloom += 1;
+  else if (adapt.bh < 2) adapt.bh += 1;
+  else return false;
+  emit();
+  return true;
+}
+export function noteFrame(ms) {
+  frameLastMs = ms;
+  const now = performance.now();
+  if (frameLast) frameSpan += Math.min(80, now - frameLast);
+  frameLast = now;
+  frameAcc += ms;
+  frameN += 1;
+  if (frameSpan >= 2000 && frameN >= 8) {
+    frameAvg = frameAcc / frameN;
+    frameAcc = 0;
+    frameN = 0;
+    frameSpan = 0;
+    frameWindows += 1;
+    if (!adaptOff && frameWindows > 1 && frameAvg > 20) stepDown();
+  }
+  return frameStats();
+}
+export function frameStats() {
+  return {
+    last: frameLastMs,
+    avg: frameAvg || (frameN ? frameAcc / frameN : frameLastMs),
+    adapt: { res: adapt.res, bloom: adapt.bloom, bh: adapt.bh },
+    dpr: targetPixelRatio(),
+    gpu: gpuName,
+    windows: isWindows(),
+    integrated: isIntegratedGpu(gpuName),
   };
 }
 
@@ -80,12 +164,13 @@ export function createBlackHole(renderer) {
     blendSrc: THREE.OneFactor,
     blendDst: THREE.OneMinusSrcAlphaFactor,
     fog: false,
-    defines: { STEPS: gs.bhSteps, LITE: gs.bhLite },
+    defines: { STEPS: gs.bhStepsMax, LITE: gs.bhLite },
     uniforms: {
       bhPos: { value: new THREE.Vector3() },
       Rs: { value: BH_RS },
       W2D: { value: new THREE.Matrix3() },
       uTime: { value: 0 },
+      uSteps: { value: gs.bhSteps },
       dim: { value: 0 },
       tBg: { value: null },
       res: { value: new THREE.Vector2(1, 1) },
@@ -94,7 +179,7 @@ export function createBlackHole(renderer) {
       bgOn: { value: 1 },
     },
     vertexShader: 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
-    fragmentShader: `uniform vec3 bhPos;uniform float Rs;uniform mat3 W2D;uniform float uTime;uniform float dim;uniform sampler2D tBg;uniform vec2 res;uniform mat4 uVP;uniform float gain;uniform float bgOn;varying vec3 vW;
+    fragmentShader: `uniform vec3 bhPos;uniform float Rs;uniform mat3 W2D;uniform float uTime;uniform float uSteps;uniform float dim;uniform sampler2D tBg;uniform vec2 res;uniform mat4 uVP;uniform float gain;uniform float bgOn;varying vec3 vW;
 ${BBGLSL}
 float hh(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
 float nn(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(hh(i),hh(i+vec3(1,0,0)),f.x),mix(hh(i+vec3(0,1,0)),hh(i+vec3(1,1,0)),f.x),f.y),mix(mix(hh(i+vec3(0,0,1)),hh(i+vec3(1,0,1)),f.x),mix(hh(i+vec3(0,1,1)),hh(i+vec3(1,1,1)),f.x),f.y),f.z);}
@@ -119,7 +204,7 @@ void main(){vec3 ro=W2D*((cameraPosition-bhPos)/Rs);vec3 rd=normalize(W2D*(vW-ca
  float b=dot(ro,rd),c=dot(ro,ro)-RB*RB,h=b*b-c;if(h<0.)discard;
  vec3 p=ro+rd*max(-b-sqrt(h),0.);vec3 v=rd;float imp=length(cross(ro,rd));float h2=imp*imp;
  vec3 col=vec3(0.);float Tr=1.;bool cap=false;float rmin=99.;
- for(int i=0;i<STEPS;i++){float r2=dot(p,p);if(r2<1.){cap=true;break;}float r=sqrt(r2);rmin=min(rmin,r);
+ for(int i=0;i<STEPS;i++){if(float(i)>=uSteps)break;float r2=dot(p,p);if(r2<1.){cap=true;break;}float r=sqrt(r2);rmin=min(rmin,r);
   float dt=clamp(.1*r*r/(r+2.),.02,1.);
   vec3 a=-1.5*h2*p/(r2*r2*r);vec3 vn=v+a*dt;vec3 pn=p+vn*dt;
   if(p.y*pn.y<0.){float f=p.y/(p.y-pn.y);vec3 q=mix(p,pn,f);vec4 d=disk(q,vn);col+=Tr*d.rgb*d.a;Tr*=1.-d.a;}
@@ -235,14 +320,15 @@ void main(){float d=ringD(length(vL.xy));if(d<.01)discard;vec3 L=normalize(lP-vW
   });
 }
 
+export const FIELD_U = { uTime: { value: 0 } };
 export function fieldStarMaterial() {
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     fog: false,
-    uniforms: { pr: { value: Math.min(devicePixelRatio || 1, 2) }, op: { value: 1 } },
-    vertexShader: 'attribute float sz;attribute vec3 col;varying vec3 vC;uniform float pr;void main(){vC=col;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=sz*pr;}',
+    uniforms: { pr: { value: Math.min(devicePixelRatio || 1, 1.5) }, op: { value: 1 }, uTime: FIELD_U.uTime },
+    vertexShader: 'attribute float sz;attribute vec3 col;attribute float spin;varying vec3 vC;uniform float pr;uniform float uTime;void main(){vC=col;float a=spin*uTime;float c=cos(a),s=sin(a);vec3 p=vec3(c*position.x+s*position.z,position.y,-s*position.x+c*position.z);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=sz*pr;}',
     fragmentShader: 'varying vec3 vC;uniform float op;void main(){vec2 d=gl_PointCoord-.5;float a=exp(-dot(d,d)*14.);if(a<.03)discard;gl_FragColor=vec4(vC*a*op,1.);}',
   });
 }
@@ -279,7 +365,7 @@ export function createPipeline(renderer) {
   renderer.info.autoReset = false;
   const msaa = () => {
     const gs = quality(renderer);
-    const n = renderer.getPixelRatio() >= 2 ? gs.msaa / 2 : gs.msaa;
+    const n = renderer.getPixelRatio() >= 1.5 ? gs.msaa / 2 : gs.msaa;
     return n < 2 ? 0 : n;
   };
   let rt = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples: msaa(), depthBuffer: true });
@@ -399,5 +485,128 @@ gl_FragColor.rgb+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.54
     invalidate() { bl.forEach((t) => t.dispose()); bl = []; },
     bloom0: () => (bl[0] ? [bl[0].width, bl[0].height] : null),
     hdr: () => [rt.width, rt.height, rt.samples],
+    levels: () => bl.length,
   };
+}
+
+export function createBhCache() {
+  const bh = createBlackHole();
+  const { mesh, mat } = bh;
+  mesh.layers.set(2);
+  mesh.frustumCulled = false;
+  let rt = null;
+  const compMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    fog: false,
+    toneMapped: false,
+    uniforms: { t: { value: null }, res: { value: new THREE.Vector2(1, 1) } },
+    vertexShader: 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader: 'uniform sampler2D t;uniform vec2 res;void main(){gl_FragColor=texture2D(t,gl_FragCoord.xy/max(res,vec2(1.)));}',
+  });
+  const quad = new THREE.Mesh(mesh.geometry, compMat);
+  quad.frustumCulled = false;
+  quad.renderOrder = mesh.renderOrder;
+  const db = new THREE.Vector2();
+  const prevP = new Float32Array(16);
+  const prevCam = new THREE.Vector3();
+  const prevQ = new THREE.Quaternion();
+  const prevBh = new THREE.Vector3();
+  let prevRs = -1;
+  let prevDim = -1;
+  let prevT = -1;
+  let valid = false;
+  let failed = false;
+  const stats = { cached: false, w: 0, h: 0, steps: 0 };
+  const clear = new THREE.Color();
+  function remember(camera) {
+    prevP.set(camera.projectionMatrix.elements);
+    prevCam.copy(camera.position);
+    prevQ.copy(camera.quaternion);
+    prevBh.copy(mat.uniforms.bhPos.value);
+    prevRs = mat.uniforms.Rs.value;
+    prevDim = mat.uniforms.dim.value;
+    prevT = mat.uniforms.uTime.value;
+    valid = true;
+  }
+  function pxShift(camera, world) {
+    const dist = Math.max(camera.position.distanceTo(mat.uniforms.bhPos.value), 1);
+    const worldPerPx = (2 * dist * Math.tan((camera.fov * Math.PI) / 360)) / Math.max(db.y, 1);
+    return world / Math.max(worldPerPx, 1e-6);
+  }
+  function stale(camera) {
+    if (!valid) return true;
+    const e = camera.projectionMatrix.elements;
+    for (let i = 0; i < 16; i++) if (Math.abs(e[i] - prevP[i]) > 8e-4) return true;
+    if (pxShift(camera, camera.position.distanceTo(prevCam)) > 0.8) return true;
+    if (camera.quaternion.angleTo(prevQ) > 0.0012) return true;
+    if (pxShift(camera, mat.uniforms.bhPos.value.distanceTo(prevBh)) > 0.8) return true;
+    if (Math.abs(mat.uniforms.Rs.value - prevRs) > 0.02) return true;
+    if (Math.abs(mat.uniforms.dim.value - prevDim) > 0.03) return true;
+    if (Math.abs(mat.uniforms.uTime.value - prevT) > 0.09) return true;
+    return false;
+  }
+  function render(renderer, scene, camera) {
+    const gs = quality(renderer);
+    mat.uniforms.uSteps.value = gs.bhSteps;
+    stats.steps = gs.bhSteps;
+    mesh.position.copy(quad.position);
+    mesh.quaternion.copy(quad.quaternion);
+    mesh.scale.copy(quad.scale);
+    mesh.visible = quad.visible && quad.scale.x > 0.001;
+    if (failed || !mesh.visible) {
+      stats.cached = false;
+      return;
+    }
+    renderer.getDrawingBufferSize(db);
+    const w = Math.max(2, Math.round(db.x * gs.bhScale));
+    const h = Math.max(2, Math.round(db.y * gs.bhScale));
+    if (!rt) {
+      rt = new THREE.WebGLRenderTarget(w, h, {
+        type: THREE.HalfFloatType,
+        depthBuffer: false,
+        magFilter: THREE.LinearFilter,
+        minFilter: THREE.LinearFilter,
+      });
+      rt.texture.colorSpace = THREE.NoColorSpace;
+      compMat.uniforms.t.value = rt.texture;
+    } else if (rt.width !== w || rt.height !== h) {
+      rt.setSize(w, h);
+      valid = false;
+    }
+    stats.w = w;
+    stats.h = h;
+    compMat.uniforms.res.value.copy(db);
+    if (!stale(camera)) {
+      stats.cached = true;
+      return;
+    }
+    stats.cached = false;
+    const prevTarget = renderer.getRenderTarget();
+    const prevAlpha = renderer.getClearAlpha();
+    renderer.getClearColor(clear);
+    const mask = camera.layers.mask;
+    try {
+      camera.layers.set(2);
+      renderer.setRenderTarget(rt);
+      renderer.setClearColor(0x000000, 0);
+      renderer.clear(true, false, false);
+      renderer.render(scene, camera);
+      remember(camera);
+    } catch (err) {
+      failed = true;
+      mesh.layers.set(0);
+      quad.visible = false;
+      console.error(err);
+    } finally {
+      camera.layers.mask = mask;
+      renderer.setRenderTarget(prevTarget);
+      renderer.setClearColor(clear, prevAlpha);
+    }
+  }
+  return { mesh, mat, quad, render, stats };
 }
