@@ -9,7 +9,7 @@ import { homePositions } from './layout.mjs';
 import { FRIENDLY, EWORD, KINDS, ETYPES, kindOf, etype, plainName, oneLiner, stepsOf } from './copy.mjs';
 import { THEME_IDS, themeMeta, rankBadge } from './theme-meta.mjs';
 import { galaxyTheme, CREDITS_HTML } from './galaxy.mjs';
-import { targetPixelRatio, onGfx, noteFrame, frameStats } from './gfx.mjs';
+import { getGfx, targetPixelRatio, onGfx, noteFrame, frameStats, setViewMoving } from './gfx.mjs';
 
 const qs = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || qs.has('reduced');
@@ -88,7 +88,7 @@ const H = () => host.clientHeight;
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({
-    antialias: theme.id !== 'galaxy',
+    antialias: theme.id !== 'galaxy' || getGfx() === 'cinematic',
     powerPreference: 'high-performance',
     stencil: false,
   });
@@ -662,12 +662,14 @@ host.addEventListener('pointermove', (e) => {
   }
   dirty = true;
 });
+let wheeled = false;
 host.addEventListener('wheel', (e) => {
   e.preventDefault();
   let dy = e.deltaY;
   if (e.deltaMode === 1) dy *= 16;
   else if (e.deltaMode === 2) dy *= 400;
   cam.dist = THREE.MathUtils.clamp(cam.dist * Math.exp(dy * 0.001), cam.min, cam.max);
+  wheeled = true;
   dirty = true;
 }, { passive: false });
 
@@ -1648,6 +1650,9 @@ function frameBody(now) {
     labelR.render(scene, camera);
     declutter();
   }
+  const coasting = Math.abs(spinAz) > 0.008 || Math.abs(spinEl) > 0.008;
+  if (setViewMoving(!!(drag || camTw || coasting || pointers.size || wheeled))) applyView();
+  wheeled = false;
   if (theme.renderFrame) theme.renderFrame(renderer, scene, camera);
   else renderer.render(scene, camera);
   if (cardId && (anyAnim || dirty)) placeCard();
@@ -1703,6 +1708,7 @@ function paintPerf(cost) {
     `dpr ${renderer.getPixelRatio().toFixed(2)}   buf ${perfBuf.x}×${perfBuf.y}`,
     `bloom ${g.bloom ? (g.bloomSize ? g.bloomSize.join('×') : 'on') : 'off'}`,
     `disk ${g.disk || '—'}   gfx ${g.gfx || s.gfx || '—'}`,
+    g.bhSize ? `bh ${g.bhSize.join('×')}  steps ${g.bhSteps ?? '—'}  ${g.bhCached ? 'cached' : 'marched'}  adapt ${g.adapt ?? 0}` : '',
   ].join('\n');
 }
 function setAnchor(o, a) {

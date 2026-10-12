@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
-import { bbLin, bbHex, ZONE_T, createBakedDisk, createBloom } from './galaxy-fx.mjs';
-import { getGfx, setGfx, onGfx } from './gfx.mjs';
+import { bbLin, bbHex, ZONE_T, createBakedDisk, createBoundedBlackHole } from './galaxy-fx.mjs';
+import { getGfx, setGfx, onGfx, onFloor, quality } from './gfx.mjs';
 import { stepsOf } from './copy.mjs';
 
 const ZONES = [
@@ -288,13 +288,32 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   const hubs = [];
   const stepMk = [];
   let sky0 = null;
-  let texLoader = null;
 
   const tex = (file, srgb = true) => {
     const url = new URL('./assets/' + file, import.meta.url).href;
-    const t = texLoader.load(url, () => rt?.dirty?.());
+    const c = document.createElement('canvas');
+    c.width = c.height = 2;
+    const g = c.getContext('2d');
+    g.fillStyle = '#5c5348';
+    g.fillRect(0, 0, 2, 2);
+    const t = new THREE.CanvasTexture(c);
     if (srgb) t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 1;
+    const paint = (bmp, sharp) => {
+      t.image = bmp;
+      t.needsUpdate = true;
+      t.anisotropy = sharp ? 4 : 1;
+      rt?.dirty?.();
+    };
+    const load = async () => {
+      const blob = await (await fetch(url)).blob();
+      const preview = file.includes('2048') ? 256 : 64;
+      paint(await createImageBitmap(blob, { resizeWidth: preview, resizeHeight: preview, resizeQuality: 'low' }), false);
+      paint(await createImageBitmap(blob), true);
+    };
+    const kick = () => { load().catch(() => {}); };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(kick, { timeout: 600 });
+    else setTimeout(kick, 40);
     return t;
   };
 
@@ -432,7 +451,6 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     },
     scenery(scene, { HALO, mkLineMat }) {
       haloTex = HALO;
-      texLoader = new THREE.TextureLoader();
       const sky = new THREE.Group();
       scene.add(sky);
       const milky = new THREE.Mesh(
@@ -586,11 +604,21 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         zoneLbls.push({ o, d, z });
       });
       const baked = createBakedDisk();
+      const cine = createBoundedBlackHole();
+      api._cine = cine;
+      api._baked = baked;
       diskMat = baked.mat;
-      bhMesh = baked.mesh;
-      scene.add(bhMesh);
+      scene.add(baked.mesh);
+      scene.add(cine.mesh);
+      const useCine = getGfx() === 'cinematic';
+      baked.mesh.visible = !useCine;
+      cine.mesh.visible = useCine;
+      bhMesh = useCine ? cine.mesh : baked.mesh;
       api.routerMesh = bhMesh;
-      api.routerDim = (d) => { diskMat.uniforms.dim.value = d; };
+      api.routerDim = (d) => {
+        baked.mat.uniforms.dim.value = d;
+        cine.setDim(d);
+      };
       const lens = new THREE.Sprite(new THREE.SpriteMaterial({
         map: HALO, color: 0xFFE0B0, transparent: true, opacity: 0.48,
         blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false,
@@ -689,7 +717,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       const moving = !reduced && !paused;
       if (moving) mclk += dt;
       if (moving) {
-        if (diskMat) diskMat.uniforms.uTime.value = mclk * 0.00032;
+        if (getGfx() === 'fast' && diskMat) diskMat.uniforms.uTime.value = mclk * 0.00032;
         if (sky0) sky0.rotation.y += ((2 * Math.PI) / 5400) * (dt / 1000) * 0.5;
         if (!rt.focus && !rt.drag && !rt.camTw) rt.cam.az += dt * ((2 * Math.PI) / 720000);
       }
@@ -950,33 +978,56 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     },
   };
 
+  function useDisk(mode) {
+    const cine = mode === 'cinematic';
+    api._baked.mesh.visible = !cine;
+    api._cine.mesh.visible = cine;
+    if (api._lens) api._lens.visible = !cine;
+    const mesh = cine ? api._cine.mesh : api._baked.mesh;
+    api.routerMesh = mesh;
+    bhMesh = mesh;
+    const star = rt?.NB?.get(router.id);
+    if (star) {
+      mesh.position.copy(star.pos);
+      mesh.scale.copy(star.mesh?.scale || mesh.scale);
+      star.mesh = mesh;
+    }
+  }
   function applyGfx() {
+    useDisk(getGfx());
     document.querySelectorAll('[data-g]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.g === getGfx())));
+    const hint = document.getElementById('gfxHint');
+    if (hint && getGfx() === 'fast') hint.classList.remove('show');
     rt.dirty();
   }
   function installRuntime() {
     rt.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    rt.renderer.toneMappingExposure = 1.05;
+    rt.renderer.toneMappingExposure = 0.9;
     rt.renderer.info.autoReset = false;
-    let bloom = null;
     api.renderFrame = (renderer, scene, camera) => {
-      const high = getGfx() === 'high';
-      let calls;
-      let tris;
-      let bloomSize = null;
-      if (high) {
-        if (!bloom) bloom = createBloom(renderer);
-        const stats = bloom.render(scene, camera);
-        calls = stats.calls;
-        tris = stats.tris;
-        bloomSize = bloom.size();
-      } else {
-        renderer.render(scene, camera);
-        calls = renderer.info.render.calls;
-        tris = renderer.info.render.triangles;
-        renderer.info.reset();
+      const q = quality();
+      let march = null;
+      if (q.cinematic) {
+        const star = rt.NB?.get(router.id);
+        if (star) api._cine.mesh.scale.copy(star.mesh.scale);
+        march = api._cine.update(renderer, camera, { ...q, time: (reduced || paused) ? 0 : mclk / 1000 });
       }
-      api.lastStats = { calls, tris, gfx: getGfx(), disk: 'baked', bloom: high, bloomSize };
+      renderer.render(scene, camera);
+      const calls = renderer.info.render.calls;
+      const tris = renderer.info.render.triangles;
+      renderer.info.reset();
+      api.lastStats = {
+        calls, tris, gfx: getGfx(),
+        disk: q.cinematic ? 'march' : 'baked',
+        bloom: !!q.bloom,
+        bloomSize: march?.bloomSize || null,
+        bhSize: march?.bhSize || null,
+        bhSteps: march?.steps || 0,
+        bhCached: !!march?.cached,
+        shader: march?.shader || 0,
+        bloomWork: march?.bloomWork || 0,
+        adapt: q.adapt,
+      };
     };
     const reset = document.getElementById('reset');
     const dock = document.createElement('div');
@@ -984,7 +1035,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     dock.id = 'gfxDock';
     dock.setAttribute('role', 'group');
     dock.setAttribute('aria-label', 'Graphics quality');
-    dock.innerHTML = '<button type="button" data-g="fast">Fast</button><button type="button" data-g="high">High</button>';
+    dock.innerHTML = '<button type="button" data-g="cinematic">Cinematic</button><button type="button" data-g="fast">Fast</button>';
     reset.parentNode.insertBefore(dock, reset);
     const pauseI = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3.5 2.5h2.2v9H3.5zM8.3 2.5h2.2v9H8.3z"/></svg>';
     const playI = '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M4 2.2l7.5 4.8L4 11.8z"/></svg>';
@@ -1009,9 +1060,15 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       e.preventDefault();
       setPaused(!paused);
     });
-    document.getElementById('about').insertAdjacentHTML('beforeend', '<div class="gfx"><span>Graphics</span><div class="gseg" id="gfxSeg" role="group" aria-label="Graphics quality"><button type="button" data-g="fast">Fast</button><button type="button" data-g="high">High</button></div></div><p class="gnote">Fast is the default: a painted black hole, glow sprites, and no full-screen bloom. High adds a soft bloom. Saved on this device.</p>');
+    document.getElementById('about').insertAdjacentHTML('beforeend', '<div class="gfx"><span>Graphics</span><div class="gseg" id="gfxSeg" role="group" aria-label="Graphics quality"><button type="button" data-g="cinematic">Cinematic</button><button type="button" data-g="fast">Fast</button></div></div><p class="gnote">Cinematic is the default: a ray-marched black hole, a soft glow, and full sharpness while the view is still. Fast keeps the same map with a painted disk.</p>');
     document.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => setGfx(b.dataset.g); });
     onGfx(applyGfx);
+    onFloor(() => {
+      const hint = document.getElementById('gfxHint');
+      if (hint && getGfx() === 'cinematic') hint.classList.add('show');
+    });
+    const fastBtn = document.getElementById('gfxHintFast');
+    if (fastBtn) fastBtn.onclick = () => setGfx('fast');
     const key = document.getElementById('key');
     const pill = document.createElement('button');
     pill.className = 'kpill';
@@ -1026,7 +1083,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     };
     key.appendChild(pill);
     applyGfx();
-    api.gfx = () => ({ ...(api.lastStats || {}), gfx: getGfx(), disk: 'baked', paused, mclk: Math.round(mclk) });
+    api.gfx = () => ({ ...(api.lastStats || {}), gfx: getGfx(), paused, mclk: Math.round(mclk) });
   }
 
   function mkStep() {
