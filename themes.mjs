@@ -390,19 +390,29 @@ function kitchenTheme({ G, byId, kindOf, nm, deg }) {
       floor.position.y = FLOOR_Y;
       scene.add(floor);
       const pools = [];
-      const mkPool = (x, z, size, op, col = '#FFB46A') => {
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: HALO, color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
-        m.rotation.x = -Math.PI / 2;
-        m.position.set(x, FLOOR_Y + 0.2, z);
-        m.scale.setScalar(size);
-        scene.add(m);
-        pools.push({ m, op });
+      const poolMat = (op) => new THREE.MeshBasicMaterial({ map: HALO, color: '#FFB46A', transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false });
+      const poolGeo = new THREE.PlaneGeometry(1, 1);
+      const poolQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+      const placePool = (mesh, x, z, size) => {
+        mesh.position.set(x, FLOOR_Y + 0.2, z);
+        mesh.quaternion.copy(poolQ);
+        mesh.scale.setScalar(size);
       };
-      mkPool(0, 0, 330, 0.26);
+      const centre = new THREE.Mesh(poolGeo, poolMat(0.26));
+      placePool(centre, 0, 0, 330);
+      scene.add(centre);
+      pools.push({ m: centre, op: 0.26 });
+      const outerMat = poolMat(0.11);
+      const outer = new THREE.InstancedMesh(poolGeo, outerMat, 8);
+      const pm = new THREE.Matrix4();
+      const ps = new THREE.Vector3();
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2 + 0.2;
-        mkPool(Math.cos(a) * 255, Math.sin(a) * 255, 110, 0.11);
+        pm.compose(new THREE.Vector3(Math.cos(a) * 255, FLOOR_Y + 0.2, Math.sin(a) * 255), poolQ, ps.setScalar(110));
+        outer.setMatrixAt(i, pm);
       }
+      scene.add(outer);
+      pools.push({ m: outer, op: 0.11 });
       const plate = new THREE.Group();
       const disc = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.86, 0.07, 96), new THREE.MeshStandardMaterial({ color: '#B9BEC4', roughness: 0.55, metalness: 0, emissive: '#24262A', transparent: true, opacity: 0 }));
       const rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.012, 8, 128), new THREE.MeshStandardMaterial({ color: '#C9A15F', metalness: 0.8, roughness: 0.3, transparent: true, opacity: 0 }));
@@ -618,11 +628,12 @@ function circuitTheme({ G, kindOf, deg }) {
       board.position.y = -3;
       scene.add(board);
       const hole = new THREE.MeshStandardMaterial({ color: '#B9A06A', metalness: 0.7, roughness: 0.35 });
-      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(7, 2.2, 12, 40).rotateX(Math.PI / 2), hole);
-        ring.position.set(sx * 240, 0.4, sz * 240);
-        scene.add(ring);
+      const ringGeo = new THREE.TorusGeometry(7, 2.2, 12, 40).rotateX(Math.PI / 2);
+      const rings = new THREE.InstancedMesh(ringGeo, hole, 4);
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz], i) => {
+        rings.setMatrixAt(i, new THREE.Matrix4().makeTranslation(sx * 240, 0.4, sz * 240));
       });
+      scene.add(rings);
       const guides = [];
       const a = [];
       const rect = (s) => {
@@ -1054,19 +1065,17 @@ function brainTheme({ G, kindOf, deg, css }) {
       const colorOf = cssFn || css;
       const ZC = { frontal: colorOf('--k-playbook'), motor: colorOf('--k-skill'), parietal: colorOf('--k-principle'), temporal: colorOf('--k-reference'), occipital: '#5A6378' };
       const base = new THREE.Color('#7D8FC0');
-      const mat = () => {
-        const m = new THREE.ShaderMaterial({
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-          vertexColors: true,
-          uniforms: { op: { value: 1 } },
-          vertexShader: 'varying vec3 vN;varying vec3 vV;varying vec3 vC;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vC=color;gl_Position=projectionMatrix*mv;}',
-          fragmentShader: 'uniform float op;varying vec3 vN;varying vec3 vV;varying vec3 vC;void main(){float f=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.4);gl_FragColor=vec4(vC*(.07+.62*f)*op,1.);}',
-        });
-        brainMats.push(m);
-        return m;
-      };
+      const brainMat = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexColors: true,
+        uniforms: { op: { value: 1 } },
+        vertexShader: 'varying vec3 vN;varying vec3 vV;varying vec3 vC;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vC=color;gl_Position=projectionMatrix*mv;}',
+        fragmentShader: 'uniform float op;varying vec3 vN;varying vec3 vV;varying vec3 vC;void main(){float f=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.4);gl_FragColor=vec4(vC*(.07+.62*f)*op,1.);}',
+      });
+      brainMats.push(brainMat);
+      const parts = [];
       const hemi = (side) => {
         const g = new THREE.SphereGeometry(1, 160, 112);
         const p = g.attributes.position;
@@ -1086,10 +1095,7 @@ function brainTheme({ G, kindOf, deg, css }) {
         }
         g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
         g.computeVertexNormals();
-        const mesh = new THREE.Mesh(g, mat());
-        mesh.frustumCulled = false;
-        mesh.renderOrder = -1;
-        scene.add(mesh);
+        parts.push(g);
       };
       hemi(1);
       hemi(-1);
@@ -1107,9 +1113,7 @@ function brainTheme({ G, kindOf, deg, css }) {
         }
         g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
         g.computeVertexNormals();
-        const mesh = new THREE.Mesh(g, mat());
-        mesh.frustumCulled = false;
-        scene.add(mesh);
+        parts.push(g);
       }
       {
         const g = new THREE.CylinderGeometry(14, 20, 84, 48, 1, true);
@@ -1117,11 +1121,42 @@ function brainTheme({ G, kindOf, deg, css }) {
         const c = new THREE.Color('#5A6378');
         for (let i = 0; i < g.attributes.position.count; i++) col.push(c.r, c.g, c.b);
         g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-        const mesh = new THREE.Mesh(g, mat());
-        mesh.position.set(-58, -112, 0);
-        mesh.rotation.z = -0.42;
-        mesh.frustumCulled = false;
-        scene.add(mesh);
+        g.computeVertexNormals();
+        g.applyMatrix4(new THREE.Matrix4().makeRotationZ(-0.42).setPosition(-58, -112, 0));
+        parts.push(g);
+      }
+      {
+        let nv = 0;
+        let ni = 0;
+        parts.forEach((g) => {
+          nv += g.attributes.position.count;
+          ni += g.index ? g.index.count : g.attributes.position.count;
+        });
+        const pos = new Float32Array(nv * 3);
+        const nrm = new Float32Array(nv * 3);
+        const col = new Float32Array(nv * 3);
+        const index = new Uint32Array(ni);
+        let vbase = 0;
+        let ioff = 0;
+        parts.forEach((g) => {
+          pos.set(g.attributes.position.array, vbase * 3);
+          nrm.set(g.attributes.normal.array, vbase * 3);
+          col.set(g.attributes.color.array, vbase * 3);
+          const ix = g.index;
+          if (ix) for (let i = 0; i < ix.count; i++) index[ioff++] = ix.getX(i) + vbase;
+          else for (let i = 0; i < g.attributes.position.count; i++) index[ioff++] = vbase + i;
+          vbase += g.attributes.position.count;
+          g.dispose();
+        });
+        const merged = new THREE.BufferGeometry();
+        merged.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        merged.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+        merged.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        merged.setIndex(new THREE.BufferAttribute(index, 1));
+        const shell = new THREE.Mesh(merged, brainMat);
+        shell.frustumCulled = false;
+        shell.renderOrder = -1;
+        scene.add(shell);
       }
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), capMat);
       scene.add(mesh);

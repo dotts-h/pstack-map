@@ -6,8 +6,8 @@ import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import {
   bbLin, bbHex, ZONE_T, getGfx, setGfx, onGfx, quality,
-  createBlackHole, BH_RS, makeStarMaterial, makePlanetMaterial, makeRingMaterial,
-  fieldStarMaterial, createLensMaterial, createPipeline, STAR_U, PLAN_U,
+  createBhCache, BH_RS, makeStarMaterial, makePlanetMaterial, makeRingMaterial,
+  fieldStarMaterial, FIELD_U, createLensMaterial, createPipeline, STAR_U, PLAN_U,
 } from './galaxy-fx.mjs';
 
 const ZONES = [
@@ -300,7 +300,14 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   let keyClose = false;
   let keyPin = false;
   const galaxyFx = [];
-  const starLayers = [];
+  let fieldStars = null;
+  let fieldMat = null;
+  let bhPass = null;
+  let haloInner = null;
+  let haloOuter = null;
+  let haloTex = null;
+  const haloM = new THREE.Matrix4();
+  const haloS = new THREE.Vector3();
   const zoneLbls = [];
   const hubs = [];
   const stepMk = [];
@@ -389,6 +396,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     motion: { REGROUP: 2000, TRAVEL: 1900, EXIT: 1800, STAGGER: 26, STAGGER_MAX: 520, DISPERSE: 1700 },
     zones: ZONES,
     bindRuntime(runtime) { rt = runtime; installRuntime(); },
+    ambientMotion() { return !reduced && !paused; },
     fitDist(w, h, mobile, vf) {
       const l = mobile ? 0 : 292;
       const ppu = Math.min(
@@ -486,6 +494,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       return zoneOfBody(o.id)?.id === zView;
     },
     scenery(scene, { HALO, mkLineMat }) {
+      haloTex = HALO;
       texLoader = new THREE.TextureLoader();
       const NEB = noiseTex(7);
       const NEB2 = noiseTex(23);
@@ -499,39 +508,50 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       milky.renderOrder = -10;
       sky.add(milky);
       sky0 = milky;
-      const sfMat = fieldStarMaterial();
+      fieldMat = fieldStarMaterial();
       const fieldT = () => {
         const u = grnd();
         return u < 0.7 ? 3000 + grnd() * 2200 : u < 0.92 ? 5200 + grnd() * 2300 : 7500 + grnd() ** 2 * 12500;
       };
-      [[6400, 2600, 3600, 1.1, 0.55], [3800, 1500, 2300, 1.3, 0.7], [1700, 800, 1300, 1.6, 0.85], [900, 420, 800, 1.9, 0.9]].forEach(([n, r0, r1, sz, op], li) => {
-        const p = new Float32Array(n * 3);
-        const c = new Float32Array(n * 3);
-        const z = new Float32Array(n);
+      const layers = [[6400, 2600, 3600, 1.1, 0.55], [3800, 1500, 2300, 1.3, 0.7], [1700, 800, 1300, 1.6, 0.85], [900, 420, 800, 1.9, 0.9]];
+      const periods = [5400, 3600, 2400, 1800];
+      const keep = [];
+      const drop = [];
+      layers.forEach(([n, r0, r1, sz, op], li) => {
+        const spin = ((2 * Math.PI) / periods[li]) * (li % 2 ? -1 : 1);
+        const cut = Math.round(n * 0.45);
         for (let i = 0; i < n; i++) {
           const u = grnd() * 2 - 1;
           const th = grnd() * Math.PI * 2;
           const r = r0 + grnd() * (r1 - r0);
           const s = Math.sqrt(1 - u * u);
-          p.set([r * s * Math.cos(th), r * u, r * s * Math.sin(th)], i * 3);
           const mag = grnd() ** 5;
           const bright = op * (0.1 + mag * 1.1) * (mag > 0.6 ? 2.6 : 1);
           const col = bbLin(fieldT()).multiplyScalar(bright);
-          c.set([col.r, col.g, col.b], i * 3);
-          z[i] = sz * (0.75 + mag * 1.1);
+          const rec = [r * s * Math.cos(th), r * u, r * s * Math.sin(th), col.r, col.g, col.b, sz * (0.75 + mag * 1.1), spin];
+          (i < cut ? keep : drop).push(rec);
         }
-        const g = new THREE.BufferGeometry();
-        g.setAttribute('position', new THREE.BufferAttribute(p, 3));
-        g.setAttribute('col', new THREE.BufferAttribute(c, 3));
-        g.setAttribute('sz', new THREE.BufferAttribute(z, 1));
-        const mat = sfMat.clone();
-        mat.uniforms.op.value = 1;
-        const pts = new THREE.Points(g, mat);
-        pts.userData.n = n;
-        sky.add(pts);
-        const periods = [5400, 3600, 2400, 1800];
-        starLayers.push({ pts, w: ((2 * Math.PI) / (periods[li] * 1000)) * (li % 2 ? -1 : 1) });
       });
+      const packed = keep.concat(drop);
+      const p = new Float32Array(packed.length * 3);
+      const c = new Float32Array(packed.length * 3);
+      const z = new Float32Array(packed.length);
+      const spinA = new Float32Array(packed.length);
+      packed.forEach((rec, i) => {
+        p.set(rec.slice(0, 3), i * 3);
+        c.set(rec.slice(3, 6), i * 3);
+        z[i] = rec[6];
+        spinA[i] = rec[7];
+      });
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+      g.setAttribute('col', new THREE.BufferAttribute(c, 3));
+      g.setAttribute('sz', new THREE.BufferAttribute(z, 1));
+      g.setAttribute('spin', new THREE.BufferAttribute(spinA, 1));
+      fieldStars = new THREE.Points(g, fieldMat);
+      fieldStars.userData.full = packed.length;
+      fieldStars.userData.cut = keep.length;
+      sky.add(fieldStars);
       sky.traverse((o) => o.layers.set(1));
       {
         const n = 8000;
@@ -680,6 +700,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         g.setAttribute('position', new THREE.BufferAttribute(p, 3));
         g.setAttribute('col', new THREE.BufferAttribute(c, 3));
         g.setAttribute('sz', new THREE.BufferAttribute(z, 1));
+        g.setAttribute('spin', new THREE.BufferAttribute(new Float32Array(ob.length), 1));
         const hm = fieldStarMaterial();
         const ho = new THREE.Points(g, hm);
         ho.layers.set(1);
@@ -787,11 +808,12 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
         scene.add(o);
         zoneLbls.push({ o, d, z });
       });
-      const bh = createBlackHole();
-      diskMat = bh.mat;
-      bhMesh = bh.mesh;
+      bhPass = createBhCache();
+      diskMat = bhPass.mat;
+      bhMesh = bhPass.mesh;
       scene.add(bhMesh);
-      api.routerMesh = bhMesh;
+      scene.add(bhPass.quad);
+      api.routerMesh = bhPass.quad;
       api.routerDim = (d) => { diskMat.uniforms.dim.value = d; };
       frMat = mkLineMat({ color: '#AFC0E0', linewidth: 1, opacity: 0 });
       api._scene = scene;
@@ -807,14 +829,35 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     },
     decor(starNode, N, mkHalo) {
       const decor = [];
-      N.filter((o) => o.k === 'playbook').forEach((o) => {
-        const c = '#' + o.base.getHexString();
-        const inner = mkHalo(c, 1, 0.6);
-        const outer = mkHalo(c, 1, 0.16);
-        inner.material.color.multiplyScalar(1.8);
-        outer.material.color.multiplyScalar(0.5);
-        decor.push({ o, s: inner, f: 3.0, op: 0.6 }, { o, s: outer, f: 8.5, op: 0.16 });
+      const stars = N.filter((o) => o.k === 'playbook');
+      const haloMat = () => new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+        uniforms: { map: { value: haloTex } },
+        vertexShader: 'attribute float aOp;varying vec2 vUv;varying vec3 vC;varying float vOp;void main(){vUv=uv;vC=instanceColor;vOp=aOp;gl_Position=projectionMatrix*viewMatrix*modelMatrix*instanceMatrix*vec4(position,1.);}',
+        fragmentShader: 'uniform sampler2D map;varying vec2 vUv;varying vec3 vC;varying float vOp;void main(){vec4 t=texture2D(map,vUv);gl_FragColor=vec4(t.rgb*vC*vOp,t.a*vOp);}',
       });
+      const makeBatch = (f, op, mul) => {
+        const geo = new THREE.PlaneGeometry(1, 1);
+        const aOp = new THREE.InstancedBufferAttribute(new Float32Array(stars.length), 1);
+        aOp.setUsage(THREE.DynamicDrawUsage);
+        geo.setAttribute('aOp', aOp);
+        const im = new THREE.InstancedMesh(geo, haloMat(), stars.length);
+        im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        im.frustumCulled = false;
+        im.count = stars.length;
+        stars.forEach((o, i) => {
+          const col = o.base.clone().multiplyScalar(mul);
+          im.setColorAt(i, col);
+        });
+        if (im.instanceColor) im.instanceColor.needsUpdate = true;
+        api._scene.add(im);
+        return { im, f, op, nodes: stars };
+      };
+      haloInner = makeBatch(3.0, 0.6, 1.8);
+      haloOuter = makeBatch(8.5, 0.16, 0.5);
       if (quality().spikes) {
         const c = document.createElement('canvas');
         c.width = c.height = 256;
@@ -859,8 +902,8 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       const moving = !reduced && !paused;
       if (moving) mclk += dt;
       if (moving) {
-        starLayers.forEach((l) => { l.pts.rotation.y += l.w * dt; });
-        if (sky0) sky0.rotation.y += starLayers[0].w * dt * 0.5;
+        FIELD_U.uTime.value = mclk / 1000;
+        if (sky0) sky0.rotation.y += ((2 * Math.PI) / 5400) * (dt / 1000) * 0.5;
         if (!rt.focus && !rt.drag && !rt.camTw) rt.cam.az += dt * ((2 * Math.PI) / 720000);
       }
       const orbiting = moving && !rt.focus && (rt.idle ?? 1) > 0.98 && !rt.camTw;
@@ -944,6 +987,21 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
           p.m.visible = p.o.dim < 0.98;
         });
       }
+      [haloInner, haloOuter].forEach((batch) => {
+        if (!batch || !rt?.camera) return;
+        const attr = batch.im.geometry.getAttribute('aOp');
+        const q = rt.camera.quaternion;
+        batch.nodes.forEach((o, i) => {
+          const hid = !rt.focus && rt.hiddenKinds?.has(o.k);
+          const ad = THREE.MathUtils.smoothstep(rt.camera.position.distanceTo(o.pos) / Math.max(o.sc, 0.01), 8, 70);
+          const op = hid ? 0 : batch.op * (1 - o.dim) * (0.3 + 0.7 * ad);
+          attr.setX(i, op);
+          haloM.compose(o.pos, q, haloS.setScalar(hid ? 0 : o.sc * batch.f));
+          batch.im.setMatrixAt(i, haloM);
+        });
+        attr.needsUpdate = true;
+        batch.im.instanceMatrix.needsUpdate = true;
+      });
       decorList.forEach((d) => {
         if (!rt?.camera) return;
         const ad = THREE.MathUtils.smoothstep(rt.camera.position.distanceTo(d.o.pos) / Math.max(d.o.sc, 0.01), 8, 70);
@@ -1134,10 +1192,10 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   };
 
   function updBH() {
-    if (!bhMesh || !rt?.camera) return;
+    if (!bhPass || !rt?.camera) return;
     const star = rt.NB.get(router.id);
     if (!star) return;
-    bhMesh.quaternion.copy(rt.camera.quaternion);
+    bhPass.quad.quaternion.copy(rt.camera.quaternion);
     const u = diskMat.uniforms;
     u.bhPos.value.copy(star.pos);
     u.Rs.value = BH_RS * (star.sc / 6);
@@ -1149,7 +1207,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     const renderer = rt.renderer;
     const camera = rt.camera;
     const gs = quality(renderer);
-    const half = gs.lensHalf || rt.mobile() || renderer.getPixelRatio() >= 2;
+    const half = gs.lensHalf || rt.mobile() || renderer.getPixelRatio() >= 1.5;
     lensScale = half ? 0.5 : 1;
     const buf = new THREE.Vector2();
     renderer.getDrawingBufferSize(buf);
@@ -1197,7 +1255,8 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
   }
   function applyGfx() {
     const gs = quality(rt.renderer);
-    starLayers.forEach((l) => l.pts.geometry.setDrawRange(0, Math.round(l.pts.userData.n * gs.stars)));
+    if (fieldStars) fieldStars.geometry.setDrawRange(0, gs.stars < 1 ? fieldStars.userData.cut : fieldStars.userData.full);
+    if (fieldMat) fieldMat.uniforms.pr.value = rt.renderer.getPixelRatio();
     if (galaxyDust) galaxyDust.geometry.setDrawRange(2600, Math.round(5400 * (gs.dust < 1 ? 0.6 : 1)));
     if (armGlow) armGlow.geometry.setDrawRange(0, Math.round(640 * (gs.glow < 1 ? 0.55 : 1)));
     if (api._hii) {
@@ -1205,10 +1264,14 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       api._hii.puff.geometry.setDrawRange(0, n);
       api._hii.knot.geometry.setDrawRange(0, n * 5);
       api._hii.ho.geometry.setDrawRange(0, n * 3);
+      if (api._hii.ho.material.uniforms?.pr) api._hii.ho.material.uniforms.pr.value = rt.renderer.getPixelRatio();
     }
-    diskMat.defines.STEPS = gs.bhSteps;
-    diskMat.defines.LITE = gs.bhLite;
-    diskMat.needsUpdate = true;
+    if (Number(diskMat.defines.STEPS) !== gs.bhStepsMax || Number(diskMat.defines.LITE) !== gs.bhLite) {
+      diskMat.defines.STEPS = gs.bhStepsMax;
+      diskMat.defines.LITE = gs.bhLite;
+      diskMat.needsUpdate = true;
+    }
+    if (diskMat.uniforms.uSteps) diskMat.uniforms.uSteps.value = gs.bhSteps;
     spikes.forEach((s) => { s.visible = !!gs.spikes; });
     pipe?.invalidate();
     document.querySelectorAll('[data-g]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.g === getGfx())));
@@ -1259,8 +1322,20 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       updBH();
       if (lensOn) lensPass();
       else diskMat.uniforms.bgOn.value = 0;
+      bhPass.render(renderer, scene, camera);
       pipe.render(scene, camera);
-      api.lastStats = { ...pipe.stats, lrt: [LRT.width, LRT.height], bloom0: pipe.bloom0(), hdr: pipe.hdr(), gfx: getGfx() };
+      const gs = quality(renderer);
+      api.lastStats = {
+        ...pipe.stats,
+        lrt: [LRT.width, LRT.height],
+        bloom0: pipe.bloom0(),
+        bloomLv: pipe.levels(),
+        hdr: pipe.hdr(),
+        gfx: getGfx(),
+        bh: { ...bhPass.stats },
+        adapt: gs.adapt,
+        bloomDiv: gs.bloomDiv,
+      };
     };
     const reset = document.getElementById('reset');
     const dock = document.createElement('div');
@@ -1293,7 +1368,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
       e.preventDefault();
       setPaused(!paused);
     });
-    document.getElementById('about').insertAdjacentHTML('beforeend', '<div class="gfx"><span>Graphics</span><div class="gseg" id="gfxSeg" role="group" aria-label="Graphics quality"><button type="button" data-g="high">High</button><button type="button" data-g="balanced">Balanced</button></div></div><p class="gnote">Balanced halves the bloom and lensing resolution, draws fewer stars and a simpler black-hole disk. Saved on this device.</p>');
+    document.getElementById('about').insertAdjacentHTML('beforeend', '<div class="gfx"><span>Graphics</span><div class="gseg" id="gfxSeg" role="group" aria-label="Graphics quality"><button type="button" data-g="high">High</button><button type="button" data-g="balanced">Balanced</button></div></div><p class="gnote">Balanced is the default on Windows and integrated graphics. It lowers the resolution, simplifies the black-hole disk, and uses a smaller bloom. If frames stay slow, quality eases down on its own. Saved on this device.</p>');
     document.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => setGfx(b.dataset.g); });
     onGfx(applyGfx);
     const key = document.getElementById('key');
@@ -1310,7 +1385,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     };
     key.appendChild(pill);
     applyGfx();
-    api.gfx = () => ({ ...api.lastStats, gfx: getGfx(), steps: diskMat.defines.STEPS, lite: diskMat.defines.LITE, paused, mclk: Math.round(mclk) });
+    api.gfx = () => ({ ...api.lastStats, gfx: getGfx(), steps: diskMat.uniforms.uSteps.value, lite: diskMat.defines.LITE, paused, mclk: Math.round(mclk) });
   }
 
   function mkStep() {

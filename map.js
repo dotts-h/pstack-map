@@ -9,6 +9,7 @@ import { homePositions } from './layout.mjs';
 import { FRIENDLY, EWORD, KINDS, ETYPES, kindOf, etype, plainName, oneLiner } from './copy.mjs';
 import { THEME_IDS, themeMeta, createTheme, rankBadge } from './themes.mjs';
 import { CREDITS_HTML, stepsOf } from './galaxy.mjs';
+import { targetPixelRatio, onGfx, noteFrame, frameStats } from './galaxy-fx.mjs';
 
 const qs = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || qs.has('reduced');
@@ -92,7 +93,7 @@ try {
   showError('This browser has no 3D support.');
   throw new Error('no webgl');
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.setPixelRatio(targetPixelRatio());
 renderer.setSize(W(), H());
 renderer.setClearColor(css('--bg'), 1);
 host.appendChild(renderer.domElement);
@@ -1393,13 +1394,48 @@ let booted = false;
 function edgeMode() {
   return FOCUS && FS ? 'focus' : 'home';
 }
-function frame(now) {
+let rafOn = true;
+let lastRender = 0;
+let lastInput = performance.now();
+function wake() {
+  lastInput = performance.now();
+  if (document.hidden || rafOn) return;
+  rafOn = true;
   requestAnimationFrame(frame);
+}
+function frameMode(now) {
+  if (document.hidden) return 'stop';
+  const live = !!(camTw || idleTw || spinAz || spinEl || drag || pointers.size || pendingHover || pending || (PLAY && PLAY.playing) || bodyMoving(now));
+  if (live || now - lastInput < 160) return 'full';
+  if (dirty) return 'full';
+  if (!reduced && theme.ambientMotion?.()) return 'ambient';
+  return 'stop';
+}
+function frame(now) {
+  const mode = frameMode(now);
+  if (mode === 'stop') {
+    rafOn = false;
+    return;
+  }
+  if (mode === 'ambient' && now - lastRender < 32) {
+    requestAnimationFrame(frame);
+    return;
+  }
+  lastRender = now;
+  const t0 = performance.now();
   try {
     frameBody(now);
   } catch (err) {
     console.error(err);
   }
+  const cost = performance.now() - t0;
+  noteFrame(cost);
+  paintPerf(cost);
+  if (document.hidden || frameMode(performance.now()) === 'stop') {
+    rafOn = false;
+    return;
+  }
+  requestAnimationFrame(frame);
 }
 function frameBody(now) {
   if (pendingHover && !(drag && drag.moved > 4)) {
@@ -1448,7 +1484,10 @@ function frameBody(now) {
   }
   theme.beforeCam?.();
   applyCam();
-  for (const o of N) {
+  const nodesMoving = N.some((o) => (o.dur && now < o.t0 + o.dur) || (o.dimDur && now < o.dimT0 + o.dimDur));
+  if (nodesMoving) anyAnim = true;
+  const pose = anyAnim || dirty;
+  if (pose) for (const o of N) {
     const p = o.dur ? THREE.MathUtils.clamp((now - o.t0) / o.dur, 0, 1) : 1;
     const dp = o.dimDur ? THREE.MathUtils.clamp((now - o.dimT0) / o.dimDur, 0, 1) : 1;
     if (p < 1 || dp < 1) anyAnim = true;
@@ -1471,29 +1510,30 @@ function frameBody(now) {
     Cc.copy(o.base).lerp(DIM, o.dim * (FOCUS ? 0.9 : 0.85));
     o.im.setColorAt(o.i, Cc);
   }
-  Object.values(inst).forEach((im) => {
+  if (pose) Object.values(inst).forEach((im) => {
     im.instanceMatrix.needsUpdate = true;
     if (im.instanceColor) im.instanceColor.needsUpdate = true;
   });
-  sunLight.position.copy(starNode.pos);
-  decor.forEach((d) => {
+  if (pose) sunLight.position.copy(starNode.pos);
+  if (pose) decor.forEach((d) => {
     d.s.position.copy(d.o.pos);
     d.s.scale.setScalar(d.o.sc * d.f);
     d.s.material.opacity = d.op * (1 - d.o.dim);
     d.s.visible = !(hiddenKinds.has(d.o.k) && !FOCUS);
   });
-  pring.forEach((p) => {
+  if (pose) pring.forEach((p) => {
     p.m.position.copy(p.o.pos);
     p.m.scale.setScalar(p.o.sc);
     p.m.material.opacity = 0.32 * (1 - p.o.dim);
     p.m.visible = !(hiddenKinds.has(p.o.k) && !FOCUS);
   });
   guides.forEach((l) => {
+    if (l.userData?.limb) l.quaternion.copy(camera.quaternion);
+    if (!pose) return;
     const ga = (theme.gkeep || 0) + (1 - (theme.gkeep || 0)) * idleAlpha;
     const base = l.userData?.op ?? (l.isLineSegments2 ? 1 : 0.035);
     if (l.material) l.material.opacity = base * ga;
     l.visible = ga > 0.01;
-    if (l.userData?.limb) l.quaternion.copy(camera.quaternion);
   });
   theme.tick?.(idleAlpha);
   if (theme.plate) theme.plate.visible = !!(FOCUS && theme._plateOn);
@@ -1540,51 +1580,59 @@ function frameBody(now) {
   }
   arrows.count = ai;
   arrows.material.opacity = hl.l ? (FOCUS ? 1 - idleAlpha : 1) : 0;
-  arrows.instanceMatrix.needsUpdate = true;
-  if (arrows.instanceColor) arrows.instanceColor.needsUpdate = true;
-  drawPulses(now);
-  const camDir = T.copy(camera.position).sub(cam.target).normalize().clone();
-  const fd = fitDist();
-  const cx = FOCUS ? NB.get(FOCUS).pos.clone().project(camera).x : 0;
-  for (const o of N) {
-    if (FOCUS) {
-      if (o.lmode === 'hide' || o.lmode === 'sel') {
-        o.lo.visible = false;
-        continue;
-      }
-      o.lo.visible = true;
-      const v = o.pos.clone().project(camera);
-      const left = v.x < cx;
-      setAnchor(o, left ? 'l' : 'r');
-      o.el.className = 'lbl' + (SMALLK.includes(o.k) ? ' small' : '') + ((o === hovered || STEPCUR.has(o.id)) ? ' hover' : '');
-      paintLabel(o, trunc(nm(o.id), mobile() ? 16 : 30));
-      const rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-      o.lo.position.copy(o.pos).addScaledVector(rv, (left ? -1 : 1) * (o.sc * 1.2 + 0.8));
-      o.anc.style.opacity = (o.prog > 0.6 || reduced) ? 1 : 0;
-    } else {
-      setAnchor(o, 'c');
-      o.anc.style.opacity = 1;
-      o.el.className = 'lbl ' + (o.k === 'router' ? 'router' : SMALLK.includes(o.k) ? 'small' : '') + (o === hovered ? ' hover' : '');
-      paintLabel(o, trunc(nm(o.id)));
-      const front = theme.front ? theme.front(o, camDir) : o.pos.dot(camDir) > -0.15 * o.pos.length();
-      const tier = theme.labelTier ? theme.labelTier(o, hovered) : (o.k === 'router' || o === hovered ? 0 : o.k === 'playbook' || deg(o.id) >= 14 ? 1 : SMALLK.includes(o.k) ? 3 : 2);
-      const zoomOk = tier <= 1 || (tier === 2 && cam.dist < fd * 0.62) || (tier === 3 && cam.dist < fd * 0.42);
-      const zoneOk = theme.inZone ? theme.inZone(o) : true;
-      o.lo.visible = !hiddenKinds.has(o.k) && zoneOk && (o.k === 'router' || o === hovered || (front && zoomOk));
-      o.lo.position.copy(o.pos);
-      o.lo.position.y -= o.sc * 1.35;
-    }
+  if (pose) {
+    arrows.instanceMatrix.needsUpdate = true;
+    if (arrows.instanceColor) arrows.instanceColor.needsUpdate = true;
   }
-  theme.syncSteps?.({ focus: FOCUS, play: PLAY, nodes: NB, camera, idleAlpha, hot: STEPCUR });
-  moreLbls.forEach((h) => {
-    if (!h.node) return;
-    const rv = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-    h.lo.position.copy(h.node.pos).addScaledVector(rv, h.side * (h.node.sc * 1.2 + 0.8));
-  });
+  if (pose || FOCUS) drawPulses(now);
+  const rev = labelSignature();
+  if (pose || rev !== labelRev) {
+    labelRev = rev;
+    const camDir = T.copy(camera.position).sub(cam.target).normalize();
+    const fd = fitDist();
+    const cx = FOCUS ? (LP.copy(NB.get(FOCUS).pos).project(camera), LP.x) : 0;
+    RV.setFromMatrixColumn(camera.matrixWorld, 0);
+    for (const o of N) {
+      if (FOCUS) {
+        if (o.lmode === 'hide' || o.lmode === 'sel') {
+          o.lo.visible = false;
+          continue;
+        }
+        LP.copy(o.pos).project(camera);
+        const left = LP.x < cx;
+        setAnchor(o, left ? 'l' : 'r');
+        const cls = 'lbl' + (SMALLK.includes(o.k) ? ' small' : '') + ((o === hovered || STEPCUR.has(o.id)) ? ' hover' : '');
+        if (o.el.className !== cls) o.el.className = cls;
+        paintLabel(o, trunc(nm(o.id), mobile() ? 16 : 30));
+        o.lo.position.copy(o.pos).addScaledVector(RV, (left ? -1 : 1) * (o.sc * 1.2 + 0.8));
+        o.anc.style.opacity = (o.prog > 0.6 || reduced) ? 1 : 0;
+        o.lo.visible = !labelOff(o.lo.position);
+      } else {
+        setAnchor(o, 'c');
+        o.anc.style.opacity = 1;
+        const cls = 'lbl ' + (o.k === 'router' ? 'router' : SMALLK.includes(o.k) ? 'small' : '') + (o === hovered ? ' hover' : '');
+        if (o.el.className !== cls) o.el.className = cls;
+        paintLabel(o, trunc(nm(o.id)));
+        const front = theme.front ? theme.front(o, camDir) : o.pos.dot(camDir) > -0.15 * o.pos.length();
+        const tier = theme.labelTier ? theme.labelTier(o, hovered) : (o.k === 'router' || o === hovered ? 0 : o.k === 'playbook' || deg(o.id) >= 14 ? 1 : SMALLK.includes(o.k) ? 3 : 2);
+        const zoomOk = tier <= 1 || (tier === 2 && cam.dist < fd * 0.62) || (tier === 3 && cam.dist < fd * 0.42);
+        const zoneOk = theme.inZone ? theme.inZone(o) : true;
+        o.lo.position.copy(o.pos);
+        o.lo.position.y -= o.sc * 1.35;
+        o.lo.visible = !hiddenKinds.has(o.k) && zoneOk && (o.k === 'router' || o === hovered || (front && zoomOk)) && !labelOff(o.pos);
+      }
+    }
+    theme.syncSteps?.({ focus: FOCUS, play: PLAY, nodes: NB, camera, idleAlpha, hot: STEPCUR });
+    moreLbls.forEach((h) => {
+      if (!h.node) return;
+      h.lo.position.copy(h.node.pos).addScaledVector(RV, h.side * (h.node.sc * 1.2 + 0.8));
+      h.lo.visible = !labelOff(h.lo.position);
+    });
+    labelR.render(scene, camera);
+    declutter();
+  }
   if (theme.renderFrame) theme.renderFrame(renderer, scene, camera);
   else renderer.render(scene, camera);
-  labelR.render(scene, camera);
-  declutter();
   if (cardId && (anyAnim || dirty)) placeCard();
   dirty = false;
   if (anyAnim || pending > 0) lastBusy = now;
@@ -1595,6 +1643,52 @@ function frameBody(now) {
     window.__ready = true;
   }
   if (qs.has('debug')) document.getElementById('debug').textContent = `${renderer.info.render.calls} calls · ${renderer.info.render.triangles} tris`;
+}
+const LP = new THREE.Vector3();
+const RV = new THREE.Vector3();
+let labelRev = '';
+function labelOff(pos) {
+  LP.copy(pos).project(camera);
+  return LP.z < -1 || LP.z > 1 || Math.abs(LP.x) > 1.12 || Math.abs(LP.y) > 1.12;
+}
+function labelSignature() {
+  const e = camera.matrixWorld.elements;
+  return [
+    FOCUS || '', hovered ? hovered.id : '', cardId || '',
+    PLAY ? String(PLAY.k) + (PLAY.playing ? 'p' : '') : '',
+    hiddenKinds.size, hiddenE.size,
+    cam.dist.toFixed(1), idleAlpha.toFixed(2),
+    e[12].toFixed(1), e[13].toFixed(1), e[14].toFixed(1),
+    e[2].toFixed(3), e[6].toFixed(3), e[10].toFixed(3),
+    Math.round(viewX), Math.round(viewY),
+  ].join('|');
+}
+const perfBuf = new THREE.Vector2();
+let perfEl = null;
+let perfPaint = 0;
+if (qs.has('perf')) {
+  perfEl = document.createElement('div');
+  perfEl.id = 'perf';
+  perfEl.setAttribute('aria-hidden', 'true');
+  perfEl.style.cssText = 'position:fixed;top:68px;left:16px;z-index:40;font:12px/17px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#ECEEF4;background:rgba(3,4,10,.84);padding:8px 10px;border-radius:8px;pointer-events:none;white-space:pre;border:1px solid rgba(255,255,255,.14)';
+  document.body.appendChild(perfEl);
+}
+function paintPerf(cost) {
+  const s = frameStats();
+  window.__perf = { ...s, cost, gfx: theme.gfx?.() || null };
+  if (!perfEl || performance.now() - perfPaint < 250) return;
+  perfPaint = performance.now();
+  const g = window.__perf.gfx || {};
+  renderer.getDrawingBufferSize(perfBuf);
+  const bh = g.bh;
+  perfEl.textContent = [
+    `frame ${cost.toFixed(1)} ms   avg ${s.avg.toFixed(1)} ms`,
+    `calls ${g.calls ?? '—'}   tris ${g.tris ?? '—'}`,
+    `dpr ${renderer.getPixelRatio().toFixed(2)}   buf ${perfBuf.x}×${perfBuf.y}`,
+    `bloom ${g.bloom0 ? g.bloom0.join('×') : '—'}   mips ${g.bloomLv ?? '—'}   div ${g.bloomDiv ?? '—'}`,
+    bh ? `bh ${bh.w}×${bh.h}   steps ${g.steps ?? bh.steps}   ${bh.cached ? 'cached' : 'redraw'}` : 'bh —',
+    `gfx ${g.gfx || '—'}   adapt res ${s.adapt.res} bloom ${s.adapt.bloom} bh ${s.adapt.bh}`,
+  ].join('\n');
 }
 function setAnchor(o, a) {
   if (o.anchorMode !== a) {
@@ -1626,15 +1720,27 @@ function declutter() {
     else placed.push(r);
   }
 }
-addEventListener('resize', () => {
+function applyView() {
+  renderer.setPixelRatio(targetPixelRatio());
   renderer.setSize(W(), H());
   labelR.setSize(W(), H());
   camera.aspect = W() / Math.max(1, H());
   camera.updateProjectionMatrix();
   lineMats.forEach((m) => m.resolution.set(W(), H()));
+  labelRev = '';
   dirty = true;
+  wake();
+}
+addEventListener('resize', () => {
+  applyView();
   placeCard();
 });
+onGfx(applyView);
+addEventListener('pointerdown', wake, { capture: true });
+addEventListener('pointermove', wake, { capture: true });
+addEventListener('wheel', wake, { capture: true, passive: true });
+addEventListener('keydown', wake);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
 
 const counts = {};
 G.nodes.forEach((n) => {
@@ -1868,7 +1974,8 @@ theme.bindRuntime?.({
   cam,
   camera,
   NB,
-  dirty() { dirty = true; },
+  dirty() { dirty = true; wake(); },
+  hiddenKinds,
   exit: exitFocus,
   camTo,
   mobile,
