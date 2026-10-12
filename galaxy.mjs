@@ -316,6 +316,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced, nm }) {
   function frameFocus({ id, C, member, radii, inc, out, nodes, kind, Rh, Df, mobile, W, H, vf, ppu, dist }) {
     const chrome = focusChrome(W, H, mobile);
     const az = rt?.cam?.az ?? homeCam.az;
+    const baseEl = rt?.cam?.el ?? homeCam.el;
     const base = new Map();
     member.forEach((m, nid) => base.set(nid, m.p.clone()));
     const baseRadii = radii.slice();
@@ -417,9 +418,11 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced, nm }) {
       if (!Number.isFinite(minX)) { minX = 0; minY = 0; maxX = 1; maxY = 1; }
       return { minX, minY, maxX, maxY, behind, selR };
     };
-    let el = 1.18;
+    let el = baseEl;
     let squeeze = 1;
+    let nudge = 0;
     let fit = null;
+    const maxNudge = 4 * Math.PI / 180;
     const solve = (elev) => {
       const target = new THREE.Vector3();
       let n = 0;
@@ -474,13 +477,21 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced, nm }) {
         || box.maxY > chrome.safe.b + 3 || box.minY < chrome.safe.t - 3;
       return { aim: target, dist: d, el: elev, az, selR: box.selR, overflow, squeeze };
     };
-    for (let pass = 0; pass < 5; pass++) {
+    for (let pass = 0; pass < 8; pass++) {
       applySqueeze(squeeze);
       fit = solve(el);
       const tiny = fit.selR < (mobile ? 16 : 22);
       if (!fit.overflow && !tiny) break;
-      if (pass === 0) { el = 1.28; continue; }
-      squeeze *= 0.8;
+      if (squeeze > 0.45) {
+        squeeze *= 0.8;
+        continue;
+      }
+      if (fit.overflow && nudge < maxNudge - 1e-4) {
+        nudge = Math.min(maxNudge, nudge + 2 * Math.PI / 180);
+        el = Math.min(baseEl + nudge, 1.35);
+        continue;
+      }
+      break;
     }
     fit.squeeze = squeeze;
     fit.ppu = H / (2 * Math.tan(vf / 2) * Math.max(fit.dist, 1));
@@ -1111,7 +1122,7 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced, nm }) {
         member.set(x.id, { p: C.clone().addScaledVector(Rh, t).addScaledVector(Df, -rOut * 0.35 - st * 10 * SF).addScaledVector(Y, upY + st * 13 * SF) });
       });
       const hw0 = Math.max(rOut, upW) + 6;
-      const guessEl = 1.18;
+      const guessEl = rt?.cam?.el ?? homeCam.el;
       const top0 = Math.max(up.length ? (upY + (up.length > 5 ? 13 : 0)) * Math.cos(guessEl) + rOut * 0.35 * Math.sin(guessEl) : 0, rOut * Math.sin(guessEl)) + 10;
       const bot0 = rOut * Math.sin(guessEl) + 10;
       const visW = mobile ? W - 24 : W - 32 - 320 - 28;
