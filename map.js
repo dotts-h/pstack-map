@@ -6,10 +6,10 @@ import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { homePositions } from './layout.mjs';
-import { FRIENDLY, EWORD, KINDS, ETYPES, kindOf, etype, plainName, oneLiner } from './copy.mjs';
-import { THEME_IDS, themeMeta, createTheme, rankBadge } from './themes.mjs';
-import { CREDITS_HTML, stepsOf } from './galaxy.mjs';
-import { targetPixelRatio, onGfx, noteFrame, frameStats } from './galaxy-fx.mjs';
+import { FRIENDLY, EWORD, KINDS, ETYPES, kindOf, etype, plainName, oneLiner, stepsOf } from './copy.mjs';
+import { THEME_IDS, themeMeta, rankBadge } from './theme-meta.mjs';
+import { galaxyTheme, CREDITS_HTML } from './galaxy.mjs';
+import { targetPixelRatio, onGfx, noteFrame, frameStats } from './gfx.mjs';
 
 const qs = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || qs.has('reduced');
@@ -53,7 +53,12 @@ const deg = (id) => byId.get(id)?.degree?.total ?? 0;
 let theme;
 let homes;
 try {
-  theme = createTheme(THEME, { G, byId, kindOf, nm, deg, SHAPE, homePositions, css, reduced });
+  if (THEME === 'galaxy') {
+    theme = galaxyTheme({ G, byId, kindOf, nm, deg, css, reduced });
+  } else {
+    const { createTheme } = await import('./themes.mjs');
+    theme = createTheme(THEME, { G, byId, kindOf, nm, deg, SHAPE, homePositions, css, reduced });
+  }
   homes = theme.homes;
 } catch (e) {
   showError(e.message || 'The map data is unavailable.');
@@ -84,9 +89,8 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({
     antialias: theme.id !== 'galaxy',
-    preserveDrawingBuffer: true,
-    depth: theme.id !== 'galaxy',
-    stencil: theme.id !== 'galaxy',
+    powerPreference: 'high-performance',
+    stencil: false,
   });
   if (!renderer.getContext()) throw new Error('no context');
 } catch {
@@ -1403,12 +1407,13 @@ function wake() {
   rafOn = true;
   requestAnimationFrame(frame);
 }
+const ORBIT_IDLE = 8000;
 function frameMode(now) {
   if (document.hidden) return 'stop';
   const live = !!(camTw || idleTw || spinAz || spinEl || drag || pointers.size || pendingHover || pending || (PLAY && PLAY.playing) || bodyMoving(now));
   if (live || now - lastInput < 160) return 'full';
   if (dirty) return 'full';
-  if (!reduced && theme.ambientMotion?.()) return 'ambient';
+  if (!reduced && theme.ambientMotion?.() && now - lastInput < ORBIT_IDLE) return 'ambient';
   return 'stop';
 }
 function frame(now) {
@@ -1618,7 +1623,7 @@ function frameBody(now) {
         const zoomOk = tier <= 1 || (tier === 2 && cam.dist < fd * 0.62) || (tier === 3 && cam.dist < fd * 0.42);
         const zoneOk = theme.inZone ? theme.inZone(o) : true;
         o.lo.position.copy(o.pos);
-        o.lo.position.y -= o.sc * 1.35;
+        o.lo.position.y += theme.labelDy ? theme.labelDy(o) : -o.sc * 1.35;
         o.lo.visible = !hiddenKinds.has(o.k) && zoneOk && (o.k === 'router' || o === hovered || (front && zoomOk)) && !labelOff(o.pos);
       }
     }
@@ -1680,14 +1685,12 @@ function paintPerf(cost) {
   perfPaint = performance.now();
   const g = window.__perf.gfx || {};
   renderer.getDrawingBufferSize(perfBuf);
-  const bh = g.bh;
   perfEl.textContent = [
     `frame ${cost.toFixed(1)} ms   avg ${s.avg.toFixed(1)} ms`,
     `calls ${g.calls ?? '—'}   tris ${g.tris ?? '—'}`,
     `dpr ${renderer.getPixelRatio().toFixed(2)}   buf ${perfBuf.x}×${perfBuf.y}`,
-    `bloom ${g.bloom0 ? g.bloom0.join('×') : '—'}   mips ${g.bloomLv ?? '—'}   div ${g.bloomDiv ?? '—'}`,
-    bh ? `bh ${bh.w}×${bh.h}   steps ${g.steps ?? bh.steps}   ${bh.cached ? 'cached' : 'redraw'}` : 'bh —',
-    `gfx ${g.gfx || '—'}   adapt res ${s.adapt.res} bloom ${s.adapt.bloom} bh ${s.adapt.bh}`,
+    `bloom ${g.bloom ? (g.bloomSize ? g.bloomSize.join('×') : 'on') : 'off'}`,
+    `disk ${g.disk || '—'}   gfx ${g.gfx || s.gfx || '—'}`,
   ].join('\n');
 }
 function setAnchor(o, a) {
@@ -1810,7 +1813,7 @@ if (theme.keyExtras) {
 const dt = new Date(U.commitDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 document.getElementById('about').innerHTML = `<p>A map of how the pstack skills library fits together: workflows, the tools and rules they use, and the docs behind them.</p>
   <dl><dt>Version</dt><dd>pstack ${esc(U.version)}</dd><dt>Data from</dt><dd>${esc(dt)}</dd><dt>Commit</dt><dd><a href="${esc(U.url + '/commit/' + U.commit)}" style="font-family:var(--font-mono)">${esc(U.commitShort)}</a></dd>
-  <dt>Source</dt><dd><a href="${esc(U.url + '/tree/' + U.commit + '/' + U.pluginPath)}">cursor/plugins</a></dd><dt>License</dt><dd><a href="${esc(U.licenseUrl)}">MIT</a> · © Lauren Tan</dd></dl>${CREDITS_HTML}`;
+  <dt>Source</dt><dd><a href="${esc(U.url + '/tree/' + U.commit + '/' + U.pluginPath)}">cursor/plugins</a></dd><dt>License</dt><dd><a href="${esc(U.licenseUrl)}">MIT</a> · © Lauren Tan</dd></dl>${THEME === 'galaxy' ? CREDITS_HTML : ''}`;
 const ab = document.getElementById('aboutBtn');
 ab.onclick = () => {
   const o = document.getElementById('about').classList.toggle('open');
@@ -2049,5 +2052,12 @@ window.__pstack = {
   get calls() { return theme.lastStats?.calls ?? renderer.info.render.calls; },
   get tris() { return theme.lastStats?.tris ?? renderer.info.render.triangles; },
   get gfx() { return theme.gfx ? theme.gfx() : null; },
+  get bend() {
+    const core = NB.get(G.nodes.find((n) => n.kind === 'router').id);
+    const star = N.find((o) => o.k === 'playbook');
+    const planet = N.find((o) => o.k === 'skill');
+    const y = (o) => o && +o.pos.y.toFixed(1);
+    return { core: y(core), star: star && { id: star.id, y: y(star) }, planet: planet && { id: planet.id, y: y(planet) } };
+  },
   get play() { return PLAY && { id: PLAY.id, k: PLAY.k, playing: PLAY.playing, n: PLAY.S.length, order: PLAY.k >= 0 ? PLAY.S[PLAY.k][0] : null }; },
 };
