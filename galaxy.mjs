@@ -245,30 +245,6 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     return Y0 - d;
   };
   seatHomes();
-  const GP = new THREE.Vector3();
-  const gravPull = (a, b, m, len) => {
-    GP.set(0, 0, 0);
-    const wells = [{ p: new THREE.Vector3(), mu: 0.45, eps: 90 * SP_IN }];
-    G.nodes.filter((n) => isStar(n.id)).forEach((n) => {
-      wells.push({ p: homes.get(n.id), mu: 0.2 * MASS(n.id), eps: (sysR.get(n.id) || 6) * 1.5 });
-    });
-    wells.forEach((w) => {
-      if (w.p.distanceToSquared(a) < 1 || w.p.distanceToSquared(b) < 1) return;
-      const dx = w.p.x - m.x;
-      const dy = w.p.y - m.y;
-      const dz = w.p.z - m.z;
-      const d2 = dx * dx + dy * dy + dz * dz;
-      const d = Math.sqrt(d2) || 1;
-      const f = (w.mu * len * w.eps * w.eps) / (d2 + w.eps * w.eps) / d;
-      GP.x += dx * f;
-      GP.y += dy * f;
-      GP.z += dz * f;
-    });
-    const L = GP.length();
-    const cap = 0.35 * len;
-    if (L > cap) GP.multiplyScalar(cap / L);
-    return GP;
-  };
   const KMUL = { router: 1, playbook: 1.5, skill: 0.58, agent: 0.58, automation: 0.5, principle: 0.62, script: 0.42, reference: 0.42, other: 0.45 };
   const radiusOf = (n) => (n.kind === 'router' ? 6 : KMUL[kindOf(n.kind)] * (1.6 + 3.4 * Math.sqrt(deg(n.id) / maxDeg)));
   const GEO = {
@@ -337,8 +313,8 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
     stars: false,
     GEO,
     radiusOf,
-    edgeSeg: 20,
-    edgeSegHl: 28,
+    edgeSeg: 28,
+    edgeSegHl: 32,
     idleMs: 700,
     motion: { REGROUP: 2000, TRAVEL: 1900, EXIT: 1800, STAGGER: 26, STAGGER_MAX: 520, DISPERSE: 1700 },
     zones: ZONES,
@@ -393,19 +369,20 @@ export function galaxyTheme({ G, byId, kindOf, deg, css, reduced }) {
           a.z * mt * mt + 2 * m.z * mt * t + b.z * t * t,
         );
       }
-      m.applyAxisAngle(YV, 0.32 * Math.min(1, len / 260));
-      const pull = gravPull(a, b, m, len);
-      m.x += pull.x;
-      m.z += pull.z;
+      const dx = b.x - a.x;
+      const dz = b.z - a.z;
+      const xz = Math.hypot(dx, dz) || 1;
+      let px = -dz / xz;
+      let pz = dx / xz;
+      if (px * m.x + pz * m.z < 0) { px = -px; pz = -pz; }
+      const bow = Math.min(xz * 0.5, 120);
+      m.x += px * bow;
+      m.z += pz * bow;
       const mt = 1 - t;
-      out.set(
-        a.x * mt * mt + 2 * m.x * mt * t + b.x * t * t,
-        0,
-        a.z * mt * mt + 2 * m.z * mt * t + b.z * t * t,
-      );
-      const arch = Math.sin(Math.PI * t) * Math.min(5, len * 0.03);
-      out.y = surfaceY(out.x, out.z) + arch + 0.45;
-      return out;
+      const x = a.x * mt * mt + 2 * m.x * mt * t + b.x * t * t;
+      const z = a.z * mt * mt + 2 * m.z * mt * t + b.z * t * t;
+      const lift = Math.sin(Math.PI * t) * Math.min(6, 0.9 + len * 0.018);
+      return out.set(x, surfaceY(x, z) + lift + 0.55, z);
     },
     disperse(o) {
       return { p: homes.get(o.id).clone().add(new THREE.Vector3(0, -160, 0)), sc: o.r * 0.12 };

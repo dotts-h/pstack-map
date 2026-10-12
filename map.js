@@ -344,7 +344,10 @@ const idle = {};
   idle[t] = { l, g, list, base: baseOp };
 });
 const hl = { l: null, g: null, list: [] };
+let edgeGen = 0;
+let edgeStamp = '';
 function setHighlight(list) {
+  edgeGen += 1;
   if (hl.l) {
     scene.remove(hl.l);
     hl.g.dispose();
@@ -1551,12 +1554,21 @@ function frameBody(now) {
   } else selRing.material.opacity = 0;
   const mode = edgeMode();
   if (anyAnim || dirty) {
-    for (const t of Object.keys(idle)) {
-      const I = idle[t];
-      writeEdges(I.list, I.g, 'home');
-      if (t === 'imports') I.l.computeLineDistances();
+    let stamp = edgeGen + '|' + mode + '|' + (FOCUS || '');
+    hiddenKinds.forEach((k) => { stamp += '|' + k; });
+    for (let i = 0; i < N.length; i++) {
+      const p = N[i].pos;
+      stamp += '|' + Math.round(p.x * 4) + ',' + Math.round(p.y * 4) + ',' + Math.round(p.z * 4);
     }
-    if (hl.l) writeEdges(hl.list, hl.g, mode);
+    if (stamp !== edgeStamp) {
+      edgeStamp = stamp;
+      for (const t of Object.keys(idle)) {
+        const I = idle[t];
+        writeEdges(I.list, I.g, 'home');
+        if (t === 'imports') I.l.computeLineDistances();
+      }
+      if (hl.l) writeEdges(hl.list, hl.g, mode);
+    }
   }
   const hoverMul = hovered && !FOCUS ? 0.15 : 1;
   for (const t of Object.keys(idle)) {
