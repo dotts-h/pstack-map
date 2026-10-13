@@ -25,6 +25,10 @@ for (const [i, n] of (g.nodes ?? []).entries()) {
   if (ids.has(n.id)) errors.push(`duplicate node id ${n.id}`);
   if (n.kind === "principle" && !(n.appliesWhen === null || isStr(n.appliesWhen))) errors.push(`nodes[${i}].appliesWhen must be a string or null`);
   if ((n.kind === "skill" || n.kind === "playbook") && !isStr(n.text)) errors.push(`nodes[${i}].text must be a non-empty string`);
+  if (typeof n.text === "string" && typeof n.lines === "number") {
+    const textLines = n.text.endsWith("\n") ? n.text.split("\n").length - 1 : n.text.split("\n").length;
+    if (textLines !== n.lines) errors.push(`nodes[${i}].text line count ${textLines} does not match lines ${n.lines}`);
+  }
   ids.add(n.id);
 }
 if (!(g.nodes ?? []).some((n) => n.kind === "router")) errors.push("no router node");

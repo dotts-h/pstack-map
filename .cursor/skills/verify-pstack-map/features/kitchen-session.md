@@ -29,7 +29,7 @@ Preconditions:
 
 - **Open the station.** The helper loads `/?theme=kitchen&hint=0&open=architect` and waits for `#card .flink`.
 - **Open the file.** The helper clicks **Open skill file**. The modal text must contain a sentence from `node.text` that is not the description and not the `oneLiner`.
-- **Check fast mode.** The helper loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature` and waits for `#pvPlay`. `document.body` has class `fast`. Computed `animation-name` on `#hint` or `.btn.play` is `none`. `#lt .ttl` does not say Order up yet. The helper clicks **Play session**. `#lt .ttl` says Order up within 30 seconds.
+- **Check fast mode.** The helper loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature` and waits for `#pvPlay`. `document.body` has class `fast`. Computed `animation-name` on `#hint` or `.btn.play` is `none`. `#lt .ttl` does not say Order up yet. The helper clicks **Play session**. `#lt .ttl` says Order up within 30 seconds. `#ticket .k` says ready.
 - **Proof.** The opened file screenshot is `/tmp/verify-pstack-map/skill-kitchen.png`. The kitchen overview is `overview-kitchen.png`.
 
 ## Gotchas

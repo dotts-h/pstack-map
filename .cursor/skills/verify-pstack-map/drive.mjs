@@ -163,10 +163,12 @@ try {
   const fast = await page.evaluate(() => ({
     fast: document.body.classList.contains('fast'),
     orderUp: (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
+    ready: (document.querySelector('#ticket .k')?.textContent || '').includes('ready'),
   }));
   result.fast = { url: fastUrl, ...beforePlay, ...fast, problems: [...notes] };
   if (result.fast.problems.length) fail(`fast session: ${result.fast.problems.join('; ')}`);
   if (!fast.orderUp) fail('session did not show Order up on the lower third after Play');
+  if (!fast.ready) fail('ticket did not reach Order up · ready');
 } catch (err) {
   fail(err.message || String(err));
 } finally {

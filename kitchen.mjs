@@ -207,7 +207,7 @@ let userFast=qs.get('fast')==='1';
 let fast=false,CREW=true;
 function applyFast(){fast=userFast||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>el.classList.toggle('on',el.dataset.pace===(fast?'fast':'cozy')));}
 applyFast();
-document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;});
+document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast)landFast();});
 document.getElementById('pace').addEventListener('keydown',(e)=>{if(e.key!=='Enter'&&e.key!==' ')return;const b=e.target.closest('[data-pace]');if(!b)return;e.preventDefault();b.click();});
 const ease={io:u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,sin:u=>-(Math.cos(Math.PI*u)-1)/2,out:u=>1-Math.pow(1-u,3)};
 const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
@@ -354,8 +354,9 @@ const doorSpr=ST.map(()=>new Spr(0));
 function updDoors(dt){ST.forEach((s,i)=>{const sp=doorSpr[i];if(fast){sp.x=s.target;sp.v=0;}else sp.step(s.target,7,5.3,dt);if(Math.abs(sp.x-s.ang)>1e-4||Math.abs(sp.v)>1e-4){s.ang=cl(sp.x,0,1);doorM(s,i);}});
  [door,dpanel,knob,doorB,bpanel,dinner].forEach(m=>m.instanceMatrix.needsUpdate=true);}
 
-const visited=new Set(JSON.parse(localStorage.getItem('kc.visited')||'[]'));(qs.get('visited')||'').split(',').filter(Boolean).forEach(v=>visited.add(v));
-const setVisited=()=>{document.querySelector('#visited b').textContent=[...visited].filter(id=>N.get(id)?.kind==='skill').length;localStorage.setItem('kc.visited',JSON.stringify([...visited]));};
+function readVisited(){try{const p=JSON.parse(localStorage.getItem('kc.visited')||'[]');return Array.isArray(p)?p:[];}catch{return [];}}
+const visited=new Set(readVisited());(qs.get('visited')||'').split(',').filter(Boolean).forEach(v=>visited.add(v));
+const setVisited=()=>{document.querySelector('#visited b').textContent=[...visited].filter(id=>N.get(id)?.kind==='skill').length;try{localStorage.setItem('kc.visited',JSON.stringify([...visited]));}catch{}};
 const ICON={skill:'▣',principle:'❖',playbook:'🧾',agent:'☺',script:'⚒',reference:'◡',router:'⬢',automation:'⏲'};
 function rail(fire,ghost){const r=document.getElementById('rail');r.innerHTML='';[...playbooks].sort((a,b)=>stepsOf(b.id).length-stepsOf(a.id).length).forEach(p=>{const d=document.createElement('div');d.className='tk'+(p.id===fire?' fire':'')+(p.id===ghost?' ghost':'');d.dataset.id=p.id;
  const n=G.edges.filter(e=>e.source===p.id&&e.mode==='step').length;d.innerHTML=`<span class="n">${esc(p.name)}</span><span class="s">${n?n+' steps':'à la carte'}</span>`;r.appendChild(d);});const f=r.querySelector('.fire');if(f)f.scrollIntoView({inline:'center',block:'nearest'});}
@@ -416,7 +417,7 @@ function fire(pid){job.pid=pid;job.started=true;rail(pid);job.steps=G.edges.filt
  ST.forEach(s=>{if(!job.list.some(J=>J.s===s))s.lb.classList.add('dim');});
  job.steps.forEach(e=>{const n=N.get(e.target);if(n.kind==='principle'){const i=principles.indexOf(n);if(i>=0){plq.m.setColorAt(i,new THREE.Color('#F2C46B'));}}});plq.m.instanceColor.needsUpdate=true;
  job.rules=job.steps.filter(e=>N.get(e.target).kind==='principle').length;dishPlate.visible=true;tkt.style.display='block';document.getElementById('legend').style.display='none';updTicket();
- if(fast){job.list.forEach(J=>{J.landed=true;job.landed++;const lay=new THREE.Mesh(new THREE.CylinderGeometry(.5-STACK.length*.05,.54-STACK.length*.05,.16,56),M(FOODC[J.k%5],MG));lay.position.copy(DISH).setY(DISH.y+stackH+.08);scene.add(lay);stackH+=.15;STACK.push({m:lay,sp:new Spr(1)});});complete(0);}}
+ if(fast)landFast();}
 const rangeIds=new Set(ST.filter(s=>s.run===0).sort((a,b)=>a.p.x-b.p.x).slice(1,3).map(s=>s.n.id));
 function dispatch(J,T){if(CREW)crewIn(J);const free=CHEFS.filter(c=>c!==HEAD&&!c.resume&&!c.leaving&&!c.off&&(!CREW||!job.pid||c.fresh)).filter(c=>!c.job||c.st==='idle'&&c.job.landed);free.sort((a,b)=>a.g.position.distanceTo(front(J.s))-b.g.position.distanceTo(front(J.s)));const c=free[0];if(!c)return;J.chef=c;c.fresh=0;const ws=workSpot(J.s);J.face=ws.face;walkTo(c,ws.p,J);updTicket();}
 
@@ -426,7 +427,8 @@ function updPrint(T,tP){const el=[...document.querySelectorAll('#rail .tk')].fin
  slip.style.display='block';slip.innerHTML=el.innerHTML;const x0=innerWidth-150,y0=66;const e=ease.io(u2);const x=x0+(r.left-x0)*e,y=y0+(r.top-y0)*e+Math.sin(Math.PI*e)*26;
  const feed=ease.out(u1);slip.style.left=x+'px';slip.style.top=y+'px';slip.style.clipPath=`inset(0 0 ${((1-feed)*100).toFixed(1)}% 0)`;slip.style.transform=`rotate(${(Math.sin(T*9)*(u1<1?.6:0)+Math.sin(Math.PI*e)*-3).toFixed(2)}deg)`;}
 
-function openStation(id,quiet){const i=stOf.get(id);const s=ST[i];s.target=DOOR_OPEN;s.glow.material.opacity=.85;visited.add(id);setVisited();const n=s.n,mp=misen(id),ui=usedIn(id);
+function landFast(){if(!job.pid||doneAt>=0)return;job.list.forEach(J=>{if(J.landed)return;J.landed=true;job.landed++;const lay=new THREE.Mesh(new THREE.CylinderGeometry(.5-STACK.length*.05,.54-STACK.length*.05,.16,56),M(FOODC[J.k%5],MG));lay.position.copy(DISH).setY(DISH.y+stackH+.08);scene.add(lay);stackH+=.15;STACK.push({m:lay,sp:new Spr(1)});});complete(1e-4);}
+function openStation(id,quiet){const i=stOf.get(id);if(i==null)return;const s=ST[i];s.target=DOOR_OPEN;s.glow.material.opacity=.85;visited.add(id);setVisited();const n=s.n,mp=misen(id),ui=usedIn(id);
  card.innerHTML=`<div class="k">Station · recipe card</div><h3>${esc(n.name)}</h3>${fileLink(n,"Open skill file")}<p>${esc(n.description||'')}</p><h4>Mise en place · ${mp.length}</h4><div class="bowls">${mp.length?mp.map((m,j)=>`<span class="bowl ${j>2?'smudge':''}">${esc(m.name)}</span>`).join(''):'<span style="font-size:12px;color:#6B5644">Nothing prepped: this station works from the recipe alone.</span>'}</div>
  <h4>Goes into · ${ui.length} dishes</h4><div class="dish">${ui.slice(0,6).map((p,j)=>`<span class="${visited.has(p.id)||j<2?'':'smudge'}">${esc(p.name)}</span>`).join('')}</div><div class="hint">Smudged lines clear as you visit those stations and tickets.</div>`;
  card.innerHTML+=detHTML(n);card.style.display='block';document.getElementById('legend').style.display='none';if(!quiet)view={c:s.p.clone().setY(s.p.y+2).addScaledVector(s.fwd,1.6),h:16};ST.forEach(t=>t.lb.classList.toggle('dim',t!==s));
@@ -651,7 +653,7 @@ function clipSession(secs){const log=[];const STB=staticBoxes();for(let f=0;f<se
   if(f%3===0)chefBoxes().filter(o=>/Capsule/.test(o.g)&&o.b.getSize(new THREE.Vector3()).y>.6&&o.c.exitT==null).forEach(o=>{const b=o.b.clone().expandByScalar(-.04);for(const x of STB){if(x.m&&x.m.userData.walkable)continue;if(x.b.intersectsBox(b)){log.push({st:'(walk)',ang:0,hit:'chef '+o.c.i+' ('+o.c.st+') at '+o.c.g.position.toArray().map(v=>v.toFixed(2))+' body inside '+x.what+(x.k>=0?' #'+ST[x.k].n.id:''),tag:`t=${T.toFixed(2)}`});break;}}});}if(qs.get('auto')||qs.get('session')){const stuck=allChefs().filter(c=>c.st==='walk'&&(c.wait||0)>.2);if(doneAt<0||stuck.length)log.push({st:'(end)',ang:0,hit:`run did not finish cleanly: doneAt=${doneAt.toFixed?doneAt.toFixed(1):doneAt}, waiting cooks: ${stuck.map(c=>c.i).join(',')||'none'}`,tag:'end'});}return log;}
 window.__clip=(secs)=>{const t0=performance.now();const A=clipSweep();const B=secs?clipSession(secs):[];return {sweep:A.length,session:B.length,ms:Math.round(performance.now()-t0),first:A.concat(B).slice(0,40),byStation:Object.entries(A.concat(B).reduce((m,x)=>(m[x.st]=(m[x.st]||0)+1,m),{}))};};
 
-window.__ev=s=>eval(s);window.__doorShot=(i,u)=>{camE=null;ST.forEach((t,k)=>{t.ang=t.target=0;doorSpr[k].x=0;doorSpr[k].v=0;doorM(t,k);});const s=ST[i];s.ang=s.target=u;doorSpr[i].x=u;doorM(s,i);[door,dpanel,knob,doorB,bpanel,dinner].forEach(m=>m.instanceMatrix.needsUpdate=true);
+window.__doorShot=(i,u)=>{camE=null;ST.forEach((t,k)=>{t.ang=t.target=0;doorSpr[k].x=0;doorSpr[k].v=0;doorM(t,k);});const s=ST[i];s.ang=s.target=u;doorSpr[i].x=u;doorM(s,i);[door,dpanel,knob,doorB,bpanel,dinner].forEach(m=>m.instanceMatrix.needsUpdate=true);
  const c=CHEFS[0];CHEFS.forEach(o=>{if(o!==HEAD){o.g.position.copy(o.home);o.g.position.y=Math.max(groundY(o.g.position.x,o.g.position.z),duckH(o.g.position));}});const ws=workSpot(s);c.g.position.copy(ws.p);c.g.position.y=Math.max(groundY(c.g.position.x,c.g.position.z),duckH(c.g.position));c.g.rotation.y=c.yawT=ws.face;c.job={s,act:actOf(s),dur:999,face:ws.face,k:0,e:{order:1}};c.st='work';c.t=1;
  for(let f=0;f<30;f++)updChef(c,2+f/30,1/30);c.g.position.y=Math.max(groundY(c.g.position.x,c.g.position.z),duckH(c.g.position));
  view={c:s.p.clone().setY(s.p.y+1.3).addScaledVector(s.fwd,1.3),h:+(qs.get('dh')||5.2)};panelX=0;card.style.display='none';tkt.style.display='none';render();return s.n.id;};
