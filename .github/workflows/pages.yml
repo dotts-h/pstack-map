@@ -33,6 +33,9 @@ jobs:
       - name: Generate skill flows
         run: python3 scripts/skill-flows/mkflows.py "$RUNNER_TEMP/plugins/pstack" data/skill-flows.json
 
+      - name: Generate skill files
+        run: python3 scripts/skill-flows/mkfiles.py "$RUNNER_TEMP/plugins" data/graph.json data/files.json
+
       - name: Validate graph
         run: node scripts/validate-graph.mjs data/graph.json
 
@@ -62,17 +65,21 @@ jobs:
       - name: Generate skill flows
         run: python3 scripts/skill-flows/mkflows.py "$RUNNER_TEMP/plugins/pstack" data/skill-flows.json
 
-      - name: Commit graph if it changed
+      - name: Generate skill files
+        run: python3 scripts/skill-flows/mkfiles.py "$RUNNER_TEMP/plugins" data/graph.json data/files.json
+
+      - name: Commit generated data if it changed
         id: commit
         run: |
-          if git diff --quiet -- data/graph.json data/README-data.md data/skill-flows.json; then
+          data="data/graph.json data/README-data.md data/skill-flows.json data/files.json"
+          if git diff --quiet -- $data; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/graph.json data/README-data.md data/skill-flows.json
+            git add $data
             sha=$(node --input-type=module -e "import fs from 'node:fs'; const g=JSON.parse(fs.readFileSync('data/graph.json','utf8')); process.stdout.write(g.upstream.commitShort)")
-            git commit -m "Update pstack graph and skill flows from cursor/plugins (${sha})"
+            git commit -m "Update pstack graph, skill flows, and skill files from cursor/plugins (${sha})"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
