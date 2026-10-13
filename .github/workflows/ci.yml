@@ -15,3 +15,6 @@ jobs:
 
       - name: Check layout
         run: node scripts/check-layout.mjs
+
+      - name: Check skill flows
+        run: node scripts/check-flows.mjs data/skill-flows.json

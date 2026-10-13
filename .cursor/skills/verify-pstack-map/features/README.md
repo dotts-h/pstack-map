@@ -41,4 +41,4 @@ Each feature file starts with an H1 and one paragraph, then exactly four H2 sect
 
 - [Themes](./themes.md) covers galaxy, circuit, earth, brain, and kitchen.
 - [Skill card](./skill-card.md) covers the shared card on galaxy, circuit, earth, and brain.
-- [Kitchen session](./kitchen-session.md) covers the station file and the fast session.
+- [Kitchen session](./kitchen-session.md) covers the station file, the fast session, the cozy branch question, and the waiter.

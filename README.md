@@ -16,8 +16,11 @@ Regenerate locally (Node, no packages):
 
 ```sh
 node scripts/extract-graph.mjs path/to/plugins/pstack --out data/graph.json --readme data/README-data.md
+python3 scripts/skill-flows/mkflows.py path/to/plugins/pstack data/skill-flows.json
+python3 scripts/skill-flows/mkfiles.py path/to/plugins data/graph.json data/files.json
 node scripts/validate-graph.mjs data/graph.json
 node scripts/check-layout.mjs data/graph.json
+node scripts/check-flows.mjs data/skill-flows.json
 ```
 
 Serve the repo root and open the site (paths are relative, so it also works under `/pstack-map/`):
