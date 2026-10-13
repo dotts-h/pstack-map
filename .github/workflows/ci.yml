@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate graph
+        run: node scripts/validate-graph.mjs data/graph.json
+
+      - name: Check layout
+        run: node scripts/check-layout.mjs
