@@ -146,64 +146,71 @@ try {
   if (kitchen.problems.length) fail(`kitchen station: ${kitchen.problems.join('; ')}`);
   if (!modalText.includes(sentence)) fail('kitchen modal does not contain a body sentence from architect text');
 
-  notes.length = 0;
-  const fastUrl = `${base}/?theme=kitchen&hint=0&fast=1&session=playbook:feature`;
-  await page.goto(fastUrl, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => window.__ready === true);
-  await page.waitForSelector('#pvPlay');
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  const beforePlay = await page.evaluate(() => {
+  const sessionView = () => {
     const hint = document.getElementById('hint');
-    const play = document.querySelector('.btn.play');
-    const motion = (el) => el ? { animationName: getComputedStyle(el).animationName, transitionDuration: getComputedStyle(el).transitionDuration } : null;
     return {
       fast: document.body.classList.contains('fast'),
-      hint: motion(hint),
-      play: motion(play),
-      started: (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
+      running: document.getAnimations().length,
+      hint: hint ? { animationName: getComputedStyle(hint).animationName, transitionDuration: getComputedStyle(hint).transitionDuration } : null,
+      playButton: Boolean(document.getElementById('pvPlay')),
+      lowerThird: document.getElementById('lt')?.style.display === 'block',
+      kicker: document.querySelector('#ticket .k')?.textContent || '',
     };
-  });
-  if (!beforePlay.fast) fail('body is missing class fast');
-  for (const part of [beforePlay.hint, beforePlay.play]) {
-    if (!part) continue;
-    if (part.animationName !== 'none') fail(`animation-name is ${part.animationName}`);
-    if (part.transitionDuration !== '0s') fail(`transition-duration is ${part.transitionDuration}`);
+  };
+  const orderUpShown = () => (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up');
+
+  async function orderUp(url) {
+    notes.length = 0;
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => window.__ready === true);
+    const atReady = await page.evaluate(sessionView);
+    await page.waitForFunction(orderUpShown, { timeout: 30000 });
+    const done = await page.evaluate(sessionView);
+    return { url, atReady, done, problems: [...notes] };
   }
-  if (beforePlay.started) fail('session reached Order up before Play');
-  await page.click('#pvPlay');
-  await page.waitForFunction(
-    () => (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
-    { timeout: 30000 },
-  );
-  const fast = await page.evaluate(() => ({
-    fast: document.body.classList.contains('fast'),
-    orderUp: (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
-    ready: (document.querySelector('#ticket .k')?.textContent || '').includes('ready'),
-  }));
-  result.fast = { url: fastUrl, ...beforePlay, ...fast, problems: [...notes] };
-  if (result.fast.problems.length) fail(`fast session: ${result.fast.problems.join('; ')}`);
-  if (!fast.orderUp) fail('session did not show Order up on the lower third after Play');
-  if (!fast.ready) fail('ticket did not reach Order up · ready');
+
+  function motionOff(row, label) {
+    if (row.problems.length) fail(`${label}: ${row.problems.join('; ')}`);
+    if (!row.atReady.fast) fail(`${label}: body is missing class fast`);
+    if (row.atReady.running) fail(`${label}: ${row.atReady.running} CSS animations are running`);
+    if (row.atReady.hint?.animationName !== 'none') fail(`${label}: #hint animation-name is ${row.atReady.hint?.animationName}`);
+    if (row.atReady.hint?.transitionDuration !== '0s') fail(`${label}: #hint transition-duration is ${row.atReady.hint?.transitionDuration}`);
+    if (row.atReady.playButton) fail(`${label}: the session still shows a Play button`);
+    if (!row.atReady.lowerThird) fail(`${label}: ?session= did not start the session`);
+  }
+
+  result.fast = await orderUp(`${base}/?theme=kitchen&hint=0&fast=1&session=playbook:feature`);
+  await shot('session-kitchen.png');
+  motionOff(result.fast, 'fast session');
+  if (!result.fast.done.kicker.includes('ready')) fail('ticket did not reach Order up · ready');
+
+  await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('#ltExit')]);
+  await page.waitForFunction(() => window.__ready === true);
+  const exitQuery = new URLSearchParams(await page.evaluate(() => location.search));
+  result.exit = { search: exitQuery.toString() };
+  if (exitQuery.get('theme') !== 'kitchen' || exitQuery.has('session')) fail(`Exit went to ?${exitQuery}`);
+
+  result.skillFlow = await orderUp(`${base}/?theme=kitchen&hint=0&fast=1&session=skill:architect`);
+  await shot('skill-flow-kitchen.png');
+  if (result.skillFlow.problems.length) fail(`skill flow: ${result.skillFlow.problems.join('; ')}`);
+  if (!result.skillFlow.done.kicker.includes('order up')) fail('skill flow ticket did not reach order up');
 
   notes.length = 0;
-  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-  const reduceUrl = `${base}/?theme=kitchen&hint=0&session=playbook:feature`;
-  await page.goto(reduceUrl, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/?theme=kitchen&hint=0&fast=1`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__ready === true);
-  await page.waitForSelector('#pvPlay');
-  const reduced = await page.evaluate(() => ({
-    fast: document.body.classList.contains('fast'),
-    animationName: getComputedStyle(document.querySelector('.btn.play')).animationName,
-  }));
-  result.reduced = { url: reduceUrl, ...reduced, problems: [...notes] };
-  if (result.reduced.problems.length) fail(`reduced motion: ${result.reduced.problems.join('; ')}`);
-  if (!reduced.fast) fail('reduced motion did not set class fast');
-  if (reduced.animationName !== 'none') fail(`reduced motion animation-name is ${reduced.animationName}`);
-  await page.click('#pvPlay');
-  await page.waitForFunction(
-    () => (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
-    { timeout: 30000 },
-  );
+  await page.evaluate(() => { window.__sameDocument = true; });
+  const ticketId = 'playbook:feature';
+  await page.click(`#rail .tk[data-id="${ticketId}"]`);
+  await page.waitForFunction(orderUpShown, { timeout: 30000 });
+  const clicked = await page.evaluate(() => ({ sameDocument: window.__sameDocument === true, search: location.search }));
+  result.ticketClick = { ticketId, ...clicked, problems: [...notes] };
+  if (result.ticketClick.problems.length) fail(`ticket click: ${result.ticketClick.problems.join('; ')}`);
+  if (!clicked.sameDocument) fail('a ticket click from the overview reloaded the page');
+
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  result.reduced = await orderUp(`${base}/?theme=kitchen&hint=0&session=playbook:feature`);
+  motionOff(result.reduced, 'reduced motion');
+  if (!result.reduced.done.kicker.includes('ready')) fail('reduced motion ticket did not reach Order up · ready');
 } catch (err) {
   fail(err.message || String(err));
 } finally {
