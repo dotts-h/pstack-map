@@ -47,7 +47,7 @@ On galaxy, circuit, earth, and brain it opens `architect` with `?focus=architect
 
 On kitchen it opens `/?theme=kitchen&hint=0&open=architect`, clicks **Open skill file**, and checks that the modal contains a sentence from that node's `text` field. The sentence must not be only the one-line description.
 
-It then loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature`. `document.body` must have class `fast`. A computed `animation-name` on `#hint` or `.btn.play` must be `none`. The page must show `Order up` within 30 seconds. The helper does not report fps.
+It then loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature`. `document.body` must have class `fast` before Play. A computed `animation-name` on `#hint` or `.btn.play` must be `none`. The lower third must not say Order up yet. The helper clicks **Play session**, then `#lt .ttl` must say Order up within 30 seconds. The helper does not report fps.
 
 ## Evidence
 

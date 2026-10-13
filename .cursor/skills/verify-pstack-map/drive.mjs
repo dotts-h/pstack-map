@@ -141,22 +141,32 @@ try {
   const fastUrl = `${base}/?theme=kitchen&hint=0&fast=1&session=playbook:feature`;
   await page.goto(fastUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__ready === true);
-  await page.waitForFunction(() => document.body.innerText.includes('Order up'), { timeout: 30000 });
-  const fast = await page.evaluate(() => {
+  await page.waitForSelector('#pvPlay');
+  const beforePlay = await page.evaluate(() => {
     const hint = document.getElementById('hint');
     const play = document.querySelector('.btn.play');
     const el = hint || play;
     return {
       fast: document.body.classList.contains('fast'),
       animationName: el ? getComputedStyle(el).animationName : null,
-      orderUp: document.body.innerText.includes('Order up'),
+      started: (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
     };
   });
-  result.fast = { url: fastUrl, ...fast, problems: [...notes] };
+  if (!beforePlay.fast) fail('body is missing class fast');
+  if (beforePlay.animationName !== 'none') fail(`animation-name is ${beforePlay.animationName}`);
+  if (beforePlay.started) fail('session reached Order up before Play');
+  await page.click('#pvPlay');
+  await page.waitForFunction(
+    () => (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
+    { timeout: 30000 },
+  );
+  const fast = await page.evaluate(() => ({
+    fast: document.body.classList.contains('fast'),
+    orderUp: (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
+  }));
+  result.fast = { url: fastUrl, ...beforePlay, ...fast, problems: [...notes] };
   if (result.fast.problems.length) fail(`fast session: ${result.fast.problems.join('; ')}`);
-  if (!fast.fast) fail('body is missing class fast');
-  if (fast.animationName !== 'none') fail(`animation-name is ${fast.animationName}`);
-  if (!fast.orderUp) fail('session did not show Order up');
+  if (!fast.orderUp) fail('session did not show Order up on the lower third after Play');
 } catch (err) {
   fail(err.message || String(err));
 } finally {

@@ -34,6 +34,7 @@ const N = new Map(G.nodes.map((n) => [n.id, n]));
 const textByPath = new Map(G.nodes.filter((n) => typeof n.text === 'string' && n.text && n.path).map((n) => [n.path, n.text]));
 
 const nm=n=>(n.title||n.name).replace(/^principle-/,'').replace(/-/g,' ').replace(/^./,c=>c.toUpperCase());
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const skills=G.nodes.filter(n=>n.kind==='skill').sort((a,b)=>b.degree.total-a.degree.total);
 const router=G.nodes.find(n=>n.kind==='router');const principles=G.nodes.filter(n=>n.kind==='principle');
 const playbooks=G.nodes.filter(n=>n.kind==='playbook').sort((a,b)=>b.degree.total-a.degree.total);
@@ -101,7 +102,7 @@ const MW=2.3,ST=[];
  for(let i=0;i<4;i++)S.push({p:new THREE.Vector3(-9.7+i*MW,0,5.6),ry:0,run:3});   // v2.3: island moved .9 right so the left run's end cabinet has room for its cook
  for(let i=0;i<4;i++)S.push({p:new THREE.Vector3(7.7+i*MW,0,-1.6),ry:0,run:4});
  const C=new THREE.Vector3(0,0,.5);const ord=S.map(s=>({s,d:s.p.distanceTo(C)+(s.run===2?3:0)})).sort((a,b)=>a.d-b.d);
- {const m=S.find(t=>t.run===2&&Math.abs(t.p.x-7.4)<.01);m.p=new THREE.Vector3(15.0,NOOK.h,-6.5);m.ry=-Math.PI/2;}   /* v2.6 final: the first nook cabinet turns to the nook's open end so the back door is in view; mapping order was fixed above from the original slots */
+ {const m=S.find(t=>t.run===2&&Math.abs(t.p.x-7.4)<.01);m.p=new THREE.Vector3(15.0,NOOK.h,-6.5);m.ry=-Math.PI/2;}   /* v2.7: the first nook cabinet turns to the nook's open end so the back door is in view; mapping order was fixed above from the original slots */
  skills.forEach((n,k)=>ST.push({n,...ord[k].s}));}
 const RUNC=['#8DAE86','#7FA3B5','#E8C27A','#D99A6C','#9CB8AE'];   // paint per run (no meaning): sage, blue-grey, butter nook, apricot island, mint peninsula
 const cab=inst(rbox(MW-.1,2.05,1.9,.1),MI(),27),top=inst(rbox(MW+.04,.2,2.12,.06),MI(MG),27),plinth=inst(new THREE.BoxGeometry(MW-.3,.18,1.6),M('#3C2A20'),27);
@@ -361,7 +362,7 @@ const visited=new Set(JSON.parse(localStorage.getItem('kc.visited')||'[]'));(qs.
 const setVisited=()=>{document.querySelector('#visited b').textContent=[...visited].filter(id=>N.get(id)?.kind==='skill').length;localStorage.setItem('kc.visited',JSON.stringify([...visited]));};
 const ICON={skill:'▣',principle:'❖',playbook:'🧾',agent:'☺',script:'⚒',reference:'◡',router:'⬢',automation:'⏲'};
 function rail(fire,ghost){const r=document.getElementById('rail');r.innerHTML='';[...playbooks].sort((a,b)=>stepsOf(b.id).length-stepsOf(a.id).length).forEach(p=>{const d=document.createElement('div');d.className='tk'+(p.id===fire?' fire':'')+(p.id===ghost?' ghost':'');d.dataset.id=p.id;
- const n=G.edges.filter(e=>e.source===p.id&&e.mode==='step').length;d.innerHTML=`<span class="n">${p.name}</span><span class="s">${n?n+' steps':'à la carte'}</span>`;r.appendChild(d);});const f=r.querySelector('.fire');if(f)f.scrollIntoView({inline:'center',block:'nearest'});}
+ const n=G.edges.filter(e=>e.source===p.id&&e.mode==='step').length;d.innerHTML=`<span class="n">${esc(p.name)}</span><span class="s">${n?n+' steps':'à la carte'}</span>`;r.appendChild(d);});const f=r.querySelector('.fire');if(f)f.scrollIntoView({inline:'center',block:'nearest'});}
 const stOf=new Map(ST.map((s,i)=>[s.n.id,i]));const front=s=>s.p.clone().addScaledVector(s.fwd,1.55);
 const DOOR_OPEN=1;const DOOR_MAX=s=>1;   // slide fraction: 0 closed, 1 fully open (hard stop, critically damped, no overshoot)   // v2.2: ~81°, door stays inside its own station edge; spring overshoot clamped at 1.52
 // v2.2 · what each real step looks like (pstack skill id → chef action; principles → the head chef glances on)
@@ -407,10 +408,10 @@ const WORK_D=+(qs.get('wd')||2.3);   // chef stands centred, clear of the door t
 const CORNER=new THREE.Vector3(-12.72,0,-7.6);   // v2.4: the two corner stations share one reserved spot, facing the corner; cooks take turns
 const workSpot=s=>(s.run===0&&s.p.x<-13)||(s.run===1&&s.p.z<-8)?{p:CORNER.clone(),face:s.run===0?2.75:-1.57}:false?0:{p:s.p.clone().addScaledVector(s.fwd,WORK_D).addScaledVector(s.side,s.run===0&&s.p.x<-13?1.3:0),face:s.ry+Math.PI};
 const job={pid:null,steps:[],list:[],landed:0};
-function ticketHTML(){const p=N.get(job.pid);const ready=doneAt>0;return `<div class="k">${job.served?'Served · ticket closed':ready?'Order up · ready':'Order up · fired'}</div><h3>${p.name}</h3><div class="d">${p.description||''}</div><ol>${job.steps.map(e=>{const n=N.get(e.target);const J=job.list.find(j=>j.e===e);
+function ticketHTML(){const p=N.get(job.pid);const ready=doneAt>0;return `<div class="k">${job.served?'Served · ticket closed':ready?'Order up · ready':'Order up · fired'}</div><h3>${esc(p.name)}</h3><div class="d">${esc(p.description||'')}</div><ol>${job.steps.map(e=>{const n=N.get(e.target);const J=job.list.find(j=>j.e===e);
  const st=J?(J.landed?'done':J.chef?'now':''):(job.landed>=job.list.filter(j=>j.e.order<=e.order).length&&job.started?'done':'');
  const where={skill:'station',principle:'house rule',playbook:'side ticket',agent:'swing cook',script:'tool',reference:'prep',router:'the pass'}[n.kind]||n.kind;
- return `<li class="${st}"><span class="o">${st==='done'?'✓':e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${nm(n)}</span><span class="w">${where}</span></li>`;}).join('')}</ol>
+ return `<li class="${st}"><span class="o">${st==='done'?'✓':e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${esc(nm(n))}</span><span class="w">${esc(where)}</span></li>`;}).join('')}</ol>
  <div class="f"><button class="btn g">Back</button><button class="btn">${ready?'Back to the rail':'Next step ▸'}</button></div>`;}
 function updTicket(){if(!job.pid)return;tkt.innerHTML=ticketHTML();job.list.forEach(J=>{J.badge.className='badge'+(J.landed?' done':J.chef?'':' next');J.s.glow.material.opacity=J.landed?.45:J.chef&&J.chef.st==='work'?1:J.chef?.6:.18;});}
 function fire(pid){job.pid=pid;job.started=true;rail(pid);job.steps=G.edges.filter(e=>e.source===pid&&e.mode==='step').sort((a,b)=>a.order-b.order);
@@ -430,8 +431,8 @@ function updPrint(T,tP){const el=[...document.querySelectorAll('#rail .tk')].fin
  const feed=ease.out(u1);slip.style.left=x+'px';slip.style.top=y+'px';slip.style.clipPath=`inset(0 0 ${((1-feed)*100).toFixed(1)}% 0)`;slip.style.transform=`rotate(${(Math.sin(T*9)*(u1<1?.6:0)+Math.sin(Math.PI*e)*-3).toFixed(2)}deg)`;}
 // ---------- station open (kept from v2) ----------
 function openStation(id,quiet){const i=stOf.get(id);const s=ST[i];s.target=DOOR_OPEN;s.glow.material.opacity=.85;visited.add(id);setVisited();const n=s.n,mp=misen(id),ui=usedIn(id);
- card.innerHTML=`<div class="k">Station · recipe card</div><h3>${n.name}</h3>${fileLink(n,"Open skill file")}<p>${n.description||''}</p><h4>Mise en place · ${mp.length}</h4><div class="bowls">${mp.length?mp.map((m,j)=>`<span class="bowl ${j>2?'smudge':''}">${m.name}</span>`).join(''):'<span style="font-size:12px;color:#6B5644">Nothing prepped: this station works from the recipe alone.</span>'}</div>
- <h4>Goes into · ${ui.length} dishes</h4><div class="dish">${ui.slice(0,6).map((p,j)=>`<span class="${visited.has(p.id)||j<2?'':'smudge'}">${p.name}</span>`).join('')}</div><div class="hint">Smudged lines clear as you visit those stations and tickets.</div>`;
+ card.innerHTML=`<div class="k">Station · recipe card</div><h3>${esc(n.name)}</h3>${fileLink(n,"Open skill file")}<p>${esc(n.description||'')}</p><h4>Mise en place · ${mp.length}</h4><div class="bowls">${mp.length?mp.map((m,j)=>`<span class="bowl ${j>2?'smudge':''}">${esc(m.name)}</span>`).join(''):'<span style="font-size:12px;color:#6B5644">Nothing prepped: this station works from the recipe alone.</span>'}</div>
+ <h4>Goes into · ${ui.length} dishes</h4><div class="dish">${ui.slice(0,6).map((p,j)=>`<span class="${visited.has(p.id)||j<2?'':'smudge'}">${esc(p.name)}</span>`).join('')}</div><div class="hint">Smudged lines clear as you visit those stations and tickets.</div>`;
  card.innerHTML+=detHTML(n);card.style.display='block';document.getElementById('legend').style.display='none';if(!quiet)view={c:s.p.clone().setY(s.p.y+2).addScaledVector(s.fwd,1.6),h:16};ST.forEach(t=>t.lb.classList.toggle('dim',t!==s));
  if(!fast&&!quiet){const c=CHEFS.slice().sort((a,b)=>a.g.position.distanceTo(front(s))-b.g.position.distanceTo(front(s)))[0];walkTo(c,front(s).addScaledVector(s.side,.9));}}
 function closeStation(){card.style.display='none';ST.forEach(s=>{if(!job.list.some(J=>J.s===s&&J.chef&&!J.landed))s.target=0;if(s.lb)s.lb.classList.remove('dim');});if(tkt.style.display!=='block'){const lg=document.getElementById('legend');if(lg)lg.style.display='';}if(!sess&&!prev){const home=new THREE.Vector3(0,2.2,-1);if(fast)view={c:home,h:33};else zoomTo(home,33,3);}}
@@ -480,7 +481,7 @@ function updLOD(){const h=view.h,mid=cl((26-h)/5),close=cl((12.5-h)/2.5);
  ST.forEach(s=>{if(s.lb.classList.contains('off')){s.lb.style.opacity=0;return;}const base=1;s.lb.style.opacity=(base*(s.lb.classList.contains('dim')?.55:1)*(focusS&&close>0&&s!==focusS?1-close*.7:1)).toFixed(3);});
  bowlLb.forEach(o=>{o.d.style.opacity=close.toFixed(3);o.d.style.transform+=` scale(${(.85+.15*close).toFixed(3)})`;});
  const det=card.querySelector('.det');if(det){det.style.opacity=close.toFixed(3);det.style.maxHeight=(close*220).toFixed(0)+'px';}}
-const detHTML=n=>`<div class="det"><h4>Details</h4><dl><dt>File</dt><dd>${n.path||'—'}</dd><dt>Length</dt><dd>${n.lines||'—'} lines</dd><dt>Owner</dt><dd>${n.owner&&n.owner!=='None'?n.owner:'unowned'}</dd><dt>Links</dt><dd>${(n.degree||{}).in||0} in · ${(n.degree||{}).out||0} out</dd><dt>Prep step</dt><dd>${ACT_LINE[actOf(ST[stOf.get(n.id)])]}</dd></dl></div>`;
+const detHTML=n=>`<div class="det"><h4>Details</h4><dl><dt>File</dt><dd>${esc(n.path||'—')}</dd><dt>Length</dt><dd>${esc(n.lines||'—')} lines</dd><dt>Owner</dt><dd>${esc(n.owner&&n.owner!=='None'?n.owner:'unowned')}</dd><dt>Links</dt><dd>${(n.degree||{}).in||0} in · ${(n.degree||{}).out||0} out</dd><dt>Prep step</dt><dd>${esc(ACT_LINE[actOf(ST[stOf.get(n.id)])])}</dd></dl></div>`;
 // demo=zoom: overview → slow zoom onto one station → its card slides in → a chef arrives behind the counter → door opens → works
 let demoJ=null;const DF={};
 function updDemo(dt,T){if(DEMO!=='zoom')return;const s=ST[stOf.get(qs.get('st')||'interrogate')];const ws=workSpot(s);const fc=s.p.clone().setY(s.p.y+1.9).addScaledVector(s.fwd,-.3);
@@ -493,12 +494,12 @@ const lt=document.createElement('div');lt.id='lt';document.body.appendChild(lt);
 // ---------- v2.3 session: preview a ticket (zoom in, Play button) → play → TV-style replay ----------
 const ORDER={taste:'taste it and check how it works',sketch:'sketch the plan first',inspect:'inspect the plate closely',chop:'start cooking',stir:'start cooking'};
 const ACT_LINE2=ACT_LINE;let prev=null;
-function fileLink(n,label='Open file'){return n&&n.path?`<a href="#" class="flink" data-file="${n.path}">${label} <span>↗</span></a>`:'';}
+function fileLink(n,label='Open file'){return n&&n.path?`<a href="#" class="flink" data-file="${esc(n.path)}">${esc(label)} <span>↗</span></a>`:'';}
 function stepsOf(pid){return G.edges.filter(e=>e.source===pid&&e.mode==='step').sort((a,b)=>a.order-b.order);}
 // clicking a rail ticket (or ?session=<id>): the ticket grows out of the rail into the side panel and the camera eases onto the pass
 function openPreview(pid){if(sess)return;const p=N.get(pid);const el=[...document.querySelectorAll('#rail .tk')].find(d=>d.dataset.id===pid);const r0=el?el.getBoundingClientRect():null;
  document.querySelectorAll('#rail .tk').forEach(d=>d.classList.toggle('fire',d.dataset.id===pid));
- tkt.innerHTML=`<div class="k">Ticket · ready to cook</div><h3>${p.name}</h3><div class="d">${p.description||''}</div>${fileLink(p,'Open playbook file')}<ol>${stepsOf(pid).map(e=>{const n=N.get(e.target);return `<li><span class="o">${e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${nm(n)}</span></li>`}).join('')}</ol><div class="f"><button class="btn g" id="pvBack">Back</button><button class="btn play" id="pvPlay">▶ Play session</button></div>`;
+ tkt.innerHTML=`<div class="k">Ticket · ready to cook</div><h3>${esc(p.name)}</h3><div class="d">${esc(p.description||'')}</div>${fileLink(p,'Open playbook file')}<ol>${stepsOf(pid).map(e=>{const n=N.get(e.target);return `<li><span class="o">${e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${esc(nm(n))}</span></li>`}).join('')}</ol><div class="f"><button class="btn g" id="pvBack">Back</button><button class="btn play" id="pvPlay">▶ Play session</button></div>`;
  tkt.style.display='block';document.getElementById('legend').style.display='none';prev={pid,t:0,r0};zoomTo(DISH.clone().setY(2),14,3.2);
  document.getElementById('pvPlay').onclick=()=>playSession(pid);document.getElementById('pvBack').onclick=closePreview;}
 function closePreview(){prev=null;tkt.style.display='none';document.getElementById('legend').style.display='';document.querySelectorAll('#rail .tk').forEach(d=>d.classList.remove('fire'));zoomTo(new THREE.Vector3(0,2.2,-1),33,3);}
@@ -510,7 +511,7 @@ document.getElementById('rail').addEventListener('click',e=>{const d=e.target.cl
 function startSession(){sess={t0:T,i:-1,cut:T,key:''};fire(SESSION);job.list.forEach(J=>J.dur=2.0);   /* v2.5: snappier work beats */document.body.classList.add('sess');lt.style.display='block';}
 function updSession(dt,T){
  if(!sess){if(SESS_Q&&!prev&&!DF.pv){DF.pv=1;if(DEMO==='session'){if(T>=1)openPreview(SESS_Q);else DF.pv=0;}else openPreview(SESS_Q);}
-  if(DEMO==='session'&&prev&&prev.t>=1.5)playSession(SESS_Q);if(fast&&DEMO!=='session'&&SESS_Q&&prev)playSession(SESS_Q); /* fast skips the preview wait, so ?session= still reaches Order up */updPreview(dt);return;}
+  if(DEMO==='session'&&prev&&prev.t>=1.5)playSession(SESS_Q);updPreview(dt);return;}
  const L=job.list,i=L.findIndex(J=>!J.landed);{const k=L.findIndex(J=>!J.chef&&!J.landed);if(k>=0&&(k===0?T>sess.t0+.5:(L[k-1].landed||(L[k-1].chef&&T-L[k-1].dT>1.2)))){L[k].dT=T;dispatch(L[k],T);}}   /* v2.5: the next cook sets off while the previous one is working */
  const J=L[i>=0?i:L.length-1];const done=i<0;
  if(J&&J.chef&&sess.i!==i){sess.i=i;sess.cut=T;}if(done&&sess.i!==-2){sess.i=-2;sess.cut=T;}if(job.served&&sess.i!==-3){sess.i=-3;sess.cut=T;}
@@ -520,12 +521,11 @@ function updSession(dt,T){
  const head=done?(job.served?'Served':'Order up!'):nm(n);const cap=done?(job.served?'The dish has left the pass. Every step on the ticket is done.':'Every step is in. The dish is plated and waiting on the pass.'):`${ACT_LINE[J.act]} · ${caption(n)}`;
  const key=[head,cap,done?L.length:i+1,mm+ss].join('|');
  if(key!==sess.key){const first=!sess.key;sess.key=key;
-  if(first)lt.innerHTML=`<div class="bar"><span class="live">● Session</span><span class="pb">${nm(N.get(SESSION))}</span><span class="ct"></span><span class="tm"></span></div><div class="ttl"></div><div class="cap"></div><div class="fl"></div>${job.rules?`<div class="rules">House rules watching: ${job.rules} · the head chef keeps an eye on them</div>`:''}<div class="ctl"><button class="btn g" id="ltReplay">↺ Replay</button><button class="btn g" id="ltExit">Exit</button></div>`;
-  if(first){document.getElementById('ltReplay').onclick=()=>{const u=new URLSearchParams(location.search);u.set('session',SESSION);location.search=u;};document.getElementById('ltExit').onclick=()=>{location.search='';};}
+  if(first)lt.innerHTML=`<div class="bar"><span class="live">● Session</span><span class="pb">${esc(nm(N.get(SESSION)))}</span><span class="ct"></span><span class="tm"></span></div><div class="ttl"></div><div class="cap"></div><div class="fl"></div>${job.rules?`<div class="rules">House rules watching: ${job.rules} · the head chef keeps an eye on them</div>`:''}<div class="ctl"><button class="btn g" id="ltReplay">↺ Replay</button><button class="btn g" id="ltExit">Exit</button></div>`;
+  if(first){document.getElementById('ltReplay').onclick=()=>{const u=new URLSearchParams(location.search);u.set('session',SESSION);location.search=u;};document.getElementById('ltExit').onclick=()=>{const u=new URLSearchParams(location.search);u.delete('session');u.delete('demo');u.set('theme','kitchen');location.search=u;};}
   lt.querySelector('.ct').textContent=`Step ${done?L.length:i+1} / ${L.length}`;lt.querySelector('.tm').textContent=`${mm}:${ss}`;
   lt.querySelector('.ttl').textContent=head;lt.querySelector('.cap').textContent=cap;lt.querySelector('.fl').innerHTML=fileLink(done?N.get(SESSION):n,done?'Open playbook file':'Open skill file');}
  const fade=cl((T-sess.cut)/1.2).toFixed(3);lt.querySelector('.ttl').style.opacity=fade;lt.querySelector('.cap').style.opacity=fade;}
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const U=G.upstream;
 const aboutDt=new Date(U.commitDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 document.getElementById('about').innerHTML=`<p>A map of how the pstack skills library fits together: workflows, the tools and rules they use, and the docs behind them.</p>
@@ -568,9 +568,9 @@ function updModal(dt){if(modalT<0)return;modalT+=dt;const u=ease.out(cl(modalT/.
 if(qs.get('open'))openStation(qs.get('open'));if(qs.get('file'))setTimeout(()=>openFile(qs.get('file')),50);
 // ---------- head chef: a corner by the pass, tall hat, slow gestures; a speech bubble carries the current order ----------
 const bub=document.createElement('div');bub.id='bub';document.body.appendChild(bub);let bubKey='';
-function orderText(){if(!job.pid)return prev?`<b>${nm(N.get(prev.pid))}</b> is on the rail. Ready when you are.`:'';const t=`<b>${nm(N.get(job.pid))}</b>`;
+function orderText(){if(!job.pid)return prev?`<b>${esc(nm(N.get(prev.pid)))}</b> is on the rail. Ready when you are.`:'';const t=`<b>${esc(nm(N.get(job.pid)))}</b>`;
  if(job.served)return `${t} · Served. Lovely work, everyone.`;if(doneAt>0)return `${t} · Order up! Take it out, please.`;
- const L=job.list,i=L.findIndex(J=>!J.landed);if(i<0)return `${t} · Plating now.`;const J=L[i];return `${t} · Step ${i+1} of ${L.length}: ${nm(N.get(J.e.target))}, ${ORDER[J.act]}.`;}
+ const L=job.list,i=L.findIndex(J=>!J.landed);if(i<0)return `${t} · Plating now.`;const J=L[i];return `${t} · Step ${i+1} of ${L.length}: ${esc(nm(N.get(J.e.target)))}, ${ORDER[J.act]}.`;}
 const HV=new THREE.Vector3();
 function updBubble(){const html=orderText();if(!html||fast){bub.style.display='none';return;}if(html!==bubKey){bubKey=html;bub.innerHTML=html;}bub.style.display='block';
  HV.copy(HEAD.g.position).setY(HEAD.g.position.y+4.15).project(cam);const w=bub.offsetWidth,hh=bub.offsetHeight;let x=(HV.x+1)/2*innerWidth-w/2,y=(1-HV.y)/2*innerHeight-hh-10;
