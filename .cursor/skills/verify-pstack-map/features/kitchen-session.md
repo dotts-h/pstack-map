@@ -29,14 +29,15 @@ Preconditions:
 
 - **Open the station.** The helper loads `/?theme=kitchen&hint=0&open=architect` and waits for `#card .flink`.
 - **Open the file.** The helper clicks **Open skill file**. The modal text must contain a sentence from `node.text` that is not the description and not the `oneLiner`.
-- **Check fast mode.** The helper loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature` and waits for `#pvPlay`. `document.body` has class `fast`. Computed `animation-name` on `#hint` or `.btn.play` is `none`. `#lt .ttl` does not say Order up yet. The helper clicks **Play session**. `#lt .ttl` says Order up within 30 seconds. `#ticket .k` says ready.
+- **Check fast mode.** The helper loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature` and waits for `#pvPlay`, then waits 2 seconds. `document.body` has class `fast`. Computed `animation-name` on `#hint` and `.btn.play` is `none`. `transition-duration` is `0s`. `#lt .ttl` does not say Order up yet. The helper clicks **Play session**. `#lt .ttl` says Order up within 30 seconds. `#ticket .k` says ready.
+- **Check reduced motion.** The helper loads the same session without `fast=1`, with `prefers-reduced-motion: reduce`. The body has class `fast`. Play still reaches Order up.
 - **Proof.** The opened file screenshot is `/tmp/verify-pstack-map/skill-kitchen.png`. The kitchen overview is `overview-kitchen.png`.
 
 ## Gotchas
 
 - Fast mode still waits for Play. The ticket HTML says Order up only after the session starts, so a body-text search can pass before the lower third updates. The check uses `#lt .ttl` after the Play click.
 - Cozy does not override `prefers-reduced-motion`. The page stays fast, and the Fast control stays selected.
-- `?hint=0` hides the map hint. The kitchen has its own `#hint`. The fast check uses that element when it is present.
+- `?hint=0` hides the map hint and the kitchen hint. The fast check still finds `#hint` while a ticket preview is open, because that preview shows the Play hint.
 - Do not look for an fps counter. The helper does not record one.
 - A missing `text` field must not be filled with invented copy. The modal names the path and says the file is not in the map data.
 - Do not delete `/tmp/verify-pstack-map` during cleanup.

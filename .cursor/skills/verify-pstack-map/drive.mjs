@@ -97,6 +97,15 @@ try {
     await shot(`overview-${theme}.png`);
     const row = { theme, url: loaded.url, problems: loaded.problems };
     if (loaded.problems.length) fail(`${theme} overview: ${loaded.problems.join('; ')}`);
+    if (theme === 'kitchen') {
+      const hintOn = await page.evaluate(() => {
+        const hint = document.getElementById('hint');
+        if (!hint) return false;
+        return getComputedStyle(hint).opacity !== '0' && hint.textContent.trim().length > 0;
+      });
+      row.hintHidden = !hintOn;
+      if (hintOn) fail('kitchen hint is visible with hint=0');
+    }
     result.themes.push(row);
   }
 
@@ -142,18 +151,24 @@ try {
   await page.goto(fastUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__ready === true);
   await page.waitForSelector('#pvPlay');
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   const beforePlay = await page.evaluate(() => {
     const hint = document.getElementById('hint');
     const play = document.querySelector('.btn.play');
-    const el = hint || play;
+    const motion = (el) => el ? { animationName: getComputedStyle(el).animationName, transitionDuration: getComputedStyle(el).transitionDuration } : null;
     return {
       fast: document.body.classList.contains('fast'),
-      animationName: el ? getComputedStyle(el).animationName : null,
+      hint: motion(hint),
+      play: motion(play),
       started: (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
     };
   });
   if (!beforePlay.fast) fail('body is missing class fast');
-  if (beforePlay.animationName !== 'none') fail(`animation-name is ${beforePlay.animationName}`);
+  for (const part of [beforePlay.hint, beforePlay.play]) {
+    if (!part) continue;
+    if (part.animationName !== 'none') fail(`animation-name is ${part.animationName}`);
+    if (part.transitionDuration !== '0s') fail(`transition-duration is ${part.transitionDuration}`);
+  }
   if (beforePlay.started) fail('session reached Order up before Play');
   await page.click('#pvPlay');
   await page.waitForFunction(
@@ -169,6 +184,26 @@ try {
   if (result.fast.problems.length) fail(`fast session: ${result.fast.problems.join('; ')}`);
   if (!fast.orderUp) fail('session did not show Order up on the lower third after Play');
   if (!fast.ready) fail('ticket did not reach Order up · ready');
+
+  notes.length = 0;
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reduceUrl = `${base}/?theme=kitchen&hint=0&session=playbook:feature`;
+  await page.goto(reduceUrl, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true);
+  await page.waitForSelector('#pvPlay');
+  const reduced = await page.evaluate(() => ({
+    fast: document.body.classList.contains('fast'),
+    animationName: getComputedStyle(document.querySelector('.btn.play')).animationName,
+  }));
+  result.reduced = { url: reduceUrl, ...reduced, problems: [...notes] };
+  if (result.reduced.problems.length) fail(`reduced motion: ${result.reduced.problems.join('; ')}`);
+  if (!reduced.fast) fail('reduced motion did not set class fast');
+  if (reduced.animationName !== 'none') fail(`reduced motion animation-name is ${reduced.animationName}`);
+  await page.click('#pvPlay');
+  await page.waitForFunction(
+    () => (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up'),
+    { timeout: 30000 },
+  );
 } catch (err) {
   fail(err.message || String(err));
 } finally {
