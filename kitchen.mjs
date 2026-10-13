@@ -1,4 +1,4 @@
-import * as THREE from 'three';import {CSS2DRenderer,CSS2DObject} from 'three/addons/CSS2DRenderer.js';
+import * as THREE from 'three';import {CSS2DRenderer,CSS2DObject} from 'three/addons/CSS2DRenderer.js';import {readFlows,readPicks,FlowRun,NO_FLOW} from './kitchen-flow.mjs';
 const qs=new URLSearchParams(location.search);
 const cssLink=document.createElement('link');
 cssLink.rel='stylesheet';
@@ -307,8 +307,8 @@ function updChef(c,T,dt){if(c.off)return;c.t+=dt;if(c.st==='walk'||c.st==='antic
   const h=cl((u-.1)/.55);hop=Math.sin(Math.PI*h)*.24;squash=(u<.1?Math.sin(Math.PI*u/.1)*.07:0)+(h>=1?Math.sin(Math.PI*cl((u-.65)/.2))*.06:0);
   nod=Math.sin(cl((u-.6)/.4)*Math.PI*2)*.22*(1-u);armL=armR=-Math.sin(Math.PI*h)*.6;c.legs.forEach(l=>l.position.z*=.8);
   if(u>=1){c.st=c.job?'work':'idle';c.t=0;if(c.job)c.job.started=T;}}
- else if(c.st==='work'){const j=c.job,u=cl(c.t/(j.dur||WORK));lookYaw=Math.sin(T*.6)*.16;const env=Math.sin(Math.PI*cl(u*1.15));const act=j.stp?flowTick(j,c):j.act;c.knife.visible=c.spoon.visible=c.mag.visible=false;if(!c.supervisor)c.board.visible=false;
-  if(act==='gather'){const k=(c.t%j.tIn)/j.tIn;armR=-1.45+Math.sin(Math.PI*k)*.7;armL=-.55+Math.sin(Math.PI*k)*.2;nod=.24;lookYaw=Math.sin(T*.9)*.3;hop=Math.sin(Math.PI*k)*.03;}else
+ else if(c.st==='work'){const j=c.job,act=j.run?flowStep(j,c,dt):j.act,u=j.run?j.run.progress:cl(c.t/(j.dur||WORK));lookYaw=Math.sin(T*.6)*.16;const env=Math.sin(Math.PI*cl(u*1.15));c.knife.visible=c.spoon.visible=c.mag.visible=false;if(!c.supervisor)c.board.visible=false;
+  if(act==='gather'){const tIn=S.plan.pace.input,k=(c.t%tIn)/tIn;armR=-1.45+Math.sin(Math.PI*k)*.7;armL=-.55+Math.sin(Math.PI*k)*.2;nod=.24;lookYaw=Math.sin(T*.9)*.3;hop=Math.sin(Math.PI*k)*.03;}else
   if(act==='chop'){c.knife.visible=true;const k=Math.pow(Math.max(0,Math.sin(T*2*Math.PI*CHOP_HZ)),1.4);armR=-1.15+k*.75*env;armL=-.95;nod=.18+k*.05;squash=k*.03*env;}
   else if(act==='stir'){c.spoon.visible=true;armR=-1.05+Math.cos(T*1.9)*.18;armRz=Math.sin(T*1.9)*.38;armL=-.4;bodyRz=Math.sin(T*1.9)*.04;nod=.12;}
   else if(act==='taste'){c.spoon.visible=true;const ph=(T*.45)%1,up=ease.sin(cl((ph-.35)/.25))*(1-ease.sin(cl((ph-.75)/.2)));armR=-.95-1.25*up+Math.sin(T*1.6)*.05*(1-up);armL=-.3;nod=.2-up*.32;lookYaw=Math.sin(T*.4)*.22*(1-up);}
@@ -424,11 +424,6 @@ const reached=p=>PHASE[S.phase].rank>=PHASE[p].rank;
 const facts=()=>({fast,plates:job.list.length,allLanded:job.list.every(J=>J.landed)});
 function send(event){const to=PHASE[S.phase].on[event]?.(facts());if(!to||to===S.phase)return;S.phase=to;if(PHASE[to].rank>=PHASE.orderUp.rank&&S.orderUpAt===null)plateUp();updTicket();}
 
-const FALLBACK_STEP=Object.freeze({n:1,caption:'No ordered steps in the flow data',line:0});
-const DEFAULT_FLOW=Object.freeze({file:'',stepSource:'no flow data',inputs:[],steps:[FALLBACK_STEP]});
-function readFlows(raw){const flows=new Map(),bySkill=raw&&typeof raw.skills==='object'&&raw.skills||{};
- for(const [id,f] of Object.entries(bySkill))if(stOf.has(id)&&f)flows.set(id,{file:String(f.file||''),stepSource:String(f.stepSource||'no flow data'),inputs:Array.isArray(f.inputs)?f.inputs:[],steps:Array.isArray(f.steps)&&f.steps.length?f.steps:[FALLBACK_STEP]});
- return {flows,mirror:readMirror(raw&&raw.forgeRun)};}
 function readMirror(FR){if(!FR||!Array.isArray(FR.ranInOrder)||!Array.isArray(FR.events)||N.get('playbook:'+FR.playbook)?.kind!=='playbook')return null;
  const subs=Array.isArray(FR.subagents)?FR.subagents:[],ran=[...new Set(FR.ranInOrder.flat())].filter(id=>stOf.has(id)),pre=new Map();let buf=[],delPre=[];
  for(const ev of FR.events){if(/poteto-agent.*spawned/.test(ev.text)){delPre=[...buf,ev];buf=[];continue;}buf.push(ev);const id=ev.ran?.find(x=>ran.includes(x)&&!pre.has(x));if(id){pre.set(id,buf);buf=[];}}
@@ -437,8 +432,8 @@ function readMirror(FR){if(!FR||!Array.isArray(FR.ranInOrder)||!Array.isArray(FR
  const D=subs.find(a=>a.role==='delegate');
  return Object.freeze({playbook:'playbook:'+FR.playbook,ran,groups:FR.ranInOrder.filter((g,k,A)=>k===0||g.join()!==A[k-1].join()),readNotRun:FR.readNotRun||[],pre,
   delegate:D?{model:D.model,job:D.job,result:D.result,pre:delPre,commits:FR.delegateCommits||[]}:null,reviews,guests,sicko:subs.find(a=>a.role==='sicko')||null,tail:buf,verify:FR.events.find(e=>/verify/i.test(e.text))||null});}
-const {flows:FLOWS,mirror:MIRROR}=readFlows(flowsRaw);
-const flowOf=id=>FLOWS.get(id)??DEFAULT_FLOW;
+const FLOWS=readFlows(flowsRaw,id=>stOf.has(id)),MIRROR=readMirror(flowsRaw?.forgeRun),PICKS=readPicks(qs.get('pick'));
+const flowOf=id=>FLOWS.get(id)??NO_FLOW;
 
 const PACE={skill:{input:.5,step:2},playbook:{input:.3,step:1.1}};
 function parseSessionId(raw){if(typeof raw!=='string')return null;if(raw.startsWith('skill:'))return stOf.has(raw.slice(6))?raw:null;return N.get(raw)?.kind==='playbook'?raw:null;}
@@ -498,7 +493,7 @@ let lastDt=1/60;function step(dt){if(S.paused){updLabels();updModal(dt);return;}
 let camE=null;window.__camSnap=()=>{camE=null;};
 function render(){if(qs.get('view')==='wide'){view.c.set(5,1.5,-1.5);view.h=24;}   if(!camE||fast||qs.get('freeze'))camE={c:view.c.clone(),h:view.h};else{const k=1-Math.exp(-(lastDt||1/60)*5);camE.c.lerp(view.c,k);camE.h+=(view.h-camE.h)*k;}
  const a=innerWidth/innerHeight,h=camE.h;cam.left=-h*a/2;cam.right=h*a/2;cam.top=h/2;cam.bottom=-h/2;cam.position.copy(camE.c).addScaledVector(ISO,100);cam.lookAt(camE.c);
- cam.setViewOffset(innerWidth,innerHeight,panelX/2,-59,innerWidth,innerHeight);cam.updateProjectionMatrix();R.render(scene,cam);LR.render(scene,cam);updBubble();}
+ cam.setViewOffset(innerWidth,innerHeight,panelX/2,-59,innerWidth,innerHeight);cam.updateProjectionMatrix();updAsk();R.render(scene,cam);LR.render(scene,cam);updBubble();}
 
 const DEMO=qs.get('demo'),ZQ=qs.get('zoom');
 let ENTRY=AUTO?{id:AUTO,at:fast?0:tF,schedule:'stagger'}:qs.get('session')?{id:qs.get('session'),at:DEMO==='session'?1:0,schedule:'chain'}:null;
@@ -573,7 +568,7 @@ function updSession(dt,T){if(!S.plan)return;
  if(head!==ltState.head){ltState.head=head;ltState.cut=Math.max(ltState.cut,T-.6);}
  const key=[head,cap,done?L.length:i+1,mm+ss].join('|');
  if(key!==ltState.key){ltState.key=key;
-  lt.querySelector('.ct').textContent=S.plan.kind==='skill'?(done?'Plate out':`Step ${Math.max(0,J.stepI)+1} / ${J.stp.length}`):`Skill ${done?L.length:i+1} / ${L.length}`;lt.querySelector('.tm').textContent=`${mm}:${ss}`;
+  lt.querySelector('.ct').textContent=S.plan.kind==='skill'?(done?'Plate out':`Step ${Math.max(0,J.run.stepI)+1} / ${J.flow.steps.length}`):`Skill ${done?L.length:i+1} / ${L.length}`;lt.querySelector('.tm').textContent=`${mm}:${ss}`;
   lt.querySelector('.ttl').textContent=head;lt.querySelector('.cap').textContent=cap;lt.querySelector('.fl').innerHTML=(done?'':flowSrc(J))+fileLink(done?S.plan.node:n,done?(S.plan.kind==='skill'?'Open skill file':'Open playbook file'):'Open skill file');}
  const fade=fast?'1':cl((T-ltState.cut)/1.2).toFixed(3);lt.querySelector('.ttl').style.opacity=fade;lt.querySelector('.cap').style.opacity=fade;}
 const U=G.upstream;
@@ -617,15 +612,24 @@ addEventListener('keydown',e=>{if(e.code!=='Space'||!reached('cooking')||modal.s
 function updModal(dt){if(modalT<0)return;modalT+=dt;const u=ease.out(cl(modalT/.5));modal.style.opacity=u.toFixed(3);modal.querySelector('.box').style.transform=`translateY(${((1-u)*14).toFixed(1)}px)`;}
 
 const bub=document.createElement('div');bub.id='bub';document.body.appendChild(bub);let bubKey='';
-function orderText(){if(!S.plan)return '';const t=`<b>${esc(nm(S.plan.node))}</b>`;
+function orderText(){if(!S.plan||askingPlate())return '';const t=`<b>${esc(nm(S.plan.node))}</b>`;
  if(reached('served'))return `${t} · Served. Lovely work, everyone.`;if(HEAD_LEG&&!reached('orderUp'))return `${t} · Let me taste it first.`;if(reached('orderUp'))return `${t} · Order up! Waiter, take it out, please.`;
  const L=job.list,i=L.findIndex(J=>!J.landed);if(i<0)return `${t} · Plating now.`;
- if(S.plan.kind==='skill'){const J=L[0];return J.stepI>=0?`${t} · Step ${J.stepI+1} of ${J.stp.length}: ${esc(J.stp[J.stepI].caption)}.`:J.inI>=0?`${t} · Mise en place first: ${J.inI+1} of ${J.ins.length} in.`:`${t} · Fetch the inputs, then work the steps in order.`;}const J=L[i];return `${t} · Step ${i+1} of ${L.length}: ${esc(nm(N.get(J.e.target)))}, ${ORDER[J.act]}.`;}
+ if(S.plan.kind==='skill'){const J=L[0],r=J.run,F=J.flow;return r.stepI>=0?`${t} · Step ${r.stepI+1} of ${F.steps.length}: ${esc(F.steps[r.stepI].caption)}.`:r.inI>=0?`${t} · Mise en place first: ${r.inI+1} of ${F.inputs.length} in.`:`${t} · Fetch the inputs, then work the steps in order.`;}const J=L[i];return `${t} · Step ${i+1} of ${L.length}: ${esc(nm(N.get(J.e.target)))}, ${ORDER[J.act]}.`;}
 const HV=new THREE.Vector3();
 function updBubble(){const html=orderText();if(!html||fast){bub.style.display='none';return;}if(html!==bubKey){bubKey=html;bub.innerHTML=html;}bub.style.display='block';
  HV.copy(HEAD.g.position).setY(HEAD.g.position.y+4.15).project(cam);const w=bub.offsetWidth,hh=bub.offsetHeight;let x=(HV.x+1)/2*innerWidth-w/2,y=(1-HV.y)/2*innerHeight-hh-10;
  const maxX=innerWidth-panelX-w-16,cx=Math.min(Math.max(16,x),maxX),cy=Math.min(Math.max(128,y),innerHeight-hh-(S.plan?250:40));bub.classList.toggle('pinned',Math.abs(cx-x)>2||Math.abs(cy-y)>2);
  bub.style.left=cx.toFixed(1)+'px';bub.style.top=cy.toFixed(1)+'px';}
+function askingPlate(){return S.phase==='cooking'?job.list.find(J=>J.run.asking&&J.chef)||null:null;}
+const ASK={o:null,key:''};
+function updAsk(){const J=askingPlate(),a=J?.run.asking;
+ if(!a){if(ASK.o){ASK.o.removeFromParent();ASK.o=null;ASK.key='';}return;}
+ const key=`${J.k}:${a.index}`;if(key!==ASK.key){ASK.o?.removeFromParent();const d=document.createElement('div');d.className='qb';d.title=a.branch.text;d.style.zIndex=60;
+  d.innerHTML=`<div class="qq">${esc(a.branch.q)}</div><div class="qs">SKILL.md:${esc(a.branch.line)}</div><div class="qa"><button data-a="yes">Yes</button><button data-a="no">No</button></div>`;
+  d.querySelectorAll('button').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();J.run.choose(b.dataset.a);}));
+  ASK.o=new CSS2DObject(d);ASK.o.position.set(0,5.4,0);J.chef.g.add(ASK.o);ASK.key=key;}
+ ASK.o.element.querySelectorAll('button').forEach(b=>b.classList.toggle('pick',b.dataset.a===a.answer));}
 
 const C_BACK=new THREE.Vector3(5.0,0,-10.7),C_IN=new THREE.Vector3(.4,0,8.6),C_OUT=new THREE.Vector3(4.8,0,8.6),FAR=new THREE.Vector3(40,0,40);
 const LINE=()=>CHEFS.filter(c=>c!==HEAD);
@@ -656,13 +660,12 @@ function updCrew(dt,T){if(!CREW||!S.plan)return;
  GUESTS.forEach(g=>{if(!g.on)return;g.pop.step(1,30,8,dt);g.g.scale.setScalar(Math.max(.01,g.pop.x));updChef(g,T,dt);g.g.position.y=groundY(g.g.position.x,g.g.position.z);});
  for(const b of BACK){if(b.done)continue;b.t+=dt;const u=cl(b.t/1.4),e=ease.sin(u);const mid=b.p0.clone().lerp(b.p1,.5);mid.y=Math.max(b.p0.y,b.p1.y)+2.6;b.m.position.copy(new THREE.QuadraticBezierCurve3(b.p0,mid,b.p1).getPoint(e));b.m.rotation.z=Math.sin(e*Math.PI)*.6;if(u>=1&&b.t>2.4){b.done=1;b.m.remove(b.o);scene.remove(b.m);}}}
 const stepAct=(cap,def)=>/implement|fix|write|build|graft|apply|generate|edit|host|create/i.test(cap)?'chop':/sketch|design|plan|frame|draft|outline/i.test(cap)?'sketch':/verify|judge|inspect|review|scope|check|prove|audit|scrap|test/i.test(cap)?'inspect':/ground|read|explore|assess|understand|locate|gather|find|interview|intent/i.test(cap)?'taste':def;
-function flowInit(J){const F=J.flow,P=S.plan.pace;J.ins=F.inputs;J.stp=F.steps;J.tIn=P.input;J.tSt=P.step;J.dur=J.ins.length*J.tIn+J.stp.length*J.tSt;J.items=[];J.stepI=-1;J.inI=-1;J.acts=J.stp.map(x=>stepAct(x.caption,J.act));}
-function flowTick(j,c){const nI=j.ins.length;if(c.t<nI*j.tIn){const k=Math.floor(c.t/j.tIn);while(j.inI<k){j.inI++;addItem(j,j.inI,c);}return 'gather';}
- while(j.inI<nI-1){j.inI++;addItem(j,j.inI,c);}const k=Math.min(j.stp.length-1,Math.floor((c.t-nI*j.tIn)/j.tSt));if(k!==j.stepI){j.stepI=k;updTicket();}return j.acts[k];}
+function flowInit(J){J.run=new FlowRun(J.flow,S.plan.pace,{asks:S.plan.kind==='skill'&&!fast,picks:PICKS});J.items=[];J.acts=J.flow.steps.map(x=>stepAct(x.caption,J.act));}
+function flowStep(J,c,dt){for(const e of J.run.tick(dt)){if(e.kind==='in')addItem(J,e.i,c);else updTicket();}return J.run.stepI>=0?J.acts[J.run.stepI]:'gather';}
 const ITEM={file:[new THREE.BoxGeometry(.2,.035,.26),'#FFF8EC'],skill:[new THREE.CylinderGeometry(.12,.08,.1,20),'#8DB486'],principle:[new THREE.CylinderGeometry(.075,.075,.18,16),'#F2C46B'],rule:[new THREE.CylinderGeometry(.08,.08,.13,16),'#7FA3B5']};
 const shortIn=i=>i.name.replace(/^principle-/,'').replace(/^(references|scripts|assets)\//,'').replace(/\.md$/,'');
 const ITEMS=[];
-function addItem(j,k,c){if(fast)return;const inp=j.ins[k],s=j.s,per=7,row=Math.floor(k/per),col=k%per,n=Math.min(per,j.ins.length-row*per);
+function addItem(j,k,c){if(fast)return;const ins=j.flow.inputs,inp=ins[k],s=j.s,per=7,row=Math.floor(k/per),col=k%per,n=Math.min(per,ins.length-row*per);
  const p=s.p.clone().setY(s.p.y+2.35+(ITEM[inp.kind]||ITEM.file)[0].parameters.height/2||0).addScaledVector(s.side,(col-(n-1)/2)*.29).addScaledVector(s.fwd,.86-row*.3);
  const [geo,col0]=ITEM[inp.kind]||ITEM.file;const m=new THREE.Mesh(geo,M(col0,MG));const h=(geo.parameters.height||.035)/2;p.y=s.p.y+2.35+h;m.position.copy(p);scene.add(m);
  const d=document.createElement('div');d.className='lb it k-'+inp.kind;d.textContent=shortIn(inp);const o=new CSS2DObject(d);o.position.set(0,.32,0);m.add(o);
@@ -671,17 +674,18 @@ function clearItems(j){(j.items||[]).forEach(it=>{it.gone=0;it.out=1;});}
 function updItems(dt){for(const it of ITEMS){if(it.dead)continue;it.t+=dt;
   if(it.out){it.ot=(it.ot||0)+dt;const k=1-cl(it.ot/.35);it.m.scale.setScalar(Math.max(.001,k));it.d.style.opacity=0;if(k<=0){it.dead=1;it.m.remove(it.o);scene.remove(it.m);}continue;}
   const u=ease.io(cl(it.t/.38));it.m.position.lerpVectors(it.p0,it.p1,u).y+=Math.sin(Math.PI*u)*.45;it.m.scale.setScalar(.4+.6*u);
-  const last=it.j.items[it.j.items.length-1]===it&&it.j.inI<it.j.ins.length-1+1&&it.j.stepI<0;it.d.classList.toggle('new',last);it.d.style.opacity=last?1:Math.max(.0,1-cl((it.t-1.1)/.5)).toFixed(2);}}
-function flowCap(J,n){if(J.pre.length&&J.chef&&(J.chef.st==='walk'||J.chef.st==='antic')){const e=J.pre[Math.min(J.pre.length-1,Math.floor((T-(J.dT||T))/1.7))];return `FORGE-RUN ${e.time} · ${e.text}`;}if(!J.chef||J.chef.st!=='work')return caption(n);const nI=J.ins.length;
- if(J.stepI<0&&J.inI>=0)return `Mise en place ${J.inI+1}/${nI} · ${J.ins[J.inI].kind}: ${shortIn(J.ins[J.inI])}`;
- if(J.stepI>=0)return `Step ${J.stepI+1}/${J.stp.length} · ${J.stp[J.stepI].caption}`;return caption(n);}
-function flowSrc(J){if(!J.flow.file)return '';const ln=J.stepI>=0?J.stp[J.stepI].line:J.inI>=0?J.ins[J.inI].line:0;return `<span class="src">${esc(J.flow.file)}${ln?':'+esc(ln):''} · steps from ${esc(J.flow.stepSource)}</span> `;}
-function flowHTML(){const J=job.list[0],n=S.plan.node;const st=k=>J.landed||k<J.stepI?'done':k===J.stepI&&J.chef&&J.chef.st==='work'?'now':'';
- const ins=J.ins.map((x,k)=>`<span class="in ${k<=J.inI?'got':''} k-${esc(x.kind)}" title="${esc(x.kind)} · line ${esc(x.line)}">${k<=J.inI?'✓ ':''}${esc(shortIn(x))}</span>`).join('');
+  const last=it.j.items[it.j.items.length-1]===it&&it.j.run.stepI<0;it.d.classList.toggle('new',last);it.d.style.opacity=last?1:Math.max(.0,1-cl((it.t-1.1)/.5)).toFixed(2);}}
+function flowCap(J,n){if(J.pre.length&&J.chef&&(J.chef.st==='walk'||J.chef.st==='antic')){const e=J.pre[Math.min(J.pre.length-1,Math.floor((T-(J.dT||T))/1.7))];return `FORGE-RUN ${e.time} · ${e.text}`;}if(!J.chef||J.chef.st!=='work')return caption(n);const r=J.run,F=J.flow,a=r.asking;
+ if(a)return `Decision · ${a.branch.q} (SKILL.md:${a.branch.line})`;
+ if(r.stepI<0&&r.inI>=0)return `Mise en place ${r.inI+1}/${F.inputs.length} · ${F.inputs[r.inI].kind}: ${shortIn(F.inputs[r.inI])}`;
+ if(r.stepI>=0)return `Step ${r.stepI+1}/${F.steps.length} · ${r.note?`${r.note.head} → ${r.note.effect}`:F.steps[r.stepI].caption}`;return caption(n);}
+function flowSrc(J){const F=J.flow,r=J.run;if(!F.file)return '';const ln=r.asking?r.asking.branch.line:r.stepI>=0?F.steps[r.stepI].line:r.inI>=0?F.inputs[r.inI].line:0;return `<span class="src">${esc(F.file)}${ln?':'+esc(ln):''} · steps from ${esc(F.stepSource)}</span> `;}
+function flowHTML(){const J=job.list[0],n=S.plan.node,r=J.run,F=J.flow;const st=k=>r.skipped(k)?'skip':J.landed||k<r.stepI?'done':k===r.stepI&&J.chef&&J.chef.st==='work'?'now':'';
+ const ins=F.inputs.map((x,k)=>`<span class="in ${k<=r.inI?'got':''} k-${esc(x.kind)}" title="${esc(x.kind)} · line ${esc(x.line)}">${k<=r.inI?'✓ ':''}${esc(shortIn(x))}</span>`).join('');
  const insp=reached('orderUp')?'done':HEAD_LEG?'now':'',out=reached('served')?'done':serve?'now':'';
  return `<div class="k">${PHASE[S.phase].kicker[1]}</div><h3>${esc(n.name)}</h3><div class="d">${esc(n.description||'')}</div>${fileLink(n,'Open skill file')}
- <h4>Mise en place · ${J.ins.length} inputs</h4><div class="ins">${ins||'<span class="in">nothing listed in the file</span>'}</div>
- <h4>Steps · ${J.stp.length} <small>(${esc(J.flow.stepSource)})</small></h4><ol>${J.stp.map((x,k)=>`<li class="${st(k)}"><span class="o">${st(k)==='done'?'✓':esc(x.n)}</span><span>${esc(x.caption)}</span></li>`).join('')}
+ <h4>Mise en place · ${F.inputs.length} inputs</h4><div class="ins">${ins||'<span class="in">nothing listed in the file</span>'}</div>
+ <h4>Steps · ${F.steps.length} <small>(${esc(F.stepSource)})</small></h4><ol>${F.steps.map((x,k)=>{const m=st(k);return `<li class="${m}"><span class="o">${m==='done'?'✓':m==='skip'?'–':esc(x.n)}</span><span>${esc(x.caption)}</span></li>`;}).join('')}
  <li class="${insp}"><span class="o">${insp==='done'?'✓':'★'}</span><span>Poteto Mode tastes</span><span class="w">the pass</span></li><li class="${out}"><span class="o">${out==='done'?'✓':'→'}</span><span>Waiter carries it out</span><span class="w">service</span></li></ol>`;}
 
 function noteFly(txt,p0,p1,col){const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.04,.36),M(col||'#FFF8EC',MG));m.position.copy(p0);scene.add(m);const d=document.createElement('div');d.className='lb it new';d.textContent=txt;const o=new CSS2DObject(d);o.position.set(0,.5,0);m.add(o);BACK.push({m,o,p0,p1,t:0});}
