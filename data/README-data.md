@@ -115,7 +115,7 @@ Degree counts distinct edges (one per source, target and type), not mentions. Ti
 
 Top level: `schemaVersion`, `upstream` (repo, commit SHA, commit date in UTC, version, `sourceUrlTemplate`, license), `counts`, `nodes`, `edges`.
 
-Node fields: `id`, `kind`, `name`, `title` (first heading), `group`, `description`, `path` (repo-relative, e.g. `pstack/skills/how/SKILL.md`; fill `{path}` in `sourceUrlTemplate` for "View source"), `owner` (skill or pack a playbook, script or reference belongs to), `lines`, `flags` (every frontmatter key except name and description, e.g. `disable-model-invocation`, `mode`, `paths`, `is_background`), `files` (directory scripts only), `degree`.
+Node fields: `id`, `kind`, `name`, `title` (first heading), `group`, `description`, `path` (repo-relative, e.g. `pstack/skills/how/SKILL.md`; fill `{path}` in `sourceUrlTemplate` for "View source"), `owner` (skill or pack a playbook, script or reference belongs to), `lines`, `flags` (every frontmatter key except name and description, e.g. `disable-model-invocation`, `mode`, `paths`, `is_background`), `files` (directory scripts only), `degree`. Skill and playbook nodes include `text`, the source file, produced by this script.
 
 Kinds: router, playbook, principle, skill, script, reference, agent, automation. SPEC.md lists router, playbook, principle, script, reference and other; skill, agent and automation are extra kinds that the page should colour separately or show as "other".
 
