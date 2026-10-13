@@ -1,4 +1,3 @@
-# Builds skill-flows.json from the real pstack files. Nothing is hand-written: every step and input carries the file line it came from.
 import json,os,re,sys
 if len(sys.argv)!=3:sys.exit('usage: mkflows.py <pstack root> <out.json>')
 ROOT,OUT=sys.argv[1],sys.argv[2]
@@ -42,12 +41,69 @@ def inputs(L,self_):
             for c in (n,'principle-'+n):
                 if c in NAMES and c!=self_:add('principle' if c.startswith('principle-') else 'skill',c,i);break
     return out
+def _base(v):
+    return v[:-2] if re.search(r'(sh|ch|x|ss)es$',v) else v[:-1]
+def question(c):
+    c=re.sub(r'\s+',' ',re.sub(r'[*`]','',c)).strip().rstrip('.,;:')
+    lc=c[0].lower()+c[1:] if not re.match(r'^[A-Z]{2}|^[A-Z][a-z]+[A-Z]',c) else c
+    m=re.match(r'^((?:(?:the|this|your|a|an) [\w\'-]+|[\w\'-]+)(?: [\w\'-]+){0,6}?) (is|are|has|have|can|must|should|will) (.+)$',lc)
+    if m and m.group(1).lower() not in('it','there'):q=f"{m.group(2).capitalize()} {m.group(1)} {m.group(3)}"
+    elif re.match(r'^(it|there) (is|are) ',lc):w=lc.split(' ',2);q=f"{w[1].capitalize()} {w[0]} {w[2]}"
+    elif re.match(r'^(you|we) ',lc):q='Do '+lc
+    elif re.match(r'^on ',lc):q='Are you '+lc
+    else:
+        m=re.match(r"^((?:(?:the|this|your|a|an) [\w'-]+|[\w'-]+)(?: [\w'-]+){0,6}?) (doesn't|does not) (.+)$",lc)
+        m2=re.match(r"^((?:(?:the|this|your|a|an) [\w'-]+|[\w'-]+)(?: [\w'-]+){0,6}?) (?:(\w+ly) )?([a-z]+[^us']s)( .+)?$",lc);m3=re.match(r"^((?:the|these|those) [\w'-]+s) ([a-z]+) (.+)$",lc)
+        if m:q=f"Does {m.group(1)} fail to {m.group(3)}"
+        elif m3:q=f"Do {m3.group(1)} {m3.group(2)} {m3.group(3)}"
+        elif m2:q=f"Does {m2.group(1)} {(m2.group(2)+' ') if m2.group(2) else ''}{_base(m2.group(3))}{m2.group(4) or ''}"
+        else:q=c[0].upper()+c[1:]
+    q=q[0].upper()+q[1:];q=q if len(q)<=80 else q[:77].rsplit(' ',1)[0]+'…'
+    return q+'?'
+def ranges(L,src,st):
+    H=h2(L);ends={i:(H[k+1][0] if k+1<len(H) else len(L)) for k,(i,_) in enumerate(H)}
+    if not st:return []
+    if src.startswith('Phase/Step') or src.startswith('section headings'):return [(i,ends[i]) for i,_ in st]
+    if 'under "## Start"' in src:
+        ph=[(i,t) for i,t in H if re.match(r'^(Phase [A-Z]:|Step \d+|\d+\.)',t)]
+        if len(ph)==len(st):return [(i,ends[i]) for i,_ in ph]
+    out=[]
+    for k,(i,_) in enumerate(st):
+        nxt=st[k+1][0] if k+1<len(st) else next((j for j,_ in H if j>i),len(L))
+        out.append((i,nxt))
+    return out
+def branches(L,src,st,steps_out):
+    R=ranges(L,src,st);D=[];only=None;only_cond=None
+    for k,(a,b) in enumerate(R):
+        head=L[a]
+        m=re.search(r'\(([a-z -]+) only\)',head)
+        if m:
+            if only and only_cond==m.group(1) and only['skip'][-1]==k-1:only['skip'].append(k)
+            else:only_cond=m.group(1);only={'ask':k,'kind':'only','q':f"Is the task {only_cond}?",'skip':[k],'skipOn':'no','line':a+1,'text':head.strip('# ').strip()};D.append(only)
+        if re.search(r'\((opt-in|optional)\)',head):
+            opt=None
+            for j in range(a+1,b):
+                mm=re.search(r'\bOpt in\b[^.]*?\bwhen ([^.:]+)',L[j])
+                if mm:opt=(j,mm.group(1));break
+            dflt=next((L[j] for j in range(a+1,b) if L[j].startswith('Default:')),None)
+            D.append({'ask':k,'kind':'opt-in','q':question(opt[1]) if opt else f"Opt in to {steps_out[k]['caption']}?",'yes':'surface it and pause for sign-off' if opt else steps_out[k]['caption'],'no':(re.sub(r'^Default:\s*','',dflt).split('.')[0] if dflt else 'skip it'),'skip':[],'line':(opt[0] if opt else a)+1,'text':(L[opt[0]] if opt else head).strip()})
+        for j in range(a,b):
+            l=L[j]
+            for mm in re.finditer(r'\bSkip (Phase ([A-Z])|step (\d+)|this step)\b[^.]*?\b(?:only )?(?:when|if) ([^.]+)\.',l):
+                t=(ord(mm.group(2))-65) if mm.group(2) else (int(mm.group(3))-1 if mm.group(3) else k)
+                if 0<=t<len(R):D.append({'ask':t,'kind':'skip','q':question(mm.group(4)),'skip':[t],'skipOn':'yes','line':j+1,'text':mm.group(0)})
+            mm=re.match(r'^\s*(?:[-*]|\d+\.)?\s*(?:\*\*)?(If|When) ([^,]{3,110}),\s*(.+)$',l)
+            if mm and not re.match(r'in doubt',mm.group(2)):
+                act=re.split(r'(?<=[.;])\s',re.sub(r'[*`]','',mm.group(3)))[0].rstrip('.;')
+                D.append({'ask':k,'kind':mm.group(1).lower(),'q':question(mm.group(2)),'yes':act[:90],'no':'carry on','skip':[],'line':j+1,'text':l.strip()})
+    D.sort(key=lambda d:(d['ask'],d['line']));return D
 flows={}
 for n in NAMES:
     if n.startswith('principle-'):continue
     p=os.path.join(SK,n,'SKILL.md');L=open(p,encoding='utf-8').read().split('\n')
     src,st=steps(L)
-    flows[n]={'file':f'skills/{n}/SKILL.md','stepSource':src,'steps':[{'n':k+1,'caption':short(t),'line':i+1} for k,(i,t) in enumerate(st)],'inputs':inputs(L,n)}
+    so=[{'n':k+1,'caption':short(t),'line':i+1} for k,(i,t) in enumerate(st)]
+    flows[n]={'file':f'skills/{n}/SKILL.md','stepSource':src,'steps':so,'inputs':inputs(L,n),'branches':branches(L,src,st,so)}
 PB={};pd=os.path.join(SK,'poteto-mode','playbooks')
 for f in sorted(os.listdir(pd)):
     L=open(os.path.join(pd,f),encoding='utf-8').read().split('\n');chain=[]
@@ -59,7 +115,6 @@ for f in sorted(os.listdir(pd)):
         chain.append({'line':i+1,'text':short(t),'skill':hit})
     PB[f[:-3]]={'file':f'skills/poteto-mode/playbooks/{f}','steps':chain}
 
-# FORGE-RUN.md (if present): the real order of events for PR #13. Only timeline rows and the "were not spawned" note are read.
 FR=os.path.join(os.path.dirname(os.path.abspath(__file__)),'FORGE-RUN.md');forge=None
 if os.path.isfile(FR):
     T=open(FR,encoding='utf-8').read();ev=[];ran=[];notrun=[]
@@ -92,4 +147,4 @@ if os.path.isfile(FR):
     forge={'file':'FORGE-RUN.md','playbook':(pb.group(1).lower() if pb else None),'ranInOrder':ran,'readNotRun':notrun,'events':ev,'subagents':sub,'reviews':rw,'delegateCommits':hs}
 json.dump({'source':'cursor/plugins/pstack','generatedBy':'mkflows.py','skills':flows,'playbooks':PB,'forgeRun':forge},open(OUT,'w',encoding='utf-8'),indent=1,ensure_ascii=False)
 print('forgeRun:',forge and {k:forge[k] for k in('playbook','ranInOrder','readNotRun')},forge and len(forge['events']))
-for n,f in flows.items():print(f"{n:28s}{len(f['steps']):3d} steps {len(f['inputs']):3d} inputs  [{f['stepSource']}]")
+for n,f in flows.items():print(f"{n:28s}{len(f['steps']):3d} steps {len(f['inputs']):3d} inputs {len(f['branches']):2d} branches  [{f['stepSource']}]")
