@@ -16,6 +16,7 @@ Regenerate locally (Node, no packages):
 
 ```sh
 node scripts/extract-graph.mjs path/to/plugins/pstack --out data/graph.json --readme data/README-data.md
+python3 scripts/skill-flows/mkflows.py path/to/plugins/pstack data/skill-flows.json
 node scripts/validate-graph.mjs data/graph.json
 node scripts/check-layout.mjs data/graph.json
 ```

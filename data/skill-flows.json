@@ -1,0 +1,2611 @@
+{
+ "source": "cursor/plugins/pstack",
+ "generatedBy": "mkflows.py",
+ "skills": {
+  "architect": {
+   "file": "skills/architect/SKILL.md",
+   "stepSource": "numbered list under \"## Start\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Ground",
+     "line": 15
+    },
+    {
+     "n": 2,
+     "caption": "Sketch",
+     "line": 16
+    },
+    {
+     "n": 3,
+     "caption": "Agree",
+     "line": 17
+    },
+    {
+     "n": 4,
+     "caption": "Implement",
+     "line": 18
+    },
+    {
+     "n": 5,
+     "caption": "Scrap",
+     "line": 19
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "how",
+     "line": 23
+    },
+    {
+     "kind": "skill",
+     "name": "why",
+     "line": 23
+    },
+    {
+     "kind": "file",
+     "name": "references/runner-prompt.md",
+     "line": 29
+    },
+    {
+     "kind": "skill",
+     "name": "arena",
+     "line": 29
+    },
+    {
+     "kind": "rule",
+     "name": "pstack-models.mdc",
+     "line": 31
+    },
+    {
+     "kind": "principle",
+     "name": "principle-exhaust-the-design-space",
+     "line": 33
+    },
+    {
+     "kind": "file",
+     "name": "references/design-red-flags.md",
+     "line": 35
+    },
+    {
+     "kind": "principle",
+     "name": "principle-foundational-thinking",
+     "line": 47
+    },
+    {
+     "kind": "principle",
+     "name": "principle-outcome-oriented-execution",
+     "line": 47
+    },
+    {
+     "kind": "skill",
+     "name": "interrogate",
+     "line": 47
+    },
+    {
+     "kind": "principle",
+     "name": "principle-redesign-from-first-principles",
+     "line": 57
+    },
+    {
+     "kind": "principle",
+     "name": "principle-fix-root-causes",
+     "line": 57
+    },
+    {
+     "kind": "principle",
+     "name": "principle-subtract-before-you-add",
+     "line": 74
+    },
+    {
+     "kind": "file",
+     "name": "references/rationale-template.md",
+     "line": 79
+    }
+   ]
+  },
+  "arena": {
+   "file": "skills/arena/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Frame",
+     "line": 11
+    },
+    {
+     "n": 2,
+     "caption": "Fan out",
+     "line": 20
+    },
+    {
+     "n": 3,
+     "caption": "Cross-judge",
+     "line": 26
+    },
+    {
+     "n": 4,
+     "caption": "Pick a base",
+     "line": 30
+    },
+    {
+     "n": 5,
+     "caption": "Graft",
+     "line": 36
+    },
+    {
+     "n": 6,
+     "caption": "Verify",
+     "line": 42
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "principle",
+     "name": "principle-separate-before-serializing-shared-state",
+     "line": 18
+    },
+    {
+     "kind": "principle",
+     "name": "principle-redesign-from-first-principles",
+     "line": 38
+    },
+    {
+     "kind": "principle",
+     "name": "principle-prove-it-works",
+     "line": 44
+    }
+   ]
+  },
+  "automate-me": {
+   "file": "skills/automate-me/SKILL.md",
+   "stepSource": "no ordered steps in the file",
+   "steps": [],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 11
+    },
+    {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 63
+    }
+   ]
+  },
+  "benchmark-checklist": {
+   "file": "skills/benchmark-checklist/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Before you run anything",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "The questions",
+     "line": 19
+    }
+   ],
+   "inputs": []
+  },
+  "blast-radius": {
+   "file": "skills/blast-radius/SKILL.md",
+   "stepSource": "numbered list under \"## Steps\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Read the change",
+     "line": 33
+    },
+    {
+     "n": 2,
+     "caption": "Find the one fact it's safe because of",
+     "line": 34
+    },
+    {
+     "n": 3,
+     "caption": "Look where grep stops",
+     "line": 35
+    },
+    {
+     "n": 4,
+     "caption": "Be honest about each risk",
+     "line": 36
+    },
+    {
+     "n": 5,
+     "caption": "Prove the one fact",
+     "line": 37
+    },
+    {
+     "n": 6,
+     "caption": "For a big or wide change, run it as an arena",
+     "line": 38
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "how",
+     "line": 11
+    },
+    {
+     "kind": "skill",
+     "name": "why",
+     "line": 11
+    },
+    {
+     "kind": "skill",
+     "name": "arena",
+     "line": 38
+    },
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 48
+    }
+   ]
+  },
+  "bro": {
+   "file": "skills/bro/SKILL.md",
+   "stepSource": "no ordered steps in the file",
+   "steps": [],
+   "inputs": []
+  },
+  "correct": {
+   "file": "skills/correct/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Find the mistake classes",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "Fix each class at the highest level that works",
+     "line": 17
+    },
+    {
+     "n": 3,
+     "caption": "Fix and prove",
+     "line": 24
+    },
+    {
+     "n": 4,
+     "caption": "Keep the rule table",
+     "line": 28
+    }
+   ],
+   "inputs": []
+  },
+  "create-verification-skill": {
+   "file": "skills/create-verification-skill/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Interview the repo, not the user",
+     "line": 11
+    },
+    {
+     "n": 2,
+     "caption": "Generate the skill",
+     "line": 23
+    },
+    {
+     "n": 3,
+     "caption": "Seed the feature map",
+     "line": 34
+    },
+    {
+     "n": 4,
+     "caption": "Prove the generated skill before handing it over",
+     "line": 38
+    },
+    {
+     "n": 5,
+     "caption": "Offer the maintenance loop",
+     "line": 42
+    }
+   ],
+   "inputs": []
+  },
+  "figure-it-out": {
+   "file": "skills/figure-it-out/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Frame",
+     "line": 15
+    },
+    {
+     "n": 2,
+     "caption": "Design the workflow",
+     "line": 25
+    },
+    {
+     "n": 3,
+     "caption": "Run the loop",
+     "line": 36
+    },
+    {
+     "n": 4,
+     "caption": "Keep the audit trail",
+     "line": 44
+    },
+    {
+     "n": 5,
+     "caption": "Verify and hand back",
+     "line": 48
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 13
+    },
+    {
+     "kind": "principle",
+     "name": "principle-prove-it-works",
+     "line": 19
+    },
+    {
+     "kind": "principle",
+     "name": "principle-never-block-on-the-human",
+     "line": 23
+    },
+    {
+     "kind": "principle",
+     "name": "principle-foundational-thinking",
+     "line": 27
+    },
+    {
+     "kind": "skill",
+     "name": "architect",
+     "line": 30
+    },
+    {
+     "kind": "skill",
+     "name": "arena",
+     "line": 30
+    },
+    {
+     "kind": "principle",
+     "name": "principle-laziness-protocol",
+     "line": 30
+    },
+    {
+     "kind": "principle",
+     "name": "principle-separate-before-serializing-shared-state",
+     "line": 31
+    },
+    {
+     "kind": "principle",
+     "name": "principle-sequence-verifiable-units",
+     "line": 38
+    },
+    {
+     "kind": "skill",
+     "name": "show-me-your-work",
+     "line": 46
+    },
+    {
+     "kind": "principle",
+     "name": "principle-encode-lessons-in-structure",
+     "line": 50
+    }
+   ]
+  },
+  "how": {
+   "file": "skills/how/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Assess complexity",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "Explore (complex only)",
+     "line": 22
+    },
+    {
+     "n": 3,
+     "caption": "Synthesize (complex only)",
+     "line": 26
+    },
+    {
+     "n": 4,
+     "caption": "Present",
+     "line": 30
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "rule",
+     "name": "pstack-models.mdc",
+     "line": 11
+    },
+    {
+     "kind": "file",
+     "name": "references/explainer-prompt.md",
+     "line": 17
+    },
+    {
+     "kind": "file",
+     "name": "references/explorer-prompt.md",
+     "line": 24
+    }
+   ]
+  },
+  "interrogate": {
+   "file": "skills/interrogate/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Scope",
+     "line": 11
+    },
+    {
+     "n": 2,
+     "caption": "Intent",
+     "line": 21
+    },
+    {
+     "n": 3,
+     "caption": "Spawn Reviewers",
+     "line": 25
+    },
+    {
+     "n": 4,
+     "caption": "Synthesize",
+     "line": 40
+    },
+    {
+     "n": 5,
+     "caption": "Lead Judgment",
+     "line": 44
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "file",
+     "name": "references/reviewer-prompt.md",
+     "line": 38
+    },
+    {
+     "kind": "file",
+     "name": "references/rubric.md",
+     "line": 38
+    },
+    {
+     "kind": "file",
+     "name": "references/code-quality-review.md",
+     "line": 38
+    },
+    {
+     "kind": "file",
+     "name": "references/lead-judgment.md",
+     "line": 46
+    }
+   ]
+  },
+  "ketchup": {
+   "file": "skills/ketchup/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Gather what changed",
+     "line": 11
+    },
+    {
+     "n": 2,
+     "caption": "Write the reply",
+     "line": 17
+    }
+   ],
+   "inputs": []
+  },
+  "maintain-verification-skill": {
+   "file": "skills/maintain-verification-skill/SKILL.md",
+   "stepSource": "numbered list under \"## Pass\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Locate the target",
+     "line": 25
+    },
+    {
+     "n": 2,
+     "caption": "Index hygiene",
+     "line": 27
+    },
+    {
+     "n": 3,
+     "caption": "Source wave",
+     "line": 29
+    },
+    {
+     "n": 4,
+     "caption": "Reconcile",
+     "line": 31
+    },
+    {
+     "n": 5,
+     "caption": "Live pass",
+     "line": 33
+    },
+    {
+     "n": 6,
+     "caption": "Triage",
+     "line": 35
+    },
+    {
+     "n": 7,
+     "caption": "Ship or stop",
+     "line": 37
+    }
+   ],
+   "inputs": []
+  },
+  "make-bot-ui": {
+   "file": "skills/make-bot-ui/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Create the webhook routine",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "Copy the URL and the sender key",
+     "line": 25
+    },
+    {
+     "n": 3,
+     "caption": "Request the sender key",
+     "line": 39
+    },
+    {
+     "n": 4,
+     "caption": "Host the page on this computer",
+     "line": 53
+    },
+    {
+     "n": 5,
+     "caption": "Put the page on the tailnet",
+     "line": 75
+    },
+    {
+     "n": 6,
+     "caption": "Handle the webhook wake",
+     "line": 105
+    }
+   ],
+   "inputs": []
+  },
+  "no-comments": {
+   "file": "skills/no-comments/SKILL.md",
+   "stepSource": "numbered list under \"## Steps\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Spawn Task with subagent_type",
+     "line": 19
+    },
+    {
+     "n": 2,
+     "caption": "Inspect its report and diff",
+     "line": 20
+    },
+    {
+     "n": 3,
+     "caption": "Fix trivial accepted flags directly by deleting a dead path,…",
+     "line": 21
+    },
+    {
+     "n": 4,
+     "caption": "Implement the smallest root-cause fix in scope",
+     "line": 22
+    },
+    {
+     "n": 5,
+     "caption": "Constraint comments say do not remove, do not change…",
+     "line": 23
+    },
+    {
+     "n": 6,
+     "caption": "Report the deletion count, restored comments, reruns,…",
+     "line": 24
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "principle",
+     "name": "principle-fix-root-causes",
+     "line": 22
+    },
+    {
+     "kind": "principle",
+     "name": "principle-redesign-from-first-principles",
+     "line": 22
+    }
+   ]
+  },
+  "poteto-help": {
+   "file": "skills/poteto-help/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Find out what they need",
+     "line": 15
+    },
+    {
+     "n": 2,
+     "caption": "Get set up",
+     "line": 35
+    },
+    {
+     "n": 3,
+     "caption": "Start a task with /poteto-mode",
+     "line": 47
+    },
+    {
+     "n": 4,
+     "caption": "Pick a skill",
+     "line": 59
+    },
+    {
+     "n": 5,
+     "caption": "Playbooks and principles",
+     "line": 111
+    },
+    {
+     "n": 6,
+     "caption": "Fix a run that went wrong",
+     "line": 128
+    },
+    {
+     "n": 7,
+     "caption": "Make pstack my own",
+     "line": 143
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 11
+    },
+    {
+     "kind": "file",
+     "name": "references/prompting.md",
+     "line": 41
+    },
+    {
+     "kind": "file",
+     "name": "references/recipes.md",
+     "line": 154
+    }
+   ]
+  },
+  "poteto-mode": {
+   "file": "skills/poteto-mode/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Principles",
+     "line": 40
+    },
+    {
+     "n": 2,
+     "caption": "Autonomy",
+     "line": 83
+    },
+    {
+     "n": 3,
+     "caption": "Subagents",
+     "line": 93
+    },
+    {
+     "n": 4,
+     "caption": "Writing the reply",
+     "line": 103
+    },
+    {
+     "n": 5,
+     "caption": "Comments",
+     "line": 117
+    },
+    {
+     "n": 6,
+     "caption": "Playbooks",
+     "line": 121
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "how",
+     "line": 21
+    },
+    {
+     "kind": "principle",
+     "name": "principle-model-the-domain",
+     "line": 23
+    },
+    {
+     "kind": "skill",
+     "name": "architect",
+     "line": 24
+    },
+    {
+     "kind": "skill",
+     "name": "swarm",
+     "line": 25
+    },
+    {
+     "kind": "skill",
+     "name": "arena",
+     "line": 25
+    },
+    {
+     "kind": "skill",
+     "name": "interrogate",
+     "line": 26
+    },
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 28
+    },
+    {
+     "kind": "skill",
+     "name": "technical-writing",
+     "line": 29
+    },
+    {
+     "kind": "skill",
+     "name": "no-comments",
+     "line": 31
+    },
+    {
+     "kind": "skill",
+     "name": "benchmark-checklist",
+     "line": 33
+    },
+    {
+     "kind": "file",
+     "name": "references/bugbot-triage.md",
+     "line": 36
+    },
+    {
+     "kind": "skill",
+     "name": "show-me-your-work",
+     "line": 38
+    },
+    {
+     "kind": "principle",
+     "name": "principle-sequence-verifiable-units",
+     "line": 70
+    },
+    {
+     "kind": "skill",
+     "name": "why",
+     "line": 95
+    },
+    {
+     "kind": "skill",
+     "name": "reflect",
+     "line": 95
+    },
+    {
+     "kind": "skill",
+     "name": "figure-it-out",
+     "line": 125
+    }
+   ]
+  },
+  "recall": {
+   "file": "skills/recall/SKILL.md",
+   "stepSource": "top-level numbered list",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Classify, then route",
+     "line": 17
+    },
+    {
+     "n": 2,
+     "caption": "Lock the scope before searching",
+     "line": 18
+    },
+    {
+     "n": 3,
+     "caption": "Fan out across your chat history",
+     "line": 19
+    },
+    {
+     "n": 4,
+     "caption": "Sweep the shared record whenever the topic names a feature,…",
+     "line": 20
+    },
+    {
+     "n": 5,
+     "caption": "Verify against live state",
+     "line": 21
+    },
+    {
+     "n": 6,
+     "caption": "Write the brief to the contract below",
+     "line": 22
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "why",
+     "line": 13
+    },
+    {
+     "kind": "skill",
+     "name": "automate-me",
+     "line": 17
+    },
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 33
+    }
+   ]
+  },
+  "reflect": {
+   "file": "skills/reflect/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Locate the active transcript",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "Spawn three reviewers in parallel",
+     "line": 23
+    },
+    {
+     "n": 3,
+     "caption": "Synthesize",
+     "line": 37
+    },
+    {
+     "n": 4,
+     "caption": "Structural enforcement check",
+     "line": 41
+    },
+    {
+     "n": 5,
+     "caption": "Apply",
+     "line": 45
+    },
+    {
+     "n": 6,
+     "caption": "Summarize for the user",
+     "line": 60
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "rule",
+     "name": "pstack-models.mdc",
+     "line": 27
+    },
+    {
+     "kind": "file",
+     "name": "references/judgment-reviewer.md",
+     "line": 31
+    },
+    {
+     "kind": "file",
+     "name": "references/tooling-reviewer.md",
+     "line": 32
+    },
+    {
+     "kind": "file",
+     "name": "references/divergent-reviewer.md",
+     "line": 33
+    },
+    {
+     "kind": "file",
+     "name": "references/synthesizer.md",
+     "line": 39
+    },
+    {
+     "kind": "principle",
+     "name": "principle-encode-lessons-in-structure",
+     "line": 43
+    }
+   ]
+  },
+  "setup-pstack": {
+   "file": "skills/setup-pstack/SKILL.md",
+   "stepSource": "no ordered steps in the file",
+   "steps": [],
+   "inputs": []
+  },
+  "show-me-your-work": {
+   "file": "skills/show-me-your-work/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Logging a row",
+     "line": 34
+    },
+    {
+     "n": 2,
+     "caption": "Audit the log against the transcript",
+     "line": 55
+    },
+    {
+     "n": 3,
+     "caption": "Cross-model review of the trail",
+     "line": 65
+    },
+    {
+     "n": 4,
+     "caption": "Reviewing the trail",
+     "line": 76
+    },
+    {
+     "n": 5,
+     "caption": "Composing this skill",
+     "line": 80
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "file",
+     "name": "references/decision-log-template.tsv",
+     "line": 15
+    },
+    {
+     "kind": "file",
+     "name": "scripts/snapshot.sh",
+     "line": 29
+    },
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 36
+    },
+    {
+     "kind": "file",
+     "name": "scripts/log.sh",
+     "line": 38
+    },
+    {
+     "kind": "principle",
+     "name": "principle-encode-lessons-in-structure",
+     "line": 53
+    }
+   ]
+  },
+  "swarm": {
+   "file": "skills/swarm/SKILL.md",
+   "stepSource": "numbered list under \"## Start\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Frame",
+     "line": 15
+    },
+    {
+     "n": 2,
+     "caption": "Fan out",
+     "line": 16
+    },
+    {
+     "n": 3,
+     "caption": "Aggregate",
+     "line": 17
+    },
+    {
+     "n": 4,
+     "caption": "Report",
+     "line": 18
+    }
+   ],
+   "inputs": []
+  },
+  "tdd": {
+   "file": "skills/tdd/SKILL.md",
+   "stepSource": "numbered list under \"## Workflow\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Understand the bug",
+     "line": 15
+    },
+    {
+     "n": 2,
+     "caption": "Choose the narrowest executable check",
+     "line": 16
+    },
+    {
+     "n": 3,
+     "caption": "Write the failing test first",
+     "line": 17
+    },
+    {
+     "n": 4,
+     "caption": "Run the new test before fixing",
+     "line": 18
+    },
+    {
+     "n": 5,
+     "caption": "Fix the bug",
+     "line": 19
+    },
+    {
+     "n": 6,
+     "caption": "Rerun the regression test",
+     "line": 20
+    }
+   ],
+   "inputs": []
+  },
+  "teach": {
+   "file": "skills/teach/SKILL.md",
+   "stepSource": "top-level numbered list",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Decide the few things they should walk away understanding",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "Let how and why do the work, don't redo it",
+     "line": 14
+    },
+    {
+     "n": 3,
+     "caption": "Start with a plain definition",
+     "line": 15
+    },
+    {
+     "n": 4,
+     "caption": "Keep it a conversation, not a lecture or a performance",
+     "line": 16
+    },
+    {
+     "n": 5,
+     "caption": "Show, don't only tell, and build the picture up diagram by…",
+     "line": 17
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "how",
+     "line": 11
+    },
+    {
+     "kind": "skill",
+     "name": "why",
+     "line": 11
+    },
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 19
+    }
+   ]
+  },
+  "technical-writing": {
+   "file": "skills/technical-writing/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Vary the rhythm",
+     "line": 21
+    },
+    {
+     "n": 2,
+     "caption": "Pick the mode first (Diátaxis)",
+     "line": 30
+    },
+    {
+     "n": 3,
+     "caption": "Write sentences to the reader (Google developer style)",
+     "line": 51
+    },
+    {
+     "n": 4,
+     "caption": "Make statements load one at a time (STE rules)",
+     "line": 65
+    },
+    {
+     "n": 5,
+     "caption": "Leave no sentence open to two readings (Global English)",
+     "line": 76
+    },
+    {
+     "n": 6,
+     "caption": "Voice and repo specifics",
+     "line": 91
+    },
+    {
+     "n": 7,
+     "caption": "Worked example",
+     "line": 98
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "unslop",
+     "line": 19
+    }
+   ]
+  },
+  "typescript-best-practices": {
+   "file": "skills/typescript-best-practices/SKILL.md",
+   "stepSource": "no ordered steps in the file",
+   "steps": [],
+   "inputs": [
+    {
+     "kind": "principle",
+     "name": "principle-type-system-discipline",
+     "line": 10
+    },
+    {
+     "kind": "principle",
+     "name": "principle-boundary-discipline",
+     "line": 25
+    },
+    {
+     "kind": "file",
+     "name": "references/patterns.md",
+     "line": 31
+    }
+   ]
+  },
+  "unslop": {
+   "file": "skills/unslop/SKILL.md",
+   "stepSource": "top-level numbered list",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Superficial -ing phrases",
+     "line": 17
+    },
+    {
+     "n": 2,
+     "caption": "Vague attributions",
+     "line": 18
+    },
+    {
+     "n": 3,
+     "caption": "AI vocabulary",
+     "line": 22
+    },
+    {
+     "n": 4,
+     "caption": "Fancy ways to say \"is\"",
+     "line": 23
+    },
+    {
+     "n": 5,
+     "caption": "\"Not just X, but Y.\"",
+     "line": 24
+    },
+    {
+     "n": 6,
+     "caption": "Rule of three",
+     "line": 25
+    },
+    {
+     "n": 7,
+     "caption": "Synonym cycling",
+     "line": 26
+    },
+    {
+     "n": 8,
+     "caption": "False ranges",
+     "line": 27
+    },
+    {
+     "n": 9,
+     "caption": "Em dash overuse",
+     "line": 31
+    },
+    {
+     "n": 10,
+     "caption": "Colon overuse",
+     "line": 32
+    },
+    {
+     "n": 11,
+     "caption": "Boldface overuse",
+     "line": 33
+    },
+    {
+     "n": 12,
+     "caption": "Inline-header lists",
+     "line": 34
+    },
+    {
+     "n": 13,
+     "caption": "Title case headings",
+     "line": 35
+    },
+    {
+     "n": 14,
+     "caption": "Decorative emojis",
+     "line": 36
+    },
+    {
+     "n": 15,
+     "caption": "Curly quotes",
+     "line": 37
+    },
+    {
+     "n": 16,
+     "caption": "Chatbot phrases",
+     "line": 41
+    },
+    {
+     "n": 17,
+     "caption": "Sycophantic tone",
+     "line": 42
+    },
+    {
+     "n": 18,
+     "caption": "Filler phrases",
+     "line": 46
+    },
+    {
+     "n": 19,
+     "caption": "Excessive hedging",
+     "line": 47
+    },
+    {
+     "n": 20,
+     "caption": "Generic conclusions",
+     "line": 48
+    },
+    {
+     "n": 21,
+     "caption": "Abstract metaphor nouns",
+     "line": 52
+    },
+    {
+     "n": 22,
+     "caption": "Say what it does, not how it feels",
+     "line": 56
+    },
+    {
+     "n": 23,
+     "caption": "Shorten or split dense sentences",
+     "line": 57
+    },
+    {
+     "n": 24,
+     "caption": "Active voice",
+     "line": 58
+    },
+    {
+     "n": 25,
+     "caption": "Cut adverbs, or use a stronger verb",
+     "line": 59
+    },
+    {
+     "n": 26,
+     "caption": "Prefer the plain word",
+     "line": 60
+    },
+    {
+     "n": 27,
+     "caption": "Mannered prose",
+     "line": 61
+    },
+    {
+     "n": 28,
+     "caption": "Over-compression",
+     "line": 62
+    }
+   ],
+   "inputs": []
+  },
+  "why": {
+   "file": "skills/why/SKILL.md",
+   "stepSource": "Phase/Step headings",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Understand the Target and the Question",
+     "line": 19
+    },
+    {
+     "n": 2,
+     "caption": "Establish the Code Anchor",
+     "line": 25
+    },
+    {
+     "n": 3,
+     "caption": "Spawn Parallel Investigators",
+     "line": 29
+    },
+    {
+     "n": 4,
+     "caption": "Synthesize",
+     "line": 77
+    },
+    {
+     "n": 5,
+     "caption": "Present",
+     "line": 86
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "how",
+     "line": 9
+    },
+    {
+     "kind": "rule",
+     "name": "pstack-models.mdc",
+     "line": 11
+    },
+    {
+     "kind": "file",
+     "name": "references/epistemics.md",
+     "line": 17
+    },
+    {
+     "kind": "file",
+     "name": "references/investigator-prompt.md",
+     "line": 51
+    },
+    {
+     "kind": "file",
+     "name": "references/source-playbook.md",
+     "line": 52
+    },
+    {
+     "kind": "file",
+     "name": "references/sources/incident-postmortem.md",
+     "line": 53
+    },
+    {
+     "kind": "file",
+     "name": "references/synthesizer-prompt.md",
+     "line": 84
+    }
+   ]
+  }
+ },
+ "playbooks": {
+  "authoring-a-skill": {
+   "file": "skills/poteto-mode/playbooks/authoring-a-skill.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Use the create-skill skill (Cursor's built-in for authoring…",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Validate the skill",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Test cases if structural",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Run Opening a PR",
+     "skill": null
+    }
+   ]
+  },
+  "autonomous-run": {
+   "file": "skills/poteto-mode/playbooks/autonomous-run.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "State the exit condition as a checkable predicate before the…",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Pick the wake mechanism using Cursor's /loop command (a…",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Each iteration makes the smallest change the evidence…",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Mid-run discoveries are yours",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Checkpoint every iteration via the show-me-your-work skill,…",
+     "skill": "show-me-your-work"
+    },
+    {
+     "line": 11,
+     "text": "Stop when the predicate is met",
+     "skill": null
+    }
+   ]
+  },
+  "autopilot-full": {
+   "file": "skills/poteto-mode/playbooks/autopilot-full.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Mark the operator's items and honor state-then-wait",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Spawn one owner per PR with the full lifecycle and an early…",
+     "skill": "no-comments"
+    },
+    {
+     "line": 7,
+     "text": "Run owners in true parallel and never stack",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Swarm-verify every round before its merge",
+     "skill": "swarm"
+    },
+    {
+     "line": 9,
+     "text": "On a clean verdict the owner merges, and a fresh owner takes…",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Run the root layer",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Stand down instantly on the operator's stop",
+     "skill": null
+    }
+   ]
+  },
+  "autopilot-stack": {
+   "file": "skills/poteto-mode/playbooks/autopilot-stack.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Run the owner loop unchanged",
+     "skill": "no-comments"
+    },
+    {
+     "line": 6,
+     "text": "Audit on a real loop",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Hold the operator gates",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Verify each round",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Append on a clean verdict, never ship",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Single writer on topology, parallel writers on builds",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Absorb drift at the root, then re-verify what moved",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Deliver the chain",
+     "skill": null
+    }
+   ]
+  },
+  "babysit": {
+   "file": "skills/poteto-mode/playbooks/babysit.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Declare the mode and resolve the forge before any poll",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Work the merge frontier and nothing above it",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "One babysitter per stack",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Never mutate stack topology",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Order is conflicts, then review threads, then CI",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Trust the active forge's verdict, not a green check list",
+     "skill": null
+    },
+    {
+     "line": 19,
+     "text": "Classify CI before any retrigger",
+     "skill": null
+    },
+    {
+     "line": 20,
+     "text": "Bugbot is triaged skeptically, always",
+     "skill": null
+    },
+    {
+     "line": 21,
+     "text": "Stop at the human's line",
+     "skill": null
+    }
+   ]
+  },
+  "bug-fix": {
+   "file": "skills/poteto-mode/playbooks/bug-fix.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Reproduce it yourself on the matching surface via the…",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Binary-search the cause",
+     "skill": "how"
+    },
+    {
+     "line": 9,
+     "text": "Plan the fix",
+     "skill": "architect"
+    },
+    {
+     "line": 10,
+     "text": "Verify on the same surface",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Stage the commits so the failing repro lands before the fix…",
+     "skill": "tdd"
+    },
+    {
+     "line": 13,
+     "text": "Run Opening a PR",
+     "skill": null
+    }
+   ]
+  },
+  "eval": {
+   "file": "skills/poteto-mode/playbooks/eval.md",
+   "steps": [
+    {
+     "line": 17,
+     "text": "Frame",
+     "skill": null
+    },
+    {
+     "line": 18,
+     "text": "Set up sanitized environments",
+     "skill": null
+    },
+    {
+     "line": 19,
+     "text": "Author one organic prompt",
+     "skill": null
+    },
+    {
+     "line": 20,
+     "text": "Spawn N parallel candidates",
+     "skill": "arena"
+    },
+    {
+     "line": 21,
+     "text": "Spawn one blinded judge",
+     "skill": "arena"
+    },
+    {
+     "line": 22,
+     "text": "Verify the chain from transcripts, not self-report",
+     "skill": null
+    },
+    {
+     "line": 23,
+     "text": "Read every candidate output yourself",
+     "skill": null
+    }
+   ]
+  },
+  "feature": {
+   "file": "skills/poteto-mode/playbooks/feature.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "how over the affected subsystem",
+     "skill": "how"
+    },
+    {
+     "line": 6,
+     "text": "architect for parallel design exploration",
+     "skill": "architect"
+    },
+    {
+     "line": 7,
+     "text": "Write the throughput checkpoint as four todo items",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Delegate code-writing to a subagent using your configured…",
+     "skill": "arena"
+    },
+    {
+     "line": 13,
+     "text": "Verify on the matching surface",
+     "skill": null
+    },
+    {
+     "line": 14,
+     "text": "Rebase into small, ordered commits",
+     "skill": null
+    },
+    {
+     "line": 16,
+     "text": "If the design is contested, interrogate before shipping",
+     "skill": "interrogate"
+    },
+    {
+     "line": 17,
+     "text": "Run Opening a PR",
+     "skill": null
+    }
+   ]
+  },
+  "hillclimb": {
+   "file": "skills/poteto-mode/playbooks/hillclimb.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Ground the workload and architecture before choosing the metric",
+     "skill": "how"
+    },
+    {
+     "line": 8,
+     "text": "Build the measurement harness, prove its sensitivity, then…",
+     "skill": "benchmark-checklist"
+    },
+    {
+     "line": 9,
+     "text": "Open the decision log via the show-me-your-work skill",
+     "skill": "show-me-your-work"
+    },
+    {
+     "line": 10,
+     "text": "Ground each hypothesis in the architecture model from step…",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Loop, one hypothesis per iteration",
+     "skill": null
+    },
+    {
+     "line": 17,
+     "text": "Push past the first plateau",
+     "skill": null
+    },
+    {
+     "line": 18,
+     "text": "Stop when the predicate is met, or when the remaining ideas…",
+     "skill": null
+    },
+    {
+     "line": 19,
+     "text": "Run Opening a PR with the accepted commits stacked in the…",
+     "skill": null
+    }
+   ]
+  },
+  "investigation": {
+   "file": "skills/poteto-mode/playbooks/investigation.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Route through the how skill",
+     "skill": "how"
+    },
+    {
+     "line": 8,
+     "text": "Throughput checkpoint stays one line",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Produce the how-shaped output (Overview / Key Concepts / How…",
+     "skill": "how"
+    },
+    {
+     "line": 10,
+     "text": "Apply the unslop skill to the reply",
+     "skill": "unslop"
+    }
+   ]
+  },
+  "multi-phase-plan": {
+   "file": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "When the change is one or two files with an obvious…",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Settle open questions by prototype before you write",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Explore in subagents with subagent_type",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Copy the skeleton below into the plan file and fill every…",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Write under /technical-writing in full, then /unslop",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Run node pstack/skills/poteto-mode/scripts/check-plan.mjs…",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Hand back",
+     "skill": null
+    }
+   ]
+  },
+  "opening-a-pr": {
+   "file": "skills/poteto-mode/playbooks/opening-a-pr.md",
+   "steps": []
+  },
+  "orchestrate": {
+   "file": "skills/poteto-mode/playbooks/orchestrate.md",
+   "steps": [
+    {
+     "line": 60,
+     "text": "Frame",
+     "skill": null
+    },
+    {
+     "line": 61,
+     "text": "Install the runtime",
+     "skill": null
+    },
+    {
+     "line": 62,
+     "text": "Pilot",
+     "skill": null
+    },
+    {
+     "line": 63,
+     "text": "Scale",
+     "skill": null
+    },
+    {
+     "line": 64,
+     "text": "Drain",
+     "skill": null
+    },
+    {
+     "line": 65,
+     "text": "Land",
+     "skill": null
+    },
+    {
+     "line": 66,
+     "text": "Close",
+     "skill": null
+    }
+   ]
+  },
+  "pause-safely": {
+   "file": "skills/poteto-mode/playbooks/pause-safely.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Stop at a safe boundary",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Take no irreversible action to pause",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Make the work durable",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Write the resume note off-context",
+     "skill": null
+    }
+   ]
+  },
+  "perf-issue": {
+   "file": "skills/poteto-mode/playbooks/perf-issue.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Capture a baseline trace via the matching control skill",
+     "skill": "benchmark-checklist"
+    },
+    {
+     "line": 6,
+     "text": "how to ground hypotheses",
+     "skill": "how"
+    },
+    {
+     "line": 17,
+     "text": "Plan the fix from the trace",
+     "skill": "architect"
+    },
+    {
+     "line": 19,
+     "text": "Parse and compare the artifacts (JSON to sqlite, diff)",
+     "skill": null
+    },
+    {
+     "line": 20,
+     "text": "Cite the measurement in the PR",
+     "skill": null
+    },
+    {
+     "line": 21,
+     "text": "Run Opening a PR",
+     "skill": null
+    }
+   ]
+  },
+  "prototype": {
+   "file": "skills/poteto-mode/playbooks/prototype.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Scope the decision the prototype exists to make",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Gather references when the design space is open",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Build throwaway in an isolated scratch dir, separate from…",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "When comparing alternatives, build them behind one switcher…",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Verify on the matching surface",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Present alternatives, tradeoffs, and a recommendation",
+     "skill": "architect"
+    }
+   ]
+  },
+  "refactoring": {
+   "file": "skills/poteto-mode/playbooks/refactoring.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Pin the behavior contract first",
+     "skill": "how"
+    },
+    {
+     "line": 8,
+     "text": "Name the structure the code is missing per…",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Name the target shape",
+     "skill": "architect"
+    },
+    {
+     "line": 10,
+     "text": "Subtract before you add",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Move in small behavior-preserving steps, each keeping the…",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Prove behavior is unchanged on the real artifact, not \"it…",
+     "skill": null
+    },
+    {
+     "line": 13,
+     "text": "Confirm the change is worth keeping",
+     "skill": null
+    },
+    {
+     "line": 14,
+     "text": "Rebase into small ordered commits",
+     "skill": null
+    }
+   ]
+  },
+  "runtime-forensics": {
+   "file": "skills/poteto-mode/playbooks/runtime-forensics.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Capture the live signal on the matching surface via the…",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Reduce the artifact to the smoking gun",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Prove the mechanism before believing it",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Map the finding back to source",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Throughput checkpoint stays one line",
+     "skill": null
+    }
+   ]
+  },
+  "session-pickup": {
+   "file": "skills/poteto-mode/playbooks/session-pickup.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Locate the prior trail",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Reconstruct operational state",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Diff done vs pending",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Route the remaining work to the matching playbook and pick…",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Verify the inherited claims against the original goal on the…",
+     "skill": null
+    }
+   ]
+  },
+  "shipping": {
+   "file": "skills/poteto-mode/playbooks/shipping.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Resolve the forge, then verify every PR independently",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Land only the contiguous verified run rooted at the bottom",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Re-check that each verdict still describes the patch",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Prepare only the bottom PR",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "Land one PR at a time",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Do not read GitHub autoMergeRequest as stack readiness",
+     "skill": null
+    },
+    {
+     "line": 13,
+     "text": "Recompute after every merge",
+     "skill": null
+    },
+    {
+     "line": 14,
+     "text": "Watch the current frontier until it merges or fails",
+     "skill": null
+    },
+    {
+     "line": 15,
+     "text": "Stop at the ceiling",
+     "skill": null
+    }
+   ]
+  },
+  "trace-forensics": {
+   "file": "skills/poteto-mode/playbooks/trace-forensics.md",
+   "steps": [
+    {
+     "line": 7,
+     "text": "Identify the format and load it with the right tool",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Transform the raw artifact into a form you can query",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Narrow to the cause",
+     "skill": null
+    },
+    {
+     "line": 10,
+     "text": "Attribute to source",
+     "skill": null
+    },
+    {
+     "line": 11,
+     "text": "If you have a paired capture, diff the before and after…",
+     "skill": null
+    },
+    {
+     "line": 12,
+     "text": "Hand back a cited diagnosis, no fix unless asked",
+     "skill": null
+    }
+   ]
+  },
+  "visual-parity": {
+   "file": "skills/poteto-mode/playbooks/visual-parity.md",
+   "steps": [
+    {
+     "line": 5,
+     "text": "Establish the baseline first, before any migration",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Anti-shortcut clauses, stated and held",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Migrate one component at a time",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Verify each component against its baseline via image diff on…",
+     "skill": null
+    },
+    {
+     "line": 9,
+     "text": "Run Opening a PR per component or per safe batch",
+     "skill": null
+    }
+   ]
+  },
+  "worktree-cleanup": {
+   "file": "skills/poteto-mode/playbooks/worktree-cleanup.md",
+   "steps": [
+    {
+     "line": 3,
+     "text": "Snapshot and audit",
+     "skill": null
+    },
+    {
+     "line": 4,
+     "text": "The bucket is advice, not permission",
+     "skill": null
+    },
+    {
+     "line": 5,
+     "text": "Verify usage before deleting",
+     "skill": null
+    },
+    {
+     "line": 6,
+     "text": "Pause on irreversible loss",
+     "skill": null
+    },
+    {
+     "line": 7,
+     "text": "Prune the confirmed set",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Simulators and other reclaimers",
+     "skill": null
+    }
+   ]
+  }
+ },
+ "forgeRun": {
+  "file": "FORGE-RUN.md",
+  "playbook": "feature",
+  "ranInOrder": [
+   [
+    "how"
+   ],
+   [
+    "how"
+   ],
+   [
+    "no-comments",
+    "interrogate"
+   ]
+  ],
+  "readNotRun": [
+   "architect",
+   "arena"
+  ],
+  "events": [
+   {
+    "time": "10:23:49",
+    "line": "L1884",
+    "text": "Read poteto-mode/SKILL.md",
+    "skills": [
+     "poteto-mode"
+    ]
+   },
+   {
+    "time": "10:24:02",
+    "line": "L1887",
+    "text": "Read poteto-mode/playbooks/feature.md (the Feature playbook)",
+    "skills": [
+     "poteto-mode"
+    ]
+   },
+   {
+    "time": "10:24:27",
+    "line": "L1894",
+    "text": "todo_write: failed (success:false, no todos recorded)",
+    "skills": []
+   },
+   {
+    "time": "10:24:27",
+    "line": "L1896–1904",
+    "text": "Read how, create-verification-skill, principle-model-the-domain, principle-prove-it-works, principle-guard-the-context-window",
+    "skills": [
+     "how",
+     "create-verification-skill"
+    ]
+   },
+   {
+    "time": "10:25:05",
+    "line": "L1916–18",
+    "text": "Read how explorer and explainer prompts",
+    "skills": [
+     "how"
+    ]
+   },
+   {
+    "time": "~10:25",
+    "line": "L1932–36",
+    "text": "Step 1 how: 3 explorer Tasks spawned (see Subagents)",
+    "skills": [
+     "how"
+    ],
+    "ran": [
+     "how"
+    ]
+   },
+   {
+    "time": "10:25:49–10:26:16",
+    "line": "L1938–55",
+    "text": "Read architect, principle-sequence-verifiable-units, -separate-before-serializing-shared-state, -laziness-protocol, -experience-first, -exhaust-the-design-space, -redesign-from-first-principles, -subtract-before-you-add",
+    "skills": [
+     "architect"
+    ]
+   },
+   {
+    "time": "10:30–10:41",
+    "line": "L1958–64",
+    "text": "Explorers finish",
+    "skills": []
+   },
+   {
+    "time": "~10:41",
+    "line": "L1968",
+    "text": "how explainer Task spawned",
+    "skills": [
+     "how"
+    ],
+    "ran": [
+     "how"
+    ]
+   },
+   {
+    "time": "10:41:44",
+    "line": "L1970",
+    "text": "Read arena/SKILL.md",
+    "skills": [
+     "arena"
+    ]
+   },
+   {
+    "time": "10:43–10:45",
+    "line": "L1977–2003",
+    "text": "v2.7 bundle unpacked; CHANGES.md and BUILD-SPEC.md read; v2.6→v2.7 app.js diffed",
+    "skills": []
+   },
+   {
+    "time": "10:45:38",
+    "line": "L2010–12",
+    "text": "Read the create-verification-skill feature-map example references",
+    "skills": [
+     "create-verification-skill"
+    ]
+   },
+   {
+    "time": "10:45:54, 10:49:07",
+    "line": "L2021, L2048",
+    "text": "todo_write: failed both times",
+    "skills": []
+   },
+   {
+    "time": "10:47:41",
+    "line": "L2035",
+    "text": "Branch cursor/kitchen-cozy-a05c created from origin/main 0d8db21",
+    "skills": []
+   },
+   {
+    "time": "~10:49",
+    "line": "L2050",
+    "text": "Step 4: poteto-agent code-writing delegate spawned",
+    "skills": []
+   },
+   {
+    "time": "10:49:39",
+    "line": "L2053–55",
+    "text": "Read no-comments and playbooks/opening-a-pr.md",
+    "skills": [
+     "no-comments"
+    ]
+   },
+   {
+    "time": "10:54",
+    "line": "L2058",
+    "text": "Explainer finishes",
+    "skills": []
+   },
+   {
+    "time": "11:16",
+    "line": "L2061",
+    "text": "poteto-agent finishes: 3 commits (460923a, 74bb4af, a505247), not pushed",
+    "skills": []
+   },
+   {
+    "time": "11:17–11:23",
+    "line": "L2065–2179",
+    "text": "Lead reviews the diff and fixes 2 bugs itself (Exit cleared ?theme; fast mode started a session without Play). Commit 387d238",
+    "skills": []
+   },
+   {
+    "time": "11:23:05–27",
+    "line": "L2157–75",
+    "text": "Read no-comments, interrogate + reviewer-prompt, lead-judgment, rubric, code-quality-review",
+    "skills": [
+     "no-comments",
+     "interrogate"
+    ]
+   },
+   {
+    "time": "~11:24",
+    "line": "L2198–2203",
+    "text": "no-comments (Comment Sicko) and interrogate A/B spawned in parallel",
+    "skills": [
+     "no-comments",
+     "interrogate"
+    ],
+    "ran": [
+     "no-comments",
+     "interrogate"
+    ]
+   },
+   {
+    "time": "11:24:56",
+    "line": "L2215",
+    "text": "verify skill drive.mjs run: ok",
+    "skills": []
+   },
+   {
+    "time": "11:24:56",
+    "line": "L2217–19",
+    "text": "Read technical-writing, unslop",
+    "skills": [
+     "technical-writing",
+     "unslop"
+    ]
+   },
+   {
+    "time": "11:25:42",
+    "line": "L2226",
+    "text": "Looks for deslop. Not available: \"its plugin is missing\" (L2267)",
+    "skills": []
+   },
+   {
+    "time": "11:26",
+    "line": "L2229–48",
+    "text": "Screenshots captured from the local built site and inspected",
+    "skills": []
+   },
+   {
+    "time": "~11:27–11:40",
+    "line": "L2251, L2266",
+    "text": "computerUse browser drive, then mediaReview of the recording",
+    "skills": []
+   },
+   {
+    "time": "11:40",
+    "line": "L2274",
+    "text": "Comment Sicko returns",
+    "skills": []
+   },
+   {
+    "time": "11:46:38",
+    "line": "L2350",
+    "text": "Comments removed, commit 47c2c90; verify re-run at 11:46:53",
+    "skills": []
+   },
+   {
+    "time": "11:48",
+    "line": "L2359",
+    "text": "Interrogate B returns",
+    "skills": []
+   },
+   {
+    "time": "11:53:13",
+    "line": "L2441–44",
+    "text": "Fixes applied, verify ok, commit fdd4045",
+    "skills": []
+   },
+   {
+    "time": "11:53",
+    "line": "L2447",
+    "text": "Interrogate A returns",
+    "skills": []
+   },
+   {
+    "time": "11:57:40–11:58:44",
+    "line": "L2532–37",
+    "text": "Fixes, verify ok, final screenshots, commit 8250a2b",
+    "skills": []
+   },
+   {
+    "time": "11:59:25",
+    "line": "L2542",
+    "text": "git push. PR #13 opened (the open command isn't in the filtered output; unsure exactly when)",
+    "skills": []
+   },
+   {
+    "time": "12:01:12",
+    "line": "L2557",
+    "text": "CI: check SUCCESS, validate SUCCESS, deploy SKIPPED",
+    "skills": []
+   },
+   {
+    "time": "12:02:22",
+    "line": "gh",
+    "text": "PR #13 merged (ef31a54), outside this transcript, by Forge",
+    "skills": []
+   }
+  ],
+  "subagents": [
+   {
+    "line": "1932",
+    "type": "general-purpose (how explorer)",
+    "name": "how explorer",
+    "model": "grok-4.7-xhigh-fast",
+    "job": "How the live kitchen theme works",
+    "result": "success 10:31; kitchenTheme() plus theme.id==='kitchen' branches in map.js",
+    "skill": "how",
+    "role": "guest"
+   },
+   {
+    "line": "1934",
+    "type": "general-purpose (how explorer)",
+    "name": "how explorer",
+    "model": "grok-4.7-xhigh-fast",
+    "job": "How skill text is loaded",
+    "result": "success 10:30; graph has descriptions and paths only, no file bodies",
+    "skill": "how",
+    "role": "guest"
+   },
+   {
+    "line": "1936",
+    "type": "general-purpose (how explorer)",
+    "name": "how explorer",
+    "model": "grok-4.7-xhigh-fast",
+    "job": "How v2.6 works",
+    "result": "success 10:41; v2.6 reads full text from a local files.json",
+    "skill": "how",
+    "role": "guest"
+   },
+   {
+    "line": "1968",
+    "type": "general-purpose (how explainer)",
+    "name": "how explainer",
+    "model": "claude-opus-5-5-xhigh",
+    "job": "Synthesize the architecture",
+    "result": "success 10:54; noted main is at 0d8db21 (PR #12)",
+    "skill": "how",
+    "role": "guest"
+   },
+   {
+    "line": "2050",
+    "type": "poteto-agent (custom)",
+    "name": "custom",
+    "model": "grok-4.7-xhigh-fast",
+    "job": "Port v2.7: graph text field, kitchen.mjs + boot, verify skill, CI job",
+    "result": "success 11:16; 3 commits",
+    "skill": null,
+    "role": "delegate"
+   },
+   {
+    "line": "2198",
+    "type": "Comment Sicko (custom, no-comments)",
+    "name": "custom, no-comments",
+    "model": "grok-4.7-high-fast",
+    "job": "Review comments in the full diff",
+    "result": "11:40: rejected every comment (MUST KILL list)",
+    "skill": "no-comments",
+    "role": "sicko"
+   },
+   {
+    "line": "2201",
+    "type": "general-purpose (interrogate A)",
+    "name": "interrogate A",
+    "model": "claude-opus-5-5-xhigh",
+    "job": "Adversarial review",
+    "result": "11:53: confirmed the stale text bodies and the fast-session bug, plus more runtime bugs",
+    "skill": "interrogate",
+    "role": "guest"
+   },
+   {
+    "line": "2203",
+    "type": "general-purpose (interrogate B)",
+    "name": "interrogate B",
+    "model": "grok-4.7-xhigh-fast",
+    "job": "Adversarial review",
+    "result": "11:48: 11 text bodies don't match commit 1b6d44f, fast session never ready, eval hook, etc.",
+    "skill": "interrogate",
+    "role": "guest"
+   },
+   {
+    "line": "2251",
+    "type": "computerUse",
+    "name": "computerUse",
+    "model": "claude-4.5-sonnet",
+    "job": "Manual drive of the local site (kitchen, then galaxy)",
+    "result": "Completed; recording saved",
+    "skill": null,
+    "role": "other"
+   },
+   {
+    "line": "2266",
+    "type": "mediaReview",
+    "name": "mediaReview",
+    "model": "gemini-3.1-pro",
+    "job": "Check the demo video",
+    "result": "\"Video confirmed\" (L2267)",
+    "skill": null,
+    "role": "other"
+   }
+  ],
+  "reviews": [
+   "Lead self-review after the delegate (11:17–11:23): fixed Exit dropping the theme, and fast mode starting without Play. The verify check was tightened to click Play first (L2094, 387d238). The lead made these edits itself, not a delegate: all 52 search_replace calls come after the delegate returned.",
+   "no-comments: removed 138 comments (132 in kitchen.mjs, 6 in kitchen.css), with string literals checked unchanged by an acorn parse (47c2c90).",
+   "interrogate B → fdd4045: accepted 4 findings: 11 drifted bodies replaced from 1b6d44f, plus a validator line-count check; fast mode complete(0) → a real finish time; window.__ev eval removed; bad ?open= id or blocked storage no longer leaves the loader up. Rejected 3, with reasons (L2446).",
+   "interrogate A → 8250a2b: fixed the camera snap under reduced motion and fast mode, a bad ticket id, and hint=0."
+  ],
+  "delegateCommits": [
+   "460923a",
+   "74bb4af",
+   "a505247"
+  ]
+ }
+}
