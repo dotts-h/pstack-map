@@ -18,6 +18,7 @@ cv.id = 'c';
 sceneEl.appendChild(cv);
 document.querySelector('#top .hright').insertAdjacentHTML('afterbegin', '<span class="chip" id="visited">Stations visited <b>0</b> / 27</span><span class="seg" id="pace" role="group" aria-label="Motion"><span role="button" tabindex="0" data-pace="cozy">Cozy</span><span role="button" tabindex="0" data-pace="fast">Fast</span></span>');
 document.body.insertAdjacentHTML('beforeend', '<div id="rail"></div><div id="ticket"></div><div id="card"></div><div id="legend"><div><i style="background:#8DAE86"></i>Station · a skill (click to open)</div><div><i style="background:#C98A5A;border-radius:0 0 6px 6px"></i>Mise en place · its references and scripts</div><div><i style="background:#F2C46B"></i>House rules · principles on the wall</div><div><i style="background:#FFF8EC"></i>Ticket · a playbook, fired from the rail</div></div><footer>Click a ticket to fire it · click a station to open it · <b>Esc</b> to step back</footer>');
+const flowsReq = fetch(new URL('data/skill-flows.json', import.meta.url)).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 let G;
 try {
   const res = await fetch(new URL('data/graph.json', import.meta.url));
@@ -32,6 +33,7 @@ try {
 }
 const N = new Map(G.nodes.map((n) => [n.id, n]));
 const textByPath = new Map(G.nodes.filter((n) => typeof n.text === 'string' && n.text && n.path).map((n) => [n.path, n.text]));
+const flowsRaw = await flowsReq;
 
 const nm=n=>(n.title||n.name).replace(/^principle-/,'').replace(/-/g,' ').replace(/^./,c=>c.toUpperCase());
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -108,18 +110,18 @@ const MW=2.3,ST=[];
 const RUNC=['#8DAE86','#7FA3B5','#E8C27A','#D99A6C','#9CB8AE'];
 const cab=inst(rbox(MW-.1,2.05,1.9,.1),MI(),27),top=inst(rbox(MW+.04,.2,2.12,.06),MI(MG),27),plinth=inst(new THREE.BoxGeometry(MW-.3,.18,1.6),M('#3C2A20'),27);
 
-const leafG=rbox(.97,1.42,.06,.02);const door=new THREE.InstancedMesh(leafG,MI(),27),doorB=new THREE.InstancedMesh(leafG,MI(),27);scene.add(door,doorB);
-const panelG=rbox(.68,.95,.02,.01).clone();panelG.translate(0,0,.035);const dpanel=new THREE.InstancedMesh(panelG,MI(),27),bpanel=new THREE.InstancedMesh(panelG,MI(),27);scene.add(dpanel,bpanel);
-const knobG=new THREE.CylinderGeometry(.035,.035,.42,20);knobG.translate(-.38,0,.09);const knob=new THREE.InstancedMesh(knobG,M('#E7C48B',MS),27);scene.add(knob);
-const dinner=new THREE.InstancedMesh(new THREE.PlaneGeometry(1.9,1.42),new THREE.MeshBasicMaterial({color:'#2A1C14'}),27);scene.add(dinner);
+const LW=1.09,LX=.555,LZ=1.03;const leafG=rbox(LW,1.42,.06,.02);const door=new THREE.InstancedMesh(leafG,MI(),27),doorB=new THREE.InstancedMesh(leafG,MI(),27);scene.add(door,doorB);
+const panelG=rbox(.78,.95,.02,.01).clone();panelG.translate(0,0,.035);const dpanel=new THREE.InstancedMesh(panelG,MI(),27),bpanel=new THREE.InstancedMesh(panelG,MI(),27);scene.add(dpanel,bpanel);
+const knobG=new THREE.CylinderGeometry(.035,.035,.42,20);knobG.translate(-.44,0,.09);const knob=new THREE.InstancedMesh(knobG,M('#E7C48B',MS),27);scene.add(knob);
+const dinner=new THREE.InstancedMesh(new THREE.PlaneGeometry(2.18,1.42),new THREE.MeshBasicMaterial({color:'#2A1C14'}),27);scene.add(dinner);
 ST.forEach((s,i)=>{s.q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),s.ry);s.fwd=new THREE.Vector3(0,0,1).applyQuaternion(s.q);s.side=new THREE.Vector3(1,0,0).applyQuaternion(s.q);s.ang=0;s.target=0;
  const c=RUNC[s.run];cab.add(s.p.clone().setY(s.p.y+1.13),s.ry,1,c);top.add(s.p.clone().setY(s.p.y+2.25).addScaledVector(s.fwd,.05),s.ry,1,'#C99167');plinth.add(s.p.clone().setY(s.p.y+.09).addScaledVector(s.fwd,.1),s.ry,1,'#3C2A20');
- door.setColorAt(i,new THREE.Color(c).offsetHSL(0,.02,.05));dpanel.setColorAt(i,new THREE.Color(c).offsetHSL(0,0,-.04));doorB.setColorAt(i,new THREE.Color(c).offsetHSL(0,.02,.02));bpanel.setColorAt(i,new THREE.Color(c).offsetHSL(0,0,-.06));
+ door.setColorAt(i,new THREE.Color(c).offsetHSL(0,.02,.04));dpanel.setColorAt(i,new THREE.Color(c).offsetHSL(0,0,-.05));doorB.setColorAt(i,new THREE.Color(c).offsetHSL(0,.02,.04));bpanel.setColorAt(i,new THREE.Color(c).offsetHSL(0,0,-.05));
  blob(...s.p.clone().addScaledVector(s.fwd,.55).toArray(),MW*1.25,3.2,s.ry);});
 
 const doorQ=s=>s.q;
 function doorM(s,i){const u=s.ang,dq=doorQ(s);const at=(x,z)=>new THREE.Matrix4().compose(s.p.clone().add(new THREE.Vector3(x,1.22,z).applyQuaternion(dq)),dq,new THREE.Vector3(1,1,1));
- const mf=at(-.475+.93*u,1.07),mb=at(.475,1.0);door.setMatrixAt(i,mf);dpanel.setMatrixAt(i,mf);knob.setMatrixAt(i,mf);doorB.setMatrixAt(i,mb);bpanel.setMatrixAt(i,mb);dinner.setMatrixAt(i,at(0,.957));}
+ const po=Math.min(1,Math.max(0,u/.15)),sl=Math.min(1,Math.max(0,(u-.15)/.85));const mf=at(-LX+2*LX*sl,LZ+.04*po),mb=at(LX,LZ-.045*po);door.setMatrixAt(i,mf);dpanel.setMatrixAt(i,mf);knob.setMatrixAt(i,mf);doorB.setMatrixAt(i,mb);bpanel.setMatrixAt(i,mb);dinner.setMatrixAt(i,at(0,.957));}
 ST.forEach(doorM);
 
 W(-6.25,1.1,4.35,9.4,2.2,.5,M('#B98258'));{const st=inst(new THREE.CylinderGeometry(.42,.36,.16,40),MI(MG),8),leg=inst(new THREE.CylinderGeometry(.06,.06,1.3,16),MI(MS),8);
@@ -127,7 +129,7 @@ W(-6.25,1.1,4.35,9.4,2.2,.5,M('#B98258'));{const st=inst(new THREE.CylinderGeome
 
 const glowT=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,214,140,.95)');r.addColorStop(.5,'rgba(255,180,90,.35)');r.addColorStop(1,'rgba(255,170,80,0)');g.fillStyle=r;g.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);})();
 ST.forEach(s=>{const g=new THREE.Mesh(new THREE.PlaneGeometry(MW+1.6,3.6),new THREE.MeshBasicMaterial({map:glowT,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0}));g.rotation.x=-Math.PI/2;g.rotation.z=s.ry;g.position.copy(s.p).setY(s.p.y+.03).addScaledVector(s.fwd,1.5);scene.add(g);s.glow=g;
- const l=document.createElement('div');l.className='lb';l.textContent=s.n.name;const o=new CSS2DObject(l);o.position.copy(s.p).setY(s.p.y+3.05).addScaledVector(s.fwd,.5);scene.add(o);s.lb=l;});
+ const l=document.createElement('div');l.className='lb st';l.innerHTML=`<i class="ld"></i><span class="pill"></span>`;l.querySelector('.pill').textContent=s.n.name;const o=new CSS2DObject(l);o.position.copy(s.p).setY(s.p.y+3.05).addScaledVector(s.fwd,.5);scene.add(o);s.lb=l;s.lbA=o.position.clone();s.pill=l.querySelector('.pill');s.ld=l.querySelector('.ld');});
 
 const BOWLS=[];{const MP=ST.flatMap(s=>misen(s.n.id).map((n,j)=>({s,n,j})));const rim=inst(new THREE.TorusGeometry(.235,.025,10,40).rotateX(Math.PI/2),MI(MG),MP.length+4);const bw=inst(new THREE.CylinderGeometry(.24,.15,.22,36),MI(MG),MP.length+4),fd=inst(new THREE.SphereGeometry(.2,28,16,0,Math.PI*2,0,Math.PI/2),MI(MG),MP.length+4);
  MP.forEach((b,i)=>{const k=b.j%5,r=Math.floor(b.j/5);const p=b.s.p.clone().setY(b.s.p.y+2.47).addScaledVector(b.s.side,-.82+k*.41).addScaledVector(b.s.fwd,-.5+r*.45);
@@ -208,7 +210,7 @@ let userFast=qs.get('fast')==='1';
 let fast=false,CREW=true;
 function applyFast(){fast=userFast||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>{const on=el.dataset.pace===(fast?'fast':'cozy');el.classList.toggle('on',on);el.setAttribute('aria-pressed',String(on));if(reduceMotion&&el.dataset.pace==='cozy')el.setAttribute('aria-disabled','true');});}
 applyFast();
-document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast)landFast();});
+document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast)send('fast');});
 document.getElementById('pace').addEventListener('keydown',(e)=>{if(e.key!=='Enter'&&e.key!==' ')return;const b=e.target.closest('[data-pace]');if(!b)return;e.preventDefault();b.click();});
 const ease={io:u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,sin:u=>-(Math.cos(Math.PI*u)-1)/2,out:u=>1-Math.pow(1-u,3)};
 const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
@@ -253,7 +255,7 @@ if(false){const R2=CHEFS[2];R2.htP.scale.set(1,.55,1);const ly=new THREE.Mesh(ne
 const SUP=chef(4,'Supervisor · house rules',new THREE.Vector3(-9.6,0,-2.4),-1.1);CHEFS.splice(CHEFS.indexOf(SUP),1);recolor(SUP,'#8A6FA8');SUP.htP.scale.set(1.15,.4,1.15);SUP.board.visible=true;SUP.supervisor=true;OBST.push([-10.1,-2.9,-9.1,-1.9]);
 const dotG=new THREE.CircleGeometry(.15,14).rotateX(-Math.PI/2);
 const CR=1.05;
-const allChefs=()=>(typeof SUP!=='undefined'?[...CHEFS,SUP]:CHEFS).filter(c=>!c.off).concat(typeof GUESTS!=='undefined'?GUESTS.filter(g=>g.on):[]);
+const allChefs=()=>(typeof SUP!=='undefined'?[...CHEFS,SUP]:CHEFS).filter(c=>!c.off).concat(typeof GUESTS!=='undefined'?GUESTS.filter(g=>g.on):[]).concat(typeof WAITER!=='undefined'&&!WAITER.off?[WAITER]:[]);
 
 function stepAside(o,w,walker){if(!walker)o.asideT=1;const route=[w.g.position.clone()];if(w.st==='walk'&&w.curve)for(let d=w.s;d<=w.len;d+=.3)route.push(w.curve.getPointAt(Math.min(1,d/w.len)));const cands=[];
  for(let dx=-4.5;dx<=4.5;dx+=.5)for(let dz=-4.5;dz<=4.5;dz+=.5){const x=Math.round((o.g.position.x+dx)*2)/2,z=Math.round((o.g.position.z+dz)*2)/2;if(blocked(x,z)||(groundY(x,z)>0&&groundY(x,z)<NOOK.h)||(x>7.5&&x<11.5&&z<-3.4&&z>-5.6))continue;
@@ -304,19 +306,21 @@ function updChef(c,T,dt){if(c.off)return;c.t+=dt;if(c.st==='walk'||c.st==='antic
   const h=cl((u-.1)/.55);hop=Math.sin(Math.PI*h)*.24;squash=(u<.1?Math.sin(Math.PI*u/.1)*.07:0)+(h>=1?Math.sin(Math.PI*cl((u-.65)/.2))*.06:0);
   nod=Math.sin(cl((u-.6)/.4)*Math.PI*2)*.22*(1-u);armL=armR=-Math.sin(Math.PI*h)*.6;c.legs.forEach(l=>l.position.z*=.8);
   if(u>=1){c.st=c.job?'work':'idle';c.t=0;if(c.job)c.job.started=T;}}
- else if(c.st==='work'){const j=c.job,u=cl(c.t/(j.dur||WORK));lookYaw=Math.sin(T*.6)*.16;const env=Math.sin(Math.PI*cl(u*1.15));
-  if(j.act==='chop'){c.knife.visible=true;const k=Math.pow(Math.max(0,Math.sin(T*2*Math.PI*CHOP_HZ)),1.4);armR=-1.15+k*.75*env;armL=-.95;nod=.18+k*.05;squash=k*.03*env;}
-  else if(j.act==='stir'){c.spoon.visible=true;armR=-1.05+Math.cos(T*1.9)*.18;armRz=Math.sin(T*1.9)*.38;armL=-.4;bodyRz=Math.sin(T*1.9)*.04;nod=.12;}
-  else if(j.act==='taste'){c.spoon.visible=true;const ph=(T*.45)%1,up=ease.sin(cl((ph-.35)/.25))*(1-ease.sin(cl((ph-.75)/.2)));armR=-.95-1.25*up+Math.sin(T*1.6)*.05*(1-up);armL=-.3;nod=.2-up*.32;lookYaw=Math.sin(T*.4)*.22*(1-up);}
-  else if(j.act==='sketch'){c.board.visible=true;armL=-1.2;armR=-1.05+Math.sin(T*2.2)*.06;armRz=.25+Math.sin(T*1.1)*.18;nod=.26+Math.sin(T*.7)*.04;lookYaw=Math.sin(T*.5)*.1;}
-  else if(j.act==='inspect'){c.mag.visible=true;armR=-.95+Math.sin(T*.8)*.06;armRz=.25+Math.sin(T*.7)*.2;armL=-.35;nod=.1+Math.max(0,Math.sin(T*.7))*.08;lookYaw=Math.sin(T*.7)*.22;leanT=.04;}
+ else if(c.st==='work'){const j=c.job,u=cl(c.t/(j.dur||WORK));lookYaw=Math.sin(T*.6)*.16;const env=Math.sin(Math.PI*cl(u*1.15));const act=j.stp?flowTick(j,c):j.act;c.knife.visible=c.spoon.visible=c.mag.visible=false;if(!c.supervisor)c.board.visible=false;
+  if(act==='gather'){const k=(c.t%j.tIn)/j.tIn;armR=-1.45+Math.sin(Math.PI*k)*.7;armL=-.55+Math.sin(Math.PI*k)*.2;nod=.24;lookYaw=Math.sin(T*.9)*.3;hop=Math.sin(Math.PI*k)*.03;}else
+  if(act==='chop'){c.knife.visible=true;const k=Math.pow(Math.max(0,Math.sin(T*2*Math.PI*CHOP_HZ)),1.4);armR=-1.15+k*.75*env;armL=-.95;nod=.18+k*.05;squash=k*.03*env;}
+  else if(act==='stir'){c.spoon.visible=true;armR=-1.05+Math.cos(T*1.9)*.18;armRz=Math.sin(T*1.9)*.38;armL=-.4;bodyRz=Math.sin(T*1.9)*.04;nod=.12;}
+  else if(act==='taste'){c.spoon.visible=true;const ph=(T*.45)%1,up=ease.sin(cl((ph-.35)/.25))*(1-ease.sin(cl((ph-.75)/.2)));armR=-.95-1.25*up+Math.sin(T*1.6)*.05*(1-up);armL=-.3;nod=.2-up*.32;lookYaw=Math.sin(T*.4)*.22*(1-up);}
+  else if(act==='sketch'){c.board.visible=true;armL=-1.2;armR=-1.05+Math.sin(T*2.2)*.06;armRz=.25+Math.sin(T*1.1)*.18;nod=.26+Math.sin(T*.7)*.04;lookYaw=Math.sin(T*.5)*.1;}
+  else if(act==='inspect'){c.mag.visible=true;armR=-.95+Math.sin(T*.8)*.06;armRz=.25+Math.sin(T*.7)*.2;armL=-.35;nod=.1+Math.max(0,Math.sin(T*.7))*.08;lookYaw=Math.sin(T*.7)*.22;leanT=.04;}
   else{c.plate.visible=true;const k=Math.sin(Math.PI*u);armL=armR=-1.25+k*.25;hop=k*.05;nod=.1+k*.08;}
   if(u>=1){c.knife.visible=c.spoon.visible=c.mag.visible=c.board.visible=false;c.plate.visible=false;j.s.target=0;launch(j);c.st='done';c.t=0;}}
  else if(c.st==='done'||c.st==='cheer'){const u=cl(c.t/.8);if(c.st==='cheer'){hop=Math.sin(Math.PI*u)*.3;armL=armR=-2.2*Math.sin(Math.PI*u);}else{nod=Math.sin(u*Math.PI*2)*.12*(1-u);}
   if(u>=1)c.st='idle';}
 
  if(c.st==='idle'){const ph=T+c.phase;squash=Math.sin(ph*1.9)*.02;bodyRz=Math.sin(ph*.6)*.03;armR=-.25+Math.sin(ph*1.3)*.12;armL=Math.sin(ph*.9)*.08;c.legs.forEach(l=>l.position.z*=.9);
-  if(c===HEAD&&(job.pid||prev)){const ph=T*.7;
+  if(c===HEAD&&S.phase==='tasting'&&HEAD_LEG?.ph==='look'){const d=DISH.clone().sub(c.g.position);c.yawT=Math.atan2(d.x,d.z);const ph=(T-HEAD_LEG.t)*.75%1,up=ease.sin(cl((ph-.3)/.25))*(1-ease.sin(cl((ph-.7)/.2)));c.spoon.visible=true;armR=-.95-1.25*up;armL=-.4;nod=.25-up*.35;lookYaw=0;leanT=.08;}
+  else if(c===HEAD&&S.plan){const ph=T*.7;
    const W=job.list.find(J=>J.chef&&J.chef.st!=='idle'&&!J.landed);if(W){const d=W.chef.g.position.clone().sub(c.g.position);lookYaw=cl(angDiff(c.g.rotation.y,Math.atan2(d.x,d.z)),-.9,.9);}
    const call=Math.max(0,Math.sin(ph));armR=-1.35-call*.5;armRz=-.25+Math.sin(ph*.5)*.2;armL=-.35+Math.sin(ph*.5+1)*.12;nod=.04-call*.08;bodyRz=Math.sin(ph*.5)*.03;}}
  if(c.carry){armL=armR=-1.25;nod=Math.max(nod,.08);}
@@ -330,24 +334,25 @@ function updChef(c,T,dt){if(c.off)return;c.t+=dt;if(c.st==='walk'||c.st==='antic
 
 const DISH=new THREE.Vector3(0,2.34,1.15);const dishPlate=new THREE.Mesh(new THREE.CylinderGeometry(.66,.5,.09,64),M('#FFFDF8',MG));dishPlate.position.copy(DISH);dishPlate.visible=false;scene.add(dishPlate);
 const FOODC=['#E9A23B','#7FA37A','#D9604A','#B5653E','#F2C46B'];const FLY=[],STACK=[];let stackH=.06;
-function launch(j){const m=new THREE.Group();const bw=new THREE.Mesh(new THREE.CylinderGeometry(.24,.15,.2,32),M('#F4EDE2',MG));m.add(bw);const fd=new THREE.Mesh(new THREE.SphereGeometry(.22,28,16,0,Math.PI*2,0,Math.PI/2),M(FOODC[j.k%5],MG));fd.scale.y=.6;fd.position.y=.06;m.add(fd);
+function launch(j){clearItems(j);if(!fast&&!HEAD_LEG&&job.list.every(x=>x===j||x.landed))HEAD_LEG={ph:'call'};const m=new THREE.Group();const bw=new THREE.Mesh(new THREE.CylinderGeometry(.24,.15,.2,32),M('#F4EDE2',MG));m.add(bw);const fd=new THREE.Mesh(new THREE.SphereGeometry(.22,28,16,0,Math.PI*2,0,Math.PI/2),M(FOODC[j.k%5],MG));fd.scale.y=.6;fd.position.y=.06;m.add(fd);
  const p0=j.s.p.clone().setY(j.s.p.y+2.7).addScaledVector(j.s.fwd,.7);m.position.copy(p0);scene.add(m);const d=p0.distanceTo(DISH);FLY.push({m,j,p0,t:0,dur:1.1+d*.04,h:3.2+d*.18});}
 function updFly(dt,T){for(const f of FLY){if(f.done)continue;f.t+=dt;const u=cl(f.t/f.dur),e=ease.sin(u);const end=DISH.clone().setY(DISH.y+stackH+.1);
  const mid=f.p0.clone().lerp(end,.5).setY(Math.max(f.p0.y,end.y)+f.h);const p=new THREE.QuadraticBezierCurve3(f.p0,mid,end).getPoint(e);f.m.position.copy(p);f.m.scale.setScalar(1.45);f.m.rotation.y=e*Math.PI*2;f.tr=(f.tr||0)+dt;if(f.tr>.05){f.tr=0;puff(p.clone().setY(p.y-.15),.32,.55,-.1);}f.m.rotation.z=Math.sin(e*Math.PI)*.5;
  if(u>=1){f.done=true;scene.remove(f.m);landed(f.j,T);}}}
-function landed(j,T){const lay=new THREE.Mesh(new THREE.CylinderGeometry(.5-STACK.length*.05,.54-STACK.length*.05,.16,56),M(FOODC[j.k%5],MG));lay.position.copy(DISH).setY(DISH.y+stackH+.08);scene.add(lay);stackH+=.15;
- const sp=new Spr(.2);STACK.push({m:lay,sp});for(let i=0;i<5;i++)puff(DISH.clone().setY(DISH.y+stackH).add(new THREE.Vector3(Math.cos(i*1.26)*.5,0,Math.sin(i*1.26)*.5)),.45,.6,.4);
- j.landed=true;job.landed++;updTicket();if(job.landed===job.list.length)complete(T);}
-let garnish=null,orderUp=null,doneAt=-1;
-function complete(T){doneAt=T;garnish={m:new THREE.Mesh(new THREE.SphereGeometry(.18,28,20),M('#5B8752',MG)),sp:new Spr(0)};garnish.m.position.copy(DISH).setY(DISH.y+stackH+.12);scene.add(garnish.m);
+function layer(j,sp0){const lay=new THREE.Mesh(new THREE.CylinderGeometry(.5-STACK.length*.05,.54-STACK.length*.05,.16,56),M(FOODC[j.k%5],MG));lay.position.copy(DISH).setY(DISH.y+stackH+.08);scene.add(lay);stackH+=.15;STACK.push({m:lay,sp:new Spr(sp0)});}
+function landed(j,T){if(j.landed)return;layer(j,.2);for(let i=0;i<5;i++)puff(DISH.clone().setY(DISH.y+stackH).add(new THREE.Vector3(Math.cos(i*1.26)*.5,0,Math.sin(i*1.26)*.5)),.45,.6,.4);
+ j.landed=true;updTicket();send('landed');}
+let garnish=null,orderUp=null;
+function plateUp(){job.list.forEach(J=>{if(!J.landed){layer(J,1);J.landed=true;}});S.orderUpAt=T;
+ garnish={m:new THREE.Mesh(new THREE.SphereGeometry(.18,28,20),M('#5B8752',MG)),sp:new Spr(0)};garnish.m.position.copy(DISH).setY(DISH.y+stackH+.12);scene.add(garnish.m);
  const d=document.createElement('div');d.className='orderup';d.textContent='Order up!';orderUp={o:new CSS2DObject(d),d,sp:new Spr(0)};orderUp.o.position.copy(DISH).setY(DISH.y+stackH+1.4);scene.add(orderUp.o);
- CHEFS.forEach(c=>{if(c.st==='idle'||c.st==='done'){c.st='cheer';c.t=0;}});updTicket();}
+ CHEFS.forEach(c=>{if(c.st==='idle'||c.st==='done'){c.st='cheer';c.t=0;}});}
 function updStack(dt,T){STACK.forEach(s=>{const k=s.sp.step(1,60,6,dt);s.m.scale.set(k,Math.max(.2,2-k),k);});
  if(garnish){const k=garnish.sp.step(1,50,5,dt);garnish.m.scale.setScalar(Math.max(0,k));}
  if(orderUp){const k=orderUp.sp.step(1,40,6,dt);orderUp.d.style.transform=`scale(${Math.max(0,k).toFixed(3)})`;orderUp.d.style.opacity=(cl(k*1.5)*(serve&&serve.ph!=='go'?cl(1-serve.t/1.4)*(serve.ph==='pick'?1:0):1)).toFixed(3);}}
 
 function updAmbient(T){POTS.forEach((p,k)=>{const b=Math.pow(Math.max(0,Math.sin(T*2.4+k*2.1)),8);p.lid.position.y=p.y0+b*.06;p.lid.rotation.z=Math.sin(T*8+k)*.025*b;p.lid.rotation.x=Math.cos(T*6+k)*.015*b;});
- LAMPS.forEach((g,i)=>g.material.opacity=.64+.035*Math.sin(T*2.9+i*2)+.02*Math.sin(T*7.7+i*5)+(doneAt>0?.16*cl((T-doneAt)/.6):0));
+ LAMPS.forEach((g,i)=>g.material.opacity=.64+.035*Math.sin(T*2.9+i*2)+.02*Math.sin(T*7.7+i*5)+(reached('orderUp')?.16*cl((T-S.orderUpAt)/.6):0));
  const R3=new THREE.Matrix4(),q=new THREE.Quaternion(),Y=new THREE.Quaternion();LEAVES.forEach(l=>{const ax=.045*Math.sin(T*.5+l.k),az=.035*Math.sin(T*.39+l.k*1.3);q.setFromEuler(new THREE.Euler(ax,0,az));
   const p=l.P.clone().sub(l.base).applyQuaternion(q).add(l.base);Y.setFromAxisAngle(new THREE.Vector3(0,1,0),l.a).premultiply(q);leaf.m.setMatrixAt(l.i,R3.compose(p,Y,l.S));});leaf.m.instanceMatrix.needsUpdate=true;}
 
@@ -405,69 +410,119 @@ const caption=n=>CAPTION[n.id]||'Works through this step of the recipe.';
 const WORK_D=+(qs.get('wd')||2.3);
 const CORNER=new THREE.Vector3(-12.72,0,-7.6);
 const workSpot=s=>(s.run===0&&s.p.x<-13)||(s.run===1&&s.p.z<-8)?{p:CORNER.clone(),face:s.run===0?2.75:-1.57}:false?0:{p:s.p.clone().addScaledVector(s.fwd,WORK_D).addScaledVector(s.side,s.run===0&&s.p.x<-13?1.3:0),face:s.ry+Math.PI};
-const job={pid:null,steps:[],list:[],landed:0};
-function ticketHTML(){const p=N.get(job.pid);const ready=doneAt>0;return `<div class="k">${job.served?'Served · ticket closed':ready?'Order up · ready':'Order up · fired'}</div><h3>${esc(p.name)}</h3><div class="d">${esc(p.description||'')}</div><ol>${job.steps.map(e=>{const n=N.get(e.target);const J=job.list.find(j=>j.e===e);
- const st=J?(J.landed?'done':J.chef?'now':''):(job.landed>=job.list.filter(j=>j.e.order<=e.order).length&&job.started?'done':'');
- const where={skill:'station',principle:'house rule',playbook:'side ticket',agent:'swing cook',script:'tool',reference:'prep',router:'the pass'}[n.kind]||n.kind;
- return `<li class="${st}"><span class="o">${st==='done'?'✓':e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${esc(nm(n))}</span><span class="w">${esc(where)}</span></li>`;}).join('')}</ol>
- <div class="f"><button class="btn g">Back</button><button class="btn">${ready?'Back to the rail':'Next step ▸'}</button></div>`;}
-function updTicket(){if(!job.pid)return;tkt.innerHTML=ticketHTML();job.list.forEach(J=>{J.badge.className='badge'+(J.landed?' done':J.chef?'':' next');J.s.glow.material.opacity=J.landed?.45:J.chef&&J.chef.st==='work'?1:J.chef?.6:.18;});}
-function fire(pid){if(!N.get(pid))return;job.pid=pid;job.started=true;rail(pid);job.steps=G.edges.filter(e=>e.source===pid&&e.mode==='step').sort((a,b)=>a.order-b.order);
- job.list=job.steps.filter(e=>N.get(e.target).kind==='skill'&&stOf.has(e.target)).map((e,k)=>({e,k,s:ST[stOf.get(e.target)]}));
- job.list.forEach(J=>{J.act=actOf(J.s);const b=document.createElement('div');b.className='badge next';b.textContent=J.e.order;const o=new CSS2DObject(b);o.position.copy(J.s.p).setY(J.s.p.y+4.2).addScaledVector(J.s.fwd,.5);scene.add(o);J.badge=b;J.s.lb.classList.remove('dim');});
+const job={list:[]};
+const PHASE=Object.freeze({
+ idle:{rank:0,on:{enter:f=>!f.plates?'served':f.fast?'orderUp':'cooking'}},
+ cooking:{rank:1,kicker:['Order up · fired','Skill · cooking'],on:{landed:f=>!f.allLanded?null:f.fast?'orderUp':'tasting',fast:()=>'orderUp'}},
+ tasting:{rank:2,kicker:['Order up · fired','Skill · cooking'],title:['Poteto Mode tastes','The head chef steps to the pass and tastes the plate before it can leave.'],on:{tasted:()=>'orderUp',fast:()=>'orderUp'}},
+ orderUp:{rank:3,kicker:['Order up · ready','Skill · order up'],title:['Order up!','Poteto Mode approves the plate. A waiter comes to the pass for it.'],on:{pickedUp:()=>'serving'}},
+ serving:{rank:4,kicker:['Order up · ready','Skill · order up'],title:['Out to the guest','A waiter picks the plate up at the pass and carries it out.'],on:{out:()=>'served'}},
+ served:{rank:5,kicker:['Served · ticket closed','Skill · served'],title:['Served','The waiter has carried the plate out. Every step is done.'],on:{}}});
+const S={phase:'idle',id:null,plan:null,t0:0,orderUpAt:null,paused:false};
+const reached=p=>PHASE[S.phase].rank>=PHASE[p].rank;
+const facts=()=>({fast,plates:job.list.length,allLanded:job.list.every(J=>J.landed)});
+function send(event){const to=PHASE[S.phase].on[event]?.(facts());if(!to||to===S.phase)return;S.phase=to;if(PHASE[to].rank>=PHASE.orderUp.rank&&S.orderUpAt===null)plateUp();updTicket();}
+
+const FALLBACK_STEP=Object.freeze({n:1,caption:'Works from the recipe (the file has no ordered steps)',line:0});
+const DEFAULT_FLOW=Object.freeze({file:'',stepSource:'no flow data',inputs:[],steps:[FALLBACK_STEP]});
+function readFlows(raw){const flows=new Map(),bySkill=raw&&typeof raw.skills==='object'&&raw.skills||{};
+ for(const [id,f] of Object.entries(bySkill))if(stOf.has(id)&&f)flows.set(id,{file:String(f.file||''),stepSource:String(f.stepSource||'no flow data'),inputs:Array.isArray(f.inputs)?f.inputs:[],steps:Array.isArray(f.steps)&&f.steps.length?f.steps:[FALLBACK_STEP]});
+ return {flows,mirror:readMirror(raw&&raw.forgeRun)};}
+function readMirror(FR){if(!FR||!Array.isArray(FR.ranInOrder)||!Array.isArray(FR.events)||N.get('playbook:'+FR.playbook)?.kind!=='playbook')return null;
+ const subs=Array.isArray(FR.subagents)?FR.subagents:[],ran=[...new Set(FR.ranInOrder.flat())].filter(id=>stOf.has(id)),pre=new Map();let buf=[],delPre=[];
+ for(const ev of FR.events){if(/poteto-agent.*spawned/.test(ev.text)){delPre=[...buf,ev];buf=[];continue;}buf.push(ev);const id=ev.ran?.find(x=>ran.includes(x)&&!pre.has(x));if(id){pre.set(id,buf);buf=[];}}
+ const guests=new Map();subs.filter(a=>a.role==='guest').forEach(a=>guests.set(a.skill,[...(guests.get(a.skill)||[]),a]));
+ const reviews=(FR.reviews||[]).filter(r=>/^(interrogate|no-comments)/.test(r)).map(r=>{if(/^no-comments/.test(r))return {sicko:true,text:r.replace(/^no-comments: /,'')};const w=r.match(/^interrogate (\w)/);return {who:w?w[1]:'',sub:w&&subs.find(a=>a.name==='interrogate '+w[1])||null,text:r.replace(/^interrogate \w → /,'Fixed in ')};});
+ const D=subs.find(a=>a.role==='delegate');
+ return Object.freeze({playbook:'playbook:'+FR.playbook,ran,groups:FR.ranInOrder.filter((g,k,A)=>k===0||g.join()!==A[k-1].join()),readNotRun:FR.readNotRun||[],pre,
+  delegate:D?{model:D.model,job:D.job,result:D.result,pre:delPre,commits:FR.delegateCommits||[]}:null,reviews,guests,sicko:subs.find(a=>a.role==='sicko')||null,tail:buf,verify:FR.events.find(e=>/verify/i.test(e.text))||null});}
+const {flows:FLOWS,mirror:MIRROR}=readFlows(flowsRaw);
+const flowOf=id=>FLOWS.get(id)??DEFAULT_FLOW;
+
+const PACE={skill:{input:.5,step:2},playbook:{input:.3,step:1.1}};
+function parseSessionId(raw){if(typeof raw!=='string')return null;if(raw.startsWith('skill:'))return stOf.has(raw.slice(6))?raw:null;return N.get(raw)?.kind==='playbook'?raw:null;}
+function planSession(id,schedule){
+ if(id.startsWith('skill:')){const sk=id.slice(6),e={source:id,target:sk,order:1,mode:'step'};return Object.freeze({id,kind:'skill',node:N.get(sk),lines:[e],plates:[{k:0,e,flow:flowOf(sk),pre:[]}],pace:PACE.skill,rules:0,mirror:null,schedule});}
+ const lines=stepsOf(id),mirror=MIRROR?.playbook===id?MIRROR:null;
+ const cook=mirror?mirror.ran.map(t=>{let e=lines.find(l=>l.target===t);if(!e){e={source:id,target:t,order:'·',mode:'step',extra:true};lines.push(e);}return e;}):lines.filter(e=>stOf.has(e.target));
+ return Object.freeze({id,kind:'playbook',node:N.get(id),lines,plates:cook.map((e,k)=>({k,e,flow:flowOf(e.target),pre:mirror?.pre.get(e.target)??[]})),pace:PACE.playbook,rules:lines.filter(e=>N.get(e.target)?.kind==='principle').length,mirror,schedule});}
+function startAny(raw,schedule='chain'){const id=parseSessionId(raw);if(!id)return;if(S.phase==='idle')enter(id,schedule);else if(id!==S.id)go(id);}
+function enter(id,schedule){if(S.phase!=='idle')return;const plan=planSession(id,schedule);S.id=id;S.plan=plan;S.t0=T;card.style.display='none';
+ if(plan.kind==='skill'){const s=ST[stOf.get(plan.node.id)];visited.add(s.n.id);setVisited();if(!fast)zoomTo(s.p.clone().setY(s.p.y+1.8).addScaledVector(s.fwd,1.6),11,2.4);}
+ else if(!fast)zoomTo(DISH.clone().setY(2),14,3.2);
+ fire(plan);
+ lt.innerHTML=`<div class="bar"><span class="live">● Session</span><span class="pb">${esc(nm(plan.node))}</span><span class="ct"></span><span class="tm"></span></div><div class="ttl"></div><div class="cap"></div><div class="fl"></div>${plan.rules?`<div class="rules">House rules watching: ${plan.rules} · the head chef keeps an eye on them</div>`:''}<div class="ctl"><button class="btn g" id="ltPause">❚❚ Pause</button><button class="btn g" id="ltReplay">↺ Replay</button><button class="btn g" id="ltExit">Exit</button></div>`;
+ document.getElementById('ltPause').onclick=togglePause;document.getElementById('ltReplay').onclick=()=>go(S.id);document.getElementById('ltExit').onclick=()=>go(null);
+ lt.style.display='block';ltState.cut=T;send('enter');}
+function go(id){const u=new URLSearchParams(location.search);for(const k of ['session','demo','auto','open','file','fire','t'])u.delete(k);u.set('theme','kitchen');if(id)u.set('session',id);location.search=u;}
+function togglePause(){if(!reached('cooking'))return;S.paused=!S.paused;const b=document.getElementById('ltPause');if(b)b.textContent=S.paused?'▶ Resume':'❚❚ Pause';lt.classList.toggle('paused',S.paused);}
+
+function ticketHTML(){const P=S.plan,p=P.node,mir=P.mirror,L=job.list,landedN=L.filter(J=>J.landed).length;return `<div class="k">${PHASE[S.phase].kicker[0]}</div><h3>${esc(p.name)}</h3><div class="d">${esc(p.description||'')}</div><ol>${P.lines.map(e=>{const n=N.get(e.target);const J=L.find(j=>j.e===e);
+ const st=J?(J.landed?'done':J.chef?'now':''):(landedN>=L.filter(j=>j.e.order<=e.order).length?'done':'');
+ const where={skill:'station',principle:'house rule',playbook:'side ticket',agent:'swing cook',script:'tool',reference:'prep',router:'the pass'}[n.kind]||n.kind;const skip=mir?.readNotRun.includes(e.target);
+ return `<li class="${st}${skip?' skip':''}"><span class="o">${st==='done'?'✓':e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${esc(nm(n))}</span><span class="w">${skip?'read · not run':e.extra?'ran in PR #13':esc(where)}</span></li>`;}).join('')}</ol>${mir?`<div class="mir">Order mirrors FORGE-RUN.md (PR #13): ${esc(mir.groups.map(g=>g.join(' ∥ ')).join(' → '))}. Read but not run: ${esc(mir.readNotRun.join(', ')||'none')}.</div>`:''}`;}
+function updTicket(){if(!S.plan)return;tkt.innerHTML=S.plan.kind==='skill'?flowHTML():ticketHTML();job.list.forEach(J=>{J.badge.className='badge'+(J.landed?' done':J.chef?'':' next');J.s.glow.material.opacity=J.landed?.45:J.chef&&J.chef.st==='work'?1:J.chef?.6:.18;});}
+function fire(plan){rail(plan.kind==='skill'?null:plan.id);job.list=plan.plates.map(p=>({...p,s:ST[stOf.get(p.e.target)]}));
+ job.list.forEach(J=>{J.act=actOf(J.s);const b=document.createElement('div');b.className='badge next';b.textContent=J.e.order;const o=new CSS2DObject(b);o.position.copy(J.s.p).setY(J.s.p.y+4.2).addScaledVector(J.s.fwd,.5);scene.add(o);J.badge=b;J.s.lb.classList.remove('dim');flowInit(J);});
  ST.forEach(s=>{if(!job.list.some(J=>J.s===s))s.lb.classList.add('dim');});
- job.steps.forEach(e=>{const n=N.get(e.target);if(n.kind==='principle'){const i=principles.indexOf(n);if(i>=0){plq.m.setColorAt(i,new THREE.Color('#F2C46B'));}}});plq.m.instanceColor.needsUpdate=true;
- job.rules=job.steps.filter(e=>N.get(e.target).kind==='principle').length;dishPlate.visible=true;tkt.style.display='block';document.getElementById('legend').style.display='none';updTicket();
- if(fast)landFast();}
+ plan.lines.forEach(e=>{const n=N.get(e.target);if(n.kind==='principle'){const i=principles.indexOf(n);if(i>=0){plq.m.setColorAt(i,new THREE.Color('#F2C46B'));}}});plq.m.instanceColor.needsUpdate=true;
+ dishPlate.visible=true;tkt.style.display='block';document.getElementById('legend').style.display='none';}
 const rangeIds=new Set(ST.filter(s=>s.run===0).sort((a,b)=>a.p.x-b.p.x).slice(1,3).map(s=>s.n.id));
-function dispatch(J,T){if(CREW)crewIn(J);const free=CHEFS.filter(c=>c!==HEAD&&!c.resume&&!c.leaving&&!c.off&&(!CREW||!job.pid||c.fresh)).filter(c=>!c.job||c.st==='idle'&&c.job.landed);free.sort((a,b)=>a.g.position.distanceTo(front(J.s))-b.g.position.distanceTo(front(J.s)));const c=free[0];if(!c)return;J.chef=c;c.fresh=0;const ws=workSpot(J.s);J.face=ws.face;walkTo(c,ws.p,J);updTicket();}
+function dispatch(J,T){if(CREW)crewIn(J);const free=CHEFS.filter(c=>c!==HEAD&&!c.resume&&!c.leaving&&!c.off&&(!CREW||c.fresh)).filter(c=>!c.job||c.st==='idle'&&c.job.landed);free.sort((a,b)=>a.g.position.distanceTo(front(J.s))-b.g.position.distanceTo(front(J.s)));const c=free[0];if(!c)return;J.chef=c;c.fresh=0;const ws=workSpot(J.s);J.face=ws.face;walkTo(c,ws.p,J);updTicket();}
 
 const slip=document.createElement('div');slip.className='tk slip';document.body.appendChild(slip);slip.style.display='none';
-function updPrint(T,tP){const el=[...document.querySelectorAll('#rail .tk')].find(d=>d.dataset.id===job.wantPid);if(!el)return;const r=el.getBoundingClientRect();
+function updPrint(T,tP){const el=[...document.querySelectorAll('#rail .tk')].find(d=>d.dataset.id===AUTO);if(!el)return;const r=el.getBoundingClientRect();
  const u1=cl((T-tP)/1.4),u2=cl((T-tP-1.4)/1.1);if(T<tP||u2>=1){slip.style.display='none';if(u2>=1)el.classList.remove('ghost');return;}
  slip.style.display='block';slip.innerHTML=el.innerHTML;const x0=innerWidth-150,y0=66;const e=ease.io(u2);const x=x0+(r.left-x0)*e,y=y0+(r.top-y0)*e+Math.sin(Math.PI*e)*26;
  const feed=ease.out(u1);slip.style.left=x+'px';slip.style.top=y+'px';slip.style.clipPath=`inset(0 0 ${((1-feed)*100).toFixed(1)}% 0)`;slip.style.transform=`rotate(${(Math.sin(T*9)*(u1<1?.6:0)+Math.sin(Math.PI*e)*-3).toFixed(2)}deg)`;}
 
-function landFast(){if(!job.pid||doneAt>=0)return;job.list.forEach(J=>{if(J.landed)return;J.landed=true;job.landed++;const lay=new THREE.Mesh(new THREE.CylinderGeometry(.5-STACK.length*.05,.54-STACK.length*.05,.16,56),M(FOODC[J.k%5],MG));lay.position.copy(DISH).setY(DISH.y+stackH+.08);scene.add(lay);stackH+=.15;STACK.push({m:lay,sp:new Spr(1)});});complete(1e-4);}
 function openStation(id,quiet){const i=stOf.get(id);if(i==null)return;const s=ST[i];s.target=DOOR_OPEN;s.glow.material.opacity=.85;visited.add(id);setVisited();const n=s.n,mp=misen(id),ui=usedIn(id);
  card.innerHTML=`<div class="k">Station · recipe card</div><h3>${esc(n.name)}</h3>${fileLink(n,"Open skill file")}<p>${esc(n.description||'')}</p><h4>Mise en place · ${mp.length}</h4><div class="bowls">${mp.length?mp.map((m,j)=>`<span class="bowl ${j>2?'smudge':''}">${esc(m.name)}</span>`).join(''):'<span style="font-size:12px;color:#6B5644">Nothing prepped: this station works from the recipe alone.</span>'}</div>
  <h4>Goes into · ${ui.length} dishes</h4><div class="dish">${ui.slice(0,6).map((p,j)=>`<span class="${visited.has(p.id)||j<2?'':'smudge'}">${esc(p.name)}</span>`).join('')}</div><div class="hint">Smudged lines clear as you visit those stations and tickets.</div>`;
  card.innerHTML+=detHTML(n);card.style.display='block';document.getElementById('legend').style.display='none';if(!quiet)view={c:s.p.clone().setY(s.p.y+2).addScaledVector(s.fwd,1.6),h:16};ST.forEach(t=>t.lb.classList.toggle('dim',t!==s));
  if(!fast&&!quiet){const c=CHEFS.slice().sort((a,b)=>a.g.position.distanceTo(front(s))-b.g.position.distanceTo(front(s)))[0];walkTo(c,front(s).addScaledVector(s.side,.9));}}
-function closeStation(){card.style.display='none';ST.forEach(s=>{if(!job.list.some(J=>J.s===s&&J.chef&&!J.landed))s.target=0;if(s.lb)s.lb.classList.remove('dim');});if(tkt.style.display!=='block'){const lg=document.getElementById('legend');if(lg)lg.style.display='';}if(!sess&&!prev){const home=new THREE.Vector3(0,2.2,-1);if(fast)view={c:home,h:33};else zoomTo(home,33,3);}}
+function closeStation(){card.style.display='none';ST.forEach(s=>{if(!job.list.some(J=>J.s===s&&J.chef&&!J.landed))s.target=0;if(s.lb)s.lb.classList.remove('dim');});if(tkt.style.display!=='block'){const lg=document.getElementById('legend');if(lg)lg.style.display='';}if(!S.plan){const home=new THREE.Vector3(0,2.2,-1);if(fast)view={c:home,h:33};else zoomTo(home,33,3);}}
 
 const AUTO=qs.get('auto'),tP=+(qs.get('tp')||1.3),tF=tP+2.6;
-rail(null,AUTO);setVisited();if(AUTO){job.wantPid=AUTO;}
-if(qs.get('fire'))fire(qs.get('fire'));
+rail(null,AUTO);setVisited();
 let T=0,panelX=0;const EVENTS=[];
-let lastDt=1/60;function step(dt){T+=dt;lastDt=dt;
- if(AUTO&&!fast){if(!job.pid&&T>=tF)fire(AUTO);if(job.pid)job.list.forEach((J,k)=>{if(!J.chef&&T>=tF+.35+k*.4)dispatch(J,T);});}
- if(AUTO&&fast&&!job.pid){fire(AUTO);}
+let lastDt=1/60;function step(dt){if(S.paused){updLabels();return;}T+=dt;lastDt=dt;
+ if(ENTRY&&T>=ENTRY.at){const e=ENTRY;ENTRY=null;startAny(e.id,e.schedule);}
  if(!fast){CHEFS.forEach(c=>{updChef(c,T,dt);c.g.position.y=Math.max(groundY(c.g.position.x,c.g.position.z),duckH(c.g.position));});updFly(dt,T);updStack(dt,T);updPuffs(dt);updAmbient(T);updSteam(dt,T);if(AUTO)updPrint(T,tP);}
- if(!fast)updExtra(dt,T);else{updLabels();updHint();updVisited();updSession(dt,T);updModal(dt);}   updDoors(dt);if(job.pid)job.list.forEach(J=>{const g=J.s.glow.material;const tgt=J.landed?.45:J.chef&&J.chef.st==='work'?1:J.chef?.55:.18;g.opacity+=(tgt-g.opacity)*Math.min(1,dt*3);});
+ if(!fast)updExtra(dt,T);else{updLabels();updHint();updVisited();updSession(dt,T);updModal(dt);}   updDoors(dt);job.list.forEach(J=>{const g=J.s.glow.material;const tgt=J.landed?.45:J.chef&&J.chef.st==='work'?1:J.chef?.55:.18;g.opacity+=(tgt-g.opacity)*Math.min(1,dt*3);});
 
  const want=(card.style.display==='block'||tkt.style.display==='block')?360:0;panelX=fast?want:panelX+(want-panelX)*Math.min(1,dt*2.2);
- if(tkt.style.display==='block'&&!prev){const k=fast?1:ease.out(cl(panelX/360));tkt.style.opacity=k;tkt.style.transform=`translateX(${(1-k)*40}px)`;}}
+ if(tkt.style.display==='block'){const k=fast?1:ease.out(cl(panelX/360));tkt.style.opacity=k;tkt.style.transform=`translateX(${(1-k)*40}px)`;}}
 let camE=null;window.__camSnap=()=>{camE=null;};
 function render(){if(qs.get('view')==='wide'){view.c.set(5,1.5,-1.5);view.h=24;}   if(!camE||fast||qs.get('freeze'))camE={c:view.c.clone(),h:view.h};else{const k=1-Math.exp(-(lastDt||1/60)*5);camE.c.lerp(view.c,k);camE.h+=(view.h-camE.h)*k;}
  const a=innerWidth/innerHeight,h=camE.h;cam.left=-h*a/2;cam.right=h*a/2;cam.top=h/2;cam.bottom=-h/2;cam.position.copy(camE.c).addScaledVector(ISO,100);cam.lookAt(camE.c);
  cam.setViewOffset(innerWidth,innerHeight,panelX/2,-59,innerWidth,innerHeight);cam.updateProjectionMatrix();R.render(scene,cam);LR.render(scene,cam);updBubble();}
 
-const DEMO=qs.get('demo'),SESS_Q=qs.get('session'),ZQ=qs.get('zoom');let SESSION=null;
+const DEMO=qs.get('demo'),ZQ=qs.get('zoom');
+let ENTRY=AUTO?{id:AUTO,at:fast?0:tF,schedule:'stagger'}:qs.get('session')?{id:qs.get('session'),at:DEMO==='session'?1:0,schedule:'chain'}:null;
 
-let serve=null;const OUT=new THREE.Vector3(2.6,0,7.4);
+let serve=null;
 W(2.6,.02,8.3,2.4,.04,1.3,M('#E9A23B',MG));W(2.6,.05,8.3,1.9,.04,.85,M('#F6D88E',MG));
-function updServe(dt,T){if(doneAt<0||fast)return;
- if(!serve&&T>doneAt+2.4){const c=CHEFS.filter(c=>c.st==='idle'&&c!==HEAD&&!c.off).sort((a,b)=>a.g.position.distanceTo(DISH)-b.g.position.distanceTo(DISH))[0];if(!c)return;
-  const g=new THREE.Group();g.position.copy(DISH);scene.add(g);[dishPlate,...STACK.map(s=>s.m),garnish&&garnish.m].filter(Boolean).forEach(m=>{m.position.sub(DISH);g.add(m);});
-  serve={c,g,ph:'go',t:0};c.job=null;walkTo(c,new THREE.Vector3(DISH.x,0,DISH.z+1.7));}
- if(!serve)return;const S=serve,c=S.c;S.t+=dt;
- if(S.ph==='go'&&c.st==='idle'&&S.t>.5){S.ph='pick';S.t=0;c.yawT=Math.PI;c.carry=true;S.from=S.g.position.clone();}
- const hand=()=>c.g.localToWorld(new THREE.Vector3(0,1.5,.72)).sub(new THREE.Vector3(0,.0,0)).setY(c.g.position.y+1.5);
- if(S.ph==='pick'){const u=ease.io(cl(S.t/1.4));S.g.position.lerpVectors(S.from,hand(),u).y+=Math.sin(Math.PI*u)*.35;if(orderUp)orderUp.d.style.opacity=(1-u).toFixed(3);
-  if(u>=1){S.ph='carry';S.t=0;walkTo(c,OUT);}}
- if(S.ph==='carry'){S.g.position.copy(hand());if(S.t>.5&&c.st==='idle'){S.ph='gone';S.t=0;}}
- if(S.ph==='gone'){S.g.position.copy(hand());const k=1-ease.io(cl(S.t/1.2));S.g.scale.setScalar(Math.max(.001,k));if(k<=0&&!S.done){S.done=true;S.g.visible=false;c.carry=false;job.served=true;updTicket();}}}
+const P_INSP=new THREE.Vector3(3.7,0,2.9);let HEAD_LEG=null;
+function updServe(dt,T){if(fast||!S.plan)return;
+ if(!HEAD_LEG&&S.phase==='tasting')HEAD_LEG={ph:'call'};
+ if(HEAD_LEG?.ph==='call'&&!reached('orderUp')){HEAD_LEG={ph:'walk'};HEAD.job=null;walkTo(HEAD,P_INSP.clone());}
+ updFix(T);
+ if(S.phase==='tasting'&&HEAD_LEG?.ph==='walk'&&HEAD.st==='idle'&&HEAD.g.position.distanceTo(P_INSP)<.6&&(!S.plan.mirror||NARR.fixDone))HEAD_LEG={ph:'look',t:T};
+ if(S.phase==='tasting'&&HEAD_LEG?.ph==='look'&&T>HEAD_LEG.t+2.4){HEAD.spoon.visible=false;send('tasted');}
+ if(S.phase==='tasting'?HEAD_LEG?.ph!=='look':!reached('orderUp'))return;
+ const c=WAITER;
+ if(!serve){if(allChefs().some(o=>o!==c&&Math.hypot(o.g.position.x-C_IN.x,o.g.position.z-C_IN.z)<CR*2+.3))return;
+  c.off=0;c.g.visible=true;c.g.position.copy(C_IN);c.g.rotation.y=c.yawT=Math.PI;c.st='idle';c.t=0;c.v=0;c.wait=0;c.blockT=0;c.req=null;c.exitT=null;c.g.scale.setScalar(1);
+  serve={c,g:null,ph:'go',t:0};c.job=null;walkTo(c,new THREE.Vector3(DISH.x,0,DISH.z+1.7));}
+ const sv=serve;sv.t+=dt;updChef(c,T,dt);if(c.exitT==null)c.g.position.y=groundY(c.g.position.x,c.g.position.z);
+ if(sv.ph==='go'&&c.st==='idle'&&sv.t>.5&&reached('orderUp')&&T>S.orderUpAt+.4){const g=new THREE.Group();g.position.copy(DISH);scene.add(g);[dishPlate,...STACK.map(s=>s.m),garnish&&garnish.m].filter(Boolean).forEach(m=>{m.position.sub(DISH);g.add(m);});sv.g=g;sv.ph='pick';sv.t=0;c.yawT=Math.PI;c.carry=true;sv.from=sv.g.position.clone();send('pickedUp');}
+ const hand=()=>c.g.localToWorld(new THREE.Vector3(0,1.5,.72)).setY(c.g.position.y+1.5);
+ if(sv.ph==='pick'){const u=ease.io(cl(sv.t/1.4));sv.g.position.lerpVectors(sv.from,hand(),u).y+=Math.sin(Math.PI*u)*.35;if(orderUp)orderUp.d.style.opacity=(1-u).toFixed(3);
+  if(u>=1){sv.ph='carry';sv.t=0;walkTo(c,C_IN.clone());if(HEAD.st==='idle')walkTo(HEAD,HEAD.home.clone());}}
+ if(sv.ph==='carry'){sv.g.position.copy(hand());if(sv.t>.5&&c.st==='idle'){sv.ph='out';sv.t=0;c.exitT=0;}}
+ if(sv.ph==='out'){c.exitT+=dt;const u=cl(c.exitT/1.3);c.yawT=0;c.g.position.z=C_IN.z+ease.io(u)*1.6;sv.g.position.copy(hand());const k=1-ease.io(cl((u-.35)/.65));c.g.scale.setScalar(Math.max(.001,k));
+  if(u>=1&&!sv.done){sv.done=true;sv.g.visible=false;c.carry=false;c.exitT=null;c.off=1;c.g.visible=false;c.g.position.copy(FAR);c.g.scale.setScalar(1);send('out');}}}
 
 let tween=null;function zoomTo(c,h,dur=5){tween={c0:view.c.clone(),h0:view.h,c1:c.clone(),h1:h,t:0,dur};}
 function updZoom(dt){if(!tween)return;tween.t+=dt;const u=ease.io(cl(tween.t/tween.dur));view.h=Math.exp(Math.log(tween.h0)+(Math.log(tween.h1)-Math.log(tween.h0))*u);
@@ -488,43 +543,37 @@ function updDemo(dt,T){if(DEMO!=='zoom')return;const s=ST[stOf.get(qs.get('st')|
  if(T>=1&&!DF.z){DF.z=1;const H={mid:17,close:9}[ZQ]||+ZQ||9;zoomTo(fc,H,ZQ==='mid'?4:5);setFocus(s);}
  if(T>=3&&!DF.card){DF.card=1;openStation(s.n.id,true);s.target=0;}}
 
-const lt=document.createElement('div');lt.id='lt';document.body.appendChild(lt);lt.style.display='none';let sess=null;
+const lt=document.createElement('div');lt.id='lt';document.body.appendChild(lt);lt.style.display='none';const ltState={cut:0,beat:'',head:'',key:'',cur:null};
 
 const ORDER={taste:'taste it and check how it works',sketch:'sketch the plan first',inspect:'inspect the plate closely',chop:'start cooking',stir:'start cooking'};
-const ACT_LINE2=ACT_LINE;let prev=null;
 function fileLink(n,label='Open file'){return n&&n.path?`<a href="#" class="flink" data-file="${esc(n.path)}">${esc(label)} <span>↗</span></a>`:'';}
 function stepsOf(pid){return G.edges.filter(e=>e.source===pid&&e.mode==='step').sort((a,b)=>a.order-b.order);}
 
-function openPreview(pid){if(sess)return;const p=N.get(pid);if(!p)return;card.style.display='none';const el=[...document.querySelectorAll('#rail .tk')].find(d=>d.dataset.id===pid);const r0=el?el.getBoundingClientRect():null;
- document.querySelectorAll('#rail .tk').forEach(d=>d.classList.toggle('fire',d.dataset.id===pid));
- tkt.innerHTML=`<div class="k">Ticket · ready to cook</div><h3>${esc(p.name)}</h3><div class="d">${esc(p.description||'')}</div>${fileLink(p,'Open playbook file')}<ol>${stepsOf(pid).map(e=>{const n=N.get(e.target);return `<li><span class="o">${e.order}</span><span class="ic">${ICON[n.kind]||'·'}</span><span>${esc(nm(n))}</span></li>`}).join('')}</ol><div class="f"><button class="btn g" id="pvBack">Back</button><button class="btn play" id="pvPlay">▶ Play session</button></div>`;
- tkt.style.display='block';tkt.style.transform='';document.getElementById('legend').style.display='none';const r1=tkt.getBoundingClientRect();prev={pid,t:0,r0,r1};
- if(fast)view={c:DISH.clone().setY(2),h:14};else zoomTo(DISH.clone().setY(2),14,3.2);
- document.getElementById('pvPlay').onclick=()=>playSession(pid);document.getElementById('pvBack').onclick=closePreview;}
-function closePreview(){prev=null;tkt.style.display='none';document.getElementById('legend').style.display='';document.querySelectorAll('#rail .tk').forEach(d=>d.classList.remove('fire'));zoomTo(new THREE.Vector3(0,2.2,-1),33,3);}
-function updPreview(dt){if(!prev||sess)return;prev.t+=dt;const u=fast?1:ease.io(cl(prev.t/1.1));const r1=prev.r1;
- if(prev.r0&&r1&&r1.width){const sx=prev.r0.width/r1.width,sy=prev.r0.height/r1.height,dx=prev.r0.left-r1.left,dy=prev.r0.top-r1.top;
-  tkt.style.transformOrigin='0 0';tkt.style.transform=`translate(${(dx*(1-u)).toFixed(1)}px,${(dy*(1-u)).toFixed(1)}px) scale(${(sx+(1-sx)*u).toFixed(4)},${(sy+(1-sy)*u).toFixed(4)})`;tkt.style.opacity=fast?'1':cl(.4+u).toFixed(3);}}
-function playSession(pid){const b=document.getElementById('pvPlay');if(b)b.classList.add('press');prev=null;tkt.style.transform='';SESSION=pid;startSession();}
-document.getElementById('rail').addEventListener('click',e=>{const d=e.target.closest('.tk');if(d&&!sess)openPreview(d.dataset.id);});
-function startSession(){sess={t0:T,i:-1,cut:T,key:''};fire(SESSION);job.list.forEach(J=>J.dur=2.0);   document.body.classList.add('sess');lt.style.display='block';}
-function updSession(dt,T){
- if(!sess){if(SESS_Q&&!N.get(SESS_Q))DF.pv=1;else if(SESS_Q&&!prev&&!DF.pv){DF.pv=1;if(DEMO==='session'){if(T>=1)openPreview(SESS_Q);else DF.pv=0;}else openPreview(SESS_Q);}
-  if(DEMO==='session'&&prev&&prev.t>=1.5)playSession(SESS_Q);updPreview(dt);return;}
- const L=job.list,i=L.findIndex(J=>!J.landed);{const k=L.findIndex(J=>!J.chef&&!J.landed);if(k>=0&&(k===0?T>sess.t0+.5:(L[k-1].landed||(L[k-1].chef&&T-L[k-1].dT>1.2)))){L[k].dT=T;dispatch(L[k],T);}}
- const J=L[i>=0?i:L.length-1];const done=i<0;if(done&&doneAt<0)complete(T>0?T:1e-4);
- if(J&&J.chef&&sess.i!==i){sess.i=i;sess.cut=T;}if(done&&sess.i!==-2){sess.i=-2;sess.cut=T;}if(job.served&&sess.i!==-3){sess.i=-3;sess.cut=T;}
- let fc,h;if(done){if(serve&&!serve.done){fc=serve.c.g.position.clone().setY(2);h=10;}else if(job.served){fc=DISH.clone().setY(2);h=16;}else{fc=DISH.clone();h=11;}}else if(J.chef){const cp=J.chef.g.position;fc=cp.clone().lerp(J.s.p,.45).setY(J.s.p.y+1.8);h=J.chef.st==='work'?7.2:9.5;}else{fc=DISH.clone();h=12;}
+document.getElementById('rail').addEventListener('click',e=>{const d=e.target.closest('.tk');if(d)startAny(d.dataset.id);});
+function dispatchDue(T){const L=job.list;
+ if(S.plan.schedule==='stagger'){L.forEach((J,k)=>{if(!J.chef&&T>=S.t0+.35+k*.4)dispatch(J,T);});return;}
+ const k=L.findIndex(J=>!J.chef&&!J.landed);if(k<0||S.plan.mirror&&k===1&&!(L[0].landed&&NARR.deleg?.done))return;
+ if(k===0?T>S.t0+.5:(L[k-1].landed||(L[k-1].chef&&T-L[k-1].dT>1.2))){L[k].dT=T;dispatch(L[k],T);}}
+function lowerThird(J,n){const mir=S.plan.mirror;
+ if(!reached('tasting'))return NARR.deleg&&!NARR.deleg.done?NARR.deleg.cap:[nm(n),flowCap(J,n)];
+ if(NARR.fixCap&&!NARR.fixDone)return NARR.fixCap;
+ const [ttl,cap]=S.phase==='tasting'&&mir?.verify?[PHASE.tasting.title[0],`Verify passes (FORGE-RUN ${mir.verify.time}: ${mir.verify.text}). The head chef tastes before it can leave.`]:PHASE[S.phase].title;
+ if(!mir?.tail.length||S.phase==='served')return [ttl,cap];
+ NARR.tailT??=T;const e=mir.tail[Math.min(mir.tail.length-1,Math.floor((T-NARR.tailT)/1.8))];return [ttl,`${cap} Meanwhile in PR #13 (${e.time}): ${e.text}`];}
+function updSession(dt,T){if(!S.plan)return;
+ if(S.phase==='cooking'){updDeleg(T);dispatchDue(T);}
+ const L=job.list,i=L.findIndex(J=>!J.landed),done=reached('tasting'),J=L[i>=0?i:L.length-1];
+ const beat=done?S.phase:J.chef?'plate'+i:ltState.beat;if(beat!==ltState.beat){ltState.beat=beat;ltState.cut=T;}
+ let fc,h;if(done){if(serve&&!serve.done){fc=serve.c.g.position.clone().setY(2);h=10;}else if(reached('served')){fc=DISH.clone().setY(2);h=16;}else{fc=DISH.clone();h=11;}}else if(J.chef){const cp=J.chef.g.position;fc=cp.clone().lerp(J.s.p,.45).setY(J.s.p.y+1.8);h=J.chef.st==='work'?7.2:9.5;}else{fc=DISH.clone();h=12;}
  if(fast){view.c.copy(fc);view.h=h;}else{const k=1-Math.exp(-dt*.9);view.c.lerp(fc,k);view.h=Math.exp(Math.log(view.h)+(Math.log(h)-Math.log(view.h))*k);}
- const n=done?null:N.get(J.e.target),el=T-sess.t0,mm=String(Math.floor(el/60)).padStart(2,'0'),ss=String(Math.floor(el%60)).padStart(2,'0');
- const head=done?(job.served?'Served':'Order up!'):nm(n);const cap=done?(job.served?'The dish has left the pass. Every step on the ticket is done.':'Every step is in. The dish is plated and waiting on the pass.'):`${ACT_LINE[J.act]} · ${caption(n)}`;
+ const n=done?null:N.get(J.e.target),el=T-S.t0,mm=String(Math.floor(el/60)).padStart(2,'0'),ss=String(Math.floor(el%60)).padStart(2,'0');
+ const [head,cap]=lowerThird(J,n);ltState.cur=done?null:J.s;
+ if(head!==ltState.head){ltState.head=head;ltState.cut=Math.max(ltState.cut,T-.6);}
  const key=[head,cap,done?L.length:i+1,mm+ss].join('|');
- if(key!==sess.key){const first=!sess.key;sess.key=key;
-  if(first)lt.innerHTML=`<div class="bar"><span class="live">● Session</span><span class="pb">${esc(nm(N.get(SESSION)))}</span><span class="ct"></span><span class="tm"></span></div><div class="ttl"></div><div class="cap"></div><div class="fl"></div>${job.rules?`<div class="rules">House rules watching: ${job.rules} · the head chef keeps an eye on them</div>`:''}<div class="ctl"><button class="btn g" id="ltReplay">↺ Replay</button><button class="btn g" id="ltExit">Exit</button></div>`;
-  if(first){document.getElementById('ltReplay').onclick=()=>{const u=new URLSearchParams(location.search);u.set('session',SESSION);location.search=u;};document.getElementById('ltExit').onclick=()=>{const u=new URLSearchParams(location.search);u.delete('session');u.delete('demo');u.set('theme','kitchen');location.search=u;};}
-  lt.querySelector('.ct').textContent=`Step ${done?L.length:i+1} / ${L.length}`;lt.querySelector('.tm').textContent=`${mm}:${ss}`;
-  lt.querySelector('.ttl').textContent=head;lt.querySelector('.cap').textContent=cap;lt.querySelector('.fl').innerHTML=fileLink(done?N.get(SESSION):n,done?'Open playbook file':'Open skill file');}
- const fade=fast?'1':cl((T-sess.cut)/1.2).toFixed(3);lt.querySelector('.ttl').style.opacity=fade;lt.querySelector('.cap').style.opacity=fade;}
+ if(key!==ltState.key){ltState.key=key;
+  lt.querySelector('.ct').textContent=S.plan.kind==='skill'?(done?'Plate out':`Step ${Math.max(0,J.stepI)+1} / ${J.stp.length}`):`Skill ${done?L.length:i+1} / ${L.length}`;lt.querySelector('.tm').textContent=`${mm}:${ss}`;
+  lt.querySelector('.ttl').textContent=head;lt.querySelector('.cap').textContent=cap;lt.querySelector('.fl').innerHTML=(done?'':flowSrc(J))+fileLink(done?S.plan.node:n,done?(S.plan.kind==='skill'?'Open skill file':'Open playbook file'):'Open skill file');}
+ const fade=fast?'1':cl((T-ltState.cut)/1.2).toFixed(3);lt.querySelector('.ttl').style.opacity=fade;lt.querySelector('.cap').style.opacity=fade;}
 const U=G.upstream;
 const aboutDt=new Date(U.commitDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 document.getElementById('about').innerHTML=`<p>A map of how the pstack skills library fits together: workflows, the tools and rules they use, and the docs behind them.</p>
@@ -559,55 +608,104 @@ addEventListener('keydown',e=>{
   if(document.getElementById('about').classList.contains('open')){document.getElementById('aboutBtn').click();return;}
   if(modal.style.display==='block'){closeFile();return;}
   if(card.style.display==='block'){closeStation();return;}
-  if(prev){closePreview();return;}
   return;}
  if(modal.style.display!=='block'||e.key!=='Tab')return;const f=[...modal.querySelectorAll('button,[tabindex="0"],a[href]')];const a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}});
 document.addEventListener('click',e=>{const a=e.target.closest('[data-file]');if(a){e.preventDefault();openFile(a.dataset.file);}});
+addEventListener('keydown',e=>{if(e.code!=='Space'||!reached('cooking')||modal.style.display==='block'||e.target.closest?.('button,a,input,select,textarea,[role=button]'))return;e.preventDefault();togglePause();});
 function updModal(dt){if(modalT<0)return;modalT+=dt;const u=ease.out(cl(modalT/.5));modal.style.opacity=u.toFixed(3);modal.querySelector('.box').style.transform=`translateY(${((1-u)*14).toFixed(1)}px)`;}
-if(qs.get('open'))openStation(qs.get('open'));if(qs.get('file'))setTimeout(()=>openFile(qs.get('file')),50);
 
 const bub=document.createElement('div');bub.id='bub';document.body.appendChild(bub);let bubKey='';
-function orderText(){if(!job.pid)return prev?`<b>${esc(nm(N.get(prev.pid)))}</b> is on the rail. Ready when you are.`:'';const t=`<b>${esc(nm(N.get(job.pid)))}</b>`;
- if(job.served)return `${t} · Served. Lovely work, everyone.`;if(doneAt>0)return `${t} · Order up! Take it out, please.`;
- const L=job.list,i=L.findIndex(J=>!J.landed);if(i<0)return `${t} · Plating now.`;const J=L[i];return `${t} · Step ${i+1} of ${L.length}: ${esc(nm(N.get(J.e.target)))}, ${ORDER[J.act]}.`;}
+function orderText(){if(!S.plan)return '';const t=`<b>${esc(nm(S.plan.node))}</b>`;
+ if(reached('served'))return `${t} · Served. Lovely work, everyone.`;if(HEAD_LEG&&!reached('orderUp'))return `${t} · Let me taste it first.`;if(reached('orderUp'))return `${t} · Order up! Waiter, take it out, please.`;
+ const L=job.list,i=L.findIndex(J=>!J.landed);if(i<0)return `${t} · Plating now.`;
+ if(S.plan.kind==='skill'){const J=L[0];return J.stepI>=0?`${t} · Step ${J.stepI+1} of ${J.stp.length}: ${esc(J.stp[J.stepI].caption)}.`:J.inI>=0?`${t} · Mise en place first: ${J.inI+1} of ${J.ins.length} in.`:`${t} · Fetch the inputs, then work the steps in order.`;}const J=L[i];return `${t} · Step ${i+1} of ${L.length}: ${esc(nm(N.get(J.e.target)))}, ${ORDER[J.act]}.`;}
 const HV=new THREE.Vector3();
 function updBubble(){const html=orderText();if(!html||fast){bub.style.display='none';return;}if(html!==bubKey){bubKey=html;bub.innerHTML=html;}bub.style.display='block';
  HV.copy(HEAD.g.position).setY(HEAD.g.position.y+4.15).project(cam);const w=bub.offsetWidth,hh=bub.offsetHeight;let x=(HV.x+1)/2*innerWidth-w/2,y=(1-HV.y)/2*innerHeight-hh-10;
- const maxX=innerWidth-panelX-w-16,cx=Math.min(Math.max(16,x),maxX),cy=Math.min(Math.max(128,y),innerHeight-hh-(sess?250:40));bub.classList.toggle('pinned',Math.abs(cx-x)>2||Math.abs(cy-y)>2);
+ const maxX=innerWidth-panelX-w-16,cx=Math.min(Math.max(16,x),maxX),cy=Math.min(Math.max(128,y),innerHeight-hh-(S.plan?250:40));bub.classList.toggle('pinned',Math.abs(cx-x)>2||Math.abs(cy-y)>2);
  bub.style.left=cx.toFixed(1)+'px';bub.style.top=cy.toFixed(1)+'px';}
 
 const C_BACK=new THREE.Vector3(5.0,0,-10.7),C_IN=new THREE.Vector3(.4,0,8.6),C_OUT=new THREE.Vector3(4.8,0,8.6),FAR=new THREE.Vector3(40,0,40);
 const LINE=()=>CHEFS.filter(c=>c!==HEAD);
 function offstage(c){c.off=1;c.leaving=0;c.g.visible=false;c.g.position.copy(FAR);c.st='idle';c.curve=null;if(c.sicko)unSicko(c);}
 function onstage(c,J){c.off=0;c.g.visible=true;c.g.position.copy(C_IN);c.g.rotation.y=c.yawT=Math.PI;c.st='idle';c.t=0;c.job=null;c.v=0;c.wait=0;c.blockT=0;c.req=null;c.fresh=1;}
-let crewStarted=null;
-function crewIn(J){if(crewStarted!==job.pid){crewStarted=job.pid;LINE().forEach(offstage);}
+let crewStarted=false;
+function crewIn(J){if(!crewStarted){crewStarted=true;LINE().forEach(offstage);}
  if(allChefs().some(o=>Math.hypot(o.g.position.x-C_IN.x,o.g.position.z-C_IN.z)<CR*2+.3))return;const c=LINE().find(c=>c.off);if(c){onstage(c,J);if(/no-comments/.test(J.s.n.id))mkSicko(c);}}
 function mkSicko(c){c.sicko=1;c.badge.visible=true;if(c.lbEl)c.lbEl.textContent='Comment Sicko';}
 function unSicko(c){c.sicko=0;c.badge.visible=false;if(c.lbEl)c.lbEl.textContent='poteto-agent';}
 
-const GCOL=['#3F7F8C','#3F7F8C','#2E6470'];   var GUESTS=[0,1,2].map(k=>{const g=chef(5+k,'guest',FAR.clone(),0);CHEFS.splice(CHEFS.indexOf(g),1);recolor(g,GCOL[k]);g.apP.visible=false;g.htP.scale.set(1,.6,1);g.g.visible=false;g.on=false;g.pop=new Spr(0);return g;});
+APRON[11]='#F4EDE2';const GCOL=['#3F7F8C','#3F7F8C','#2E6470','#3F7F8C'];   var GUESTS=[0,1,2,3].map(k=>{const g=chef(k<3?5+k:11,'guest',FAR.clone(),0);CHEFS.splice(CHEFS.indexOf(g),1);recolor(g,GCOL[k]);g.apP.visible=false;g.htP.scale.set(1,.6,1);g.g.visible=false;g.on=false;g.pop=new Spr(0);return g;});
 let guestJob=null;
 function guestSpots(J,n){const ws=workSpot(J.s);const out=[];const others=allChefs();for(let r=2.4;r<5.2&&out.length<n;r+=.4)for(let a=0;a<Math.PI*2&&out.length<n;a+=Math.PI/10){const x=ws.p.x+Math.cos(a)*r,z=ws.p.z+Math.sin(a)*r;if(blocked(x,z)||Math.hypot(x-C_IN.x,z-C_IN.z)<3||Math.hypot(x-C_OUT.x,z-C_OUT.z)<3)continue;const q=new THREE.Vector3(x,0,z);if(others.concat(out.map(p=>({g:{position:p}}))).some(o=>Math.hypot(o.g.position.x-x,o.g.position.z-z)<CR*2+1))continue;out.push(q);}return out;}
-function guestsOn(J){const id=J.s.n.id;const roles=/interrogate/.test(id)?['guest reviewer','guest reviewer']:/arena/.test(id)?['guest runner','guest runner','guest judge · different family from the expediter']:null;if(!roles)return;const sp=guestSpots(J,roles.length);sp.forEach((p,k)=>{const g=GUESTS[k];g.on=true;g.g.visible=true;g.g.position.copy(p);g.st='idle';g.t=0;const ws=workSpot(J.s).p;g.g.rotation.y=g.yawT=Math.atan2(ws.x-p.x,ws.z-p.z);g.pop.x=0;g.pop.v=0;if(g.lbEl)g.lbEl.textContent=roles[k];});guestJob=J;}
+const FAM=m=>/claude|opus/.test(m)?'#7A5C8E':/grok/.test(m)?'#3F7F8C':'#5E86A0';
+function guestsOn(J){const id=J.s.n.id;const MR=S.plan.mirror?.guests.get(id);if(MR?.length){const sp=guestSpots(J,MR.length);sp.forEach((p,k)=>{const g=GUESTS[k];g.on=true;g.g.visible=true;g.g.position.copy(p);g.st='idle';g.t=0;const ws=workSpot(J.s).p;g.g.rotation.y=g.yawT=Math.atan2(ws.x-p.x,ws.z-p.z);g.pop.x=0;g.pop.v=0;recolor(g,FAM(MR[k].model));if(g.collarM)g.collarM.visible=false;if(g.lbEl)g.lbEl.textContent=`${MR[k].name} · ${MR[k].model}`;});guestJob=J;return;}
+ GUESTS.forEach((g,k)=>{recolor(g,GCOL[k]);if(g.collarM)g.collarM.visible=true;});const roles=/interrogate/.test(id)?['guest reviewer','guest reviewer']:/arena/.test(id)?['guest runner','guest runner','guest judge · different family from the expediter']:null;if(!roles)return;const sp=guestSpots(J,roles.length);sp.forEach((p,k)=>{const g=GUESTS[k];g.on=true;g.g.visible=true;g.g.position.copy(p);g.st='idle';g.t=0;const ws=workSpot(J.s).p;g.g.rotation.y=g.yawT=Math.atan2(ws.x-p.x,ws.z-p.z);g.pop.x=0;g.pop.v=0;if(g.lbEl)g.lbEl.textContent=roles[k];});guestJob=J;}
 function guestsOff(){GUESTS.forEach(g=>{g.on=false;g.g.visible=false;g.g.position.copy(FAR);});guestJob=null;}
 
 const BACK=[];function sendBack(J){const prev=job.list.filter(x=>x.landed&&x!==J).pop();if(!prev)return;const m=new THREE.Mesh(new THREE.CylinderGeometry(.42,.32,.07,32),M('#FFFDF8',MG));const p0=DISH.clone().setY(DISH.y+stackH),p1=prev.s.p.clone().setY(prev.s.p.y+2.45).addScaledVector(prev.s.fwd,.5);m.position.copy(p0);scene.add(m);
  const d=document.createElement('div');d.className='lb';d.textContent='sent back';const o=new CSS2DObject(d);o.position.set(0,.6,0);m.add(o);BACK.push({m,o,p0,p1,t:0});}
-function updCrew(dt,T){if(!CREW||!job.pid)return;
+function updCrew(dt,T){if(!CREW||!S.plan)return;
  LINE().forEach(c=>{if(c.off)return;if(c.leaving){if(c.exitT!=null||(c.st==='idle'&&Math.hypot(c.g.position.x-C_BACK.x,c.g.position.z-C_BACK.z)<1)){c.exitT=(c.exitT||0)+dt;const u=cl(c.exitT/1.1);c.g.rotation.y=c.yawT=Math.PI;c.g.position.z=C_BACK.z-ease.io(u)*1.9;c.g.position.x+=(C_BACK.x-c.g.position.x)*Math.min(1,dt*6);if(u>=1){c.exitT=null;offstage(c);}}return;}
-  if(!c.leaving&&crewStarted===job.pid&&c.job&&c.job.landed&&c.st==='idle'&&c.t>.4&&doneAt<0){c.leaving=1;walkTo(c,C_BACK.clone());}
+  if(!c.leaving&&crewStarted&&c.job&&c.job.landed&&c.st==='idle'&&c.t>.4&&S.phase==='cooking'&&!HEAD_LEG){c.leaving=1;walkTo(c,C_BACK.clone());}
   if(c.job&&c.job.chef===c&&c.st==='work'&&!guestJob&&!c.job.gDone){c.job.gDone=1;guestsOn(c.job);}
   if(c.sicko&&c.job&&c.job.landed&&!c.job.sent){c.job.sent=1;sendBack(c.job);}});
  if(guestJob&&guestJob.landed)guestsOff();
  GUESTS.forEach(g=>{if(!g.on)return;g.pop.step(1,30,8,dt);g.g.scale.setScalar(Math.max(.01,g.pop.x));updChef(g,T,dt);g.g.position.y=groundY(g.g.position.x,g.g.position.z);});
  for(const b of BACK){if(b.done)continue;b.t+=dt;const u=cl(b.t/1.4),e=ease.sin(u);const mid=b.p0.clone().lerp(b.p1,.5);mid.y=Math.max(b.p0.y,b.p1.y)+2.6;b.m.position.copy(new THREE.QuadraticBezierCurve3(b.p0,mid,b.p1).getPoint(e));b.m.rotation.z=Math.sin(e*Math.PI)*.6;if(u>=1&&b.t>2.4){b.done=1;b.m.remove(b.o);scene.remove(b.m);}}}
+const stepAct=(cap,def)=>/implement|fix|write|build|graft|apply|generate|edit|host|create/i.test(cap)?'chop':/sketch|design|plan|frame|draft|outline/i.test(cap)?'sketch':/verify|judge|inspect|review|scope|check|prove|audit|scrap|test/i.test(cap)?'inspect':/ground|read|explore|assess|understand|locate|gather|find|interview|intent/i.test(cap)?'taste':def;
+function flowInit(J){const F=J.flow,P=S.plan.pace;J.ins=F.inputs;J.stp=F.steps;J.tIn=P.input;J.tSt=P.step;J.dur=J.ins.length*J.tIn+J.stp.length*J.tSt;J.items=[];J.stepI=-1;J.inI=-1;J.acts=J.stp.map(x=>stepAct(x.caption,J.act));}
+function flowTick(j,c){const nI=j.ins.length;if(c.t<nI*j.tIn){const k=Math.floor(c.t/j.tIn);while(j.inI<k){j.inI++;addItem(j,j.inI,c);}return 'gather';}
+ while(j.inI<nI-1){j.inI++;addItem(j,j.inI,c);}const k=Math.min(j.stp.length-1,Math.floor((c.t-nI*j.tIn)/j.tSt));if(k!==j.stepI){j.stepI=k;updTicket();}return j.acts[k];}
+const ITEM={file:[new THREE.BoxGeometry(.2,.035,.26),'#FFF8EC'],skill:[new THREE.CylinderGeometry(.12,.08,.1,20),'#8DB486'],principle:[new THREE.CylinderGeometry(.075,.075,.18,16),'#F2C46B'],rule:[new THREE.CylinderGeometry(.08,.08,.13,16),'#7FA3B5']};
+const shortIn=i=>i.name.replace(/^principle-/,'').replace(/^(references|scripts|assets)\//,'').replace(/\.md$/,'');
+const ITEMS=[];
+function addItem(j,k,c){if(fast)return;const inp=j.ins[k],s=j.s,per=7,row=Math.floor(k/per),col=k%per,n=Math.min(per,j.ins.length-row*per);
+ const p=s.p.clone().setY(s.p.y+2.35+(ITEM[inp.kind]||ITEM.file)[0].parameters.height/2||0).addScaledVector(s.side,(col-(n-1)/2)*.29).addScaledVector(s.fwd,.86-row*.3);
+ const [geo,col0]=ITEM[inp.kind]||ITEM.file;const m=new THREE.Mesh(geo,M(col0,MG));const h=(geo.parameters.height||.035)/2;p.y=s.p.y+2.35+h;m.position.copy(p);scene.add(m);
+ const d=document.createElement('div');d.className='lb it k-'+inp.kind;d.textContent=shortIn(inp);const o=new CSS2DObject(d);o.position.set(0,.32,0);m.add(o);
+ const p0=c.g.position.clone().setY(c.g.position.y+1.6);const it={m,o,d,p0,p1:p,t:0,j};j.items.push(it);ITEMS.push(it);updTicket();}
+function clearItems(j){(j.items||[]).forEach(it=>{it.gone=0;it.out=1;});}
+function updItems(dt){for(const it of ITEMS){if(it.dead)continue;it.t+=dt;
+  if(it.out){it.ot=(it.ot||0)+dt;const k=1-cl(it.ot/.35);it.m.scale.setScalar(Math.max(.001,k));it.d.style.opacity=0;if(k<=0){it.dead=1;it.m.remove(it.o);scene.remove(it.m);}continue;}
+  const u=ease.io(cl(it.t/.38));it.m.position.lerpVectors(it.p0,it.p1,u).y+=Math.sin(Math.PI*u)*.45;it.m.scale.setScalar(.4+.6*u);
+  const last=it.j.items[it.j.items.length-1]===it&&it.j.inI<it.j.ins.length-1+1&&it.j.stepI<0;it.d.classList.toggle('new',last);it.d.style.opacity=last?1:Math.max(.0,1-cl((it.t-1.1)/.5)).toFixed(2);}}
+function flowCap(J,n){if(J.pre.length&&(!J.chef||J.chef.st!=='work')){const e=J.pre[Math.min(J.pre.length-1,Math.floor((T-(J.dT||T))/1.7))];return `FORGE-RUN ${e.time} · ${e.text}`;}if(!J.chef||J.chef.st!=='work')return caption(n);const nI=J.ins.length;
+ if(J.stepI<0&&J.inI>=0)return `Mise en place ${J.inI+1}/${nI} · ${J.ins[J.inI].kind}: ${shortIn(J.ins[J.inI])}`;
+ if(J.stepI>=0)return `Step ${J.stepI+1}/${J.stp.length} · ${J.stp[J.stepI].caption}`;return caption(n);}
+function flowSrc(J){if(!J.flow.file)return '';const ln=J.stepI>=0?J.stp[J.stepI].line:J.inI>=0?J.ins[J.inI].line:0;return `<span class="src">${esc(J.flow.file)}${ln?':'+esc(ln):''} · steps from ${esc(J.flow.stepSource)}</span> `;}
+function flowHTML(){const J=job.list[0],n=S.plan.node;const st=k=>J.landed||k<J.stepI?'done':k===J.stepI&&J.chef&&J.chef.st==='work'?'now':'';
+ const ins=J.ins.map((x,k)=>`<span class="in ${k<=J.inI?'got':''} k-${esc(x.kind)}" title="${esc(x.kind)} · line ${esc(x.line)}">${k<=J.inI?'✓ ':''}${esc(shortIn(x))}</span>`).join('');
+ const insp=reached('orderUp')?'done':HEAD_LEG?'now':'',out=reached('served')?'done':serve?'now':'';
+ return `<div class="k">${PHASE[S.phase].kicker[1]}</div><h3>${esc(n.name)}</h3><div class="d">${esc(n.description||'')}</div>${fileLink(n,'Open skill file')}
+ <h4>Mise en place · ${J.ins.length} inputs</h4><div class="ins">${ins||'<span class="in">nothing listed in the file</span>'}</div>
+ <h4>Steps · ${J.stp.length} <small>(${esc(J.flow.stepSource)})</small></h4><ol>${J.stp.map((x,k)=>`<li class="${st(k)}"><span class="o">${st(k)==='done'?'✓':esc(x.n)}</span><span>${esc(x.caption)}</span></li>`).join('')}
+ <li class="${insp}"><span class="o">${insp==='done'?'✓':'★'}</span><span>Poteto Mode tastes</span><span class="w">the pass</span></li><li class="${out}"><span class="o">${out==='done'?'✓':'→'}</span><span>Waiter carries it out</span><span class="w">service</span></li></ol>`;}
+
+function noteFly(txt,p0,p1,col){const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.04,.36),M(col||'#FFF8EC',MG));m.position.copy(p0);scene.add(m);const d=document.createElement('div');d.className='lb it new';d.textContent=txt;const o=new CSS2DObject(d);o.position.set(0,.5,0);m.add(o);BACK.push({m,o,p0,p1,t:0});}
+const NARR={deleg:null,fixT:null,fixK:-1,fixCap:null,fixDone:false,tailT:null};
+function updDeleg(T){const mir=S.plan.mirror;if(!mir||NARR.deleg?.done||!job.list[0]?.landed)return;const D=mir.delegate;
+ if(!NARR.deleg){if(!D){NARR.deleg={done:true};return;}NARR.deleg={t0:T,k:-1,done:false,cap:['poteto-agent delegate',`One ${D.model} delegate writes the code: ${D.job}.`]};}
+ const d=NARR.deleg,P=D.pre,H=D.commits,tp=P.length*1.3;if(T-d.t0<tp){const e=P[Math.floor((T-d.t0)/1.3)];d.cap=['poteto-agent delegate',`FORGE-RUN ${e.time} · ${e.text}`];return;}
+ const k=Math.floor((T-d.t0-tp-.4)/1.5);if(k>d.k&&k<H.length){d.k=k;if(!fast){const lay=new THREE.Mesh(new THREE.CylinderGeometry(.5-STACK.length*.05,.54-STACK.length*.05,.12,48),M('#E8C27A',MG));lay.position.copy(DISH).setY(DISH.y+stackH+.06);scene.add(lay);stackH+=.12;STACK.push({m:lay,sp:new Spr(.2)});noteFly('commit '+H[k],C_IN.clone().setY(1.6),DISH.clone().setY(DISH.y+stackH+.3),'#E8C27A');}
+  d.cap=['poteto-agent delegate',`Commit ${k+1}/${H.length}: ${H[k]} (FORGE-RUN: ${D.result}).`];}
+ if(T-d.t0>tp+.4+1.5*H.length+.6)d.done=true;}
+function updFix(T){const mir=S.plan.mirror;if(!mir||NARR.fixDone||HEAD_LEG?.ph!=='call'&&HEAD_LEG?.ph!=='walk')return;const RV=mir.reviews,IR=job.list.find(J=>J.s.n.id==='interrogate')||job.list[job.list.length-1];
+ if(!RV.length||!IR){NARR.fixDone=true;return;}if(NARR.fixT==null){NARR.fixT=T;NARR.fixK=-1;}const k=Math.floor((T-NARR.fixT)/2.6);
+ if(k>NARR.fixK&&k<RV.length){NARR.fixK=k;const r=RV[k];
+  if(r.sicko){const NC=job.list.find(J=>J.s.n.id==='no-comments')||IR;if(!fast)noteFly('Comment Sicko · comments out',NC.s.p.clone().setY(NC.s.p.y+2.6),DISH.clone().setY(DISH.y+stackH+.3),'#B79BC8');NARR.fixCap=[`Comment Sicko${mir.sicko?' ('+mir.sicko.model+')':''}`,r.text];return;}
+  if(!fast)noteFly('sent back · reviewer '+r.who,DISH.clone().setY(DISH.y+stackH+.2),IR.s.p.clone().setY(IR.s.p.y+2.6).addScaledVector(IR.s.fwd,.5),'#F2C46B');
+  NARR.fixCap=[`Reviewer ${r.who}${r.sub?' ('+r.sub.model+')':''} sends it back`,r.text];}
+ if(T-NARR.fixT>2.6*RV.length+.4)NARR.fixDone=true;}
+
+APRON[10]='#FFFDF8';const WAITER=chef(10,'waiter',FAR.clone(),0);CHEFS.splice(CHEFS.indexOf(WAITER),1);recolor(WAITER,'#26221F');WAITER.htP.visible=false;WAITER.off=1;WAITER.g.visible=false;WAITER.waiter=1;
+{const bt=new THREE.Mesh(new THREE.BoxGeometry(.22,.09,.06),M('#B23A30',MG));bt.position.set(0,1.56,.5);WAITER.body.add(bt);const hair=new THREE.Mesh(new THREE.SphereGeometry(.36,24,16,0,Math.PI*2,0,Math.PI/2.2),M('#3A2A20',MG));WAITER.hdP.add(hair);hair.position.y=.12;}
 window.__bd=()=>BD.a.x;
 
 [8,9].forEach(i=>{const c=chef(i,'poteto-agent',FAR.clone(),0);c.off=1;c.g.visible=false;});
 
 const AGENT_JK='#C4583F';LINE().forEach(c=>{recolor(c,AGENT_JK);const b=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.04,20),M('#5B3A6B',MG));b.rotation.x=Math.PI/2;b.position.set(-.2,1.3,.5);b.visible=false;c.body.add(b);c.badge=b;});
-{const j=GUESTS[2];const col=new THREE.Mesh(new THREE.TorusGeometry(.36,.05,10,32),M('#E2B65A',MS));col.rotation.x=Math.PI/2;col.position.y=1.62;j.body.add(col);}
+{const j=GUESTS[2];const col=new THREE.Mesh(new THREE.TorusGeometry(.36,.05,10,32),M('#E2B65A',MS));col.rotation.x=Math.PI/2;col.position.y=1.62;j.body.add(col);j.collarM=col;}
 
 const BD={leaf:null,a:new Spr(0)};{const g=new THREE.Group();g.rotation.y=Math.PI/2;g.position.set(4.85,0,-11.94);scene.add(g);
  [[0,1.45,-.78,.14,2.95,.16],[0,1.45,.78,.14,2.95,.16],[0,2.92,0,.14,.14,1.72]].forEach(([x,y,z,w,h,d])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M('#8A5A3B'));m.position.set(x,y,z);g.add(m);});
@@ -615,7 +713,7 @@ const BD={leaf:null,a:new Spr(0)};{const g=new THREE.Group();g.rotation.y=Math.P
  const hinge=new THREE.Group();hinge.position.set(-.05,0,-.7);g.add(hinge);const leaf=new THREE.Mesh(rbox(.08,2.8,1.38,.02),M('#A8694A'));leaf.position.set(0,1.4,.69);hinge.add(leaf);
  const kn=new THREE.Mesh(new THREE.SphereGeometry(.06,12,8),M('#E7C48B',MS));kn.position.set(-.08,1.35,1.2);hinge.add(kn);BD.leaf=hinge;}
 function updBackDoor(dt){const near=LINE().some(c=>!c.off&&c.leaving&&Math.hypot(c.g.position.x-C_BACK.x,c.g.position.z-C_BACK.z)<3.2);BD.a.step(near?1:0,40,11,dt);BD.leaf.rotation.y=BD.a.x*1.45;}
-function updExtra(dt,T){updBackDoor(dt);updFX(dt,T);updCrew(dt,T);updChef(SUP,T,dt);updLabels();updHint();updVisited();updDoorsDemo(dt,T);updDemo(dt,T);updSession(dt,T);updZoom(dt);updServe(dt,T);updLOD();updModal(dt);}
+function updExtra(dt,T){updItems(dt);updBackDoor(dt);updFX(dt,T);updCrew(dt,T);updChef(SUP,T,dt);updLabels();updHint();updVisited();updDoorsDemo(dt,T);updDemo(dt,T);updSession(dt,T);updZoom(dt);updServe(dt,T);updLOD();updModal(dt);}
 
 if(qs.get('doors'))ST.forEach(s=>s.target=DOOR_OPEN);if(qs.get('view')){const [x,y,z,h]=qs.get('view').split(',').map(Number);view={c:new THREE.Vector3(x,y,z),h};}
 
@@ -628,7 +726,7 @@ const OWN=new Set();function staticBoxes(){const out=[];const own=[door,dpanel,k
   if(o.isInstancedMesh){o.geometry.computeBoundingBox();const M4=new THREE.Matrix4();for(let k=0;k<o.count;k++){o.getMatrixAt(k,M4);const b=o.geometry.boundingBox.clone().applyMatrix4(M4);if(b.isEmpty())continue;out.push({b,what:o===cab.m?'cabinet':o===top.m?'counter top':own.includes(o)?'door/plinth':'inst:'+o.geometry.type+'['+b.getSize(new THREE.Vector3()).toArray().map(v=>v.toFixed(2))+']',k:own.includes(o)?k:-1,m:o});}}
   else{const b=new THREE.Box3().setFromObject(o);if(b.max.y<.05||b.max.y-b.min.y<.1)return;
    out.push({b,what:(o.geometry&&o.geometry.type||'mesh')+'['+b.getSize(new THREE.Vector3()).toArray().map(v=>v.toFixed(2))+'] @'+b.getCenter(new THREE.Vector3()).toArray().map(v=>v.toFixed(1)),k:-1,m:o});}});return out;}
-function chefBoxes(){const out=[];CHEFS.concat(GUESTS.filter(g=>g.on).map(g=>(g.g.updateMatrixWorld(true),g))).forEach(c=>c.g.traverse(o=>{if(o.isMesh&&o.visible&&o.geometry.type!=='PlaneGeometry'&&o.geometry.type!=='CircleGeometry'||o.isMesh&&o.visible&&o.parent!==c.g&&o.geometry.type==='CircleGeometry'){let v=true,p=o;while(p){if(!p.visible)v=false;p=p.parent;}if(v)out.push({b:new THREE.Box3().setFromObject(o),c,g:o.geometry.type});}}));return out;}
+function chefBoxes(){const out=[];CHEFS.concat(GUESTS.filter(g=>g.on).map(g=>(g.g.updateMatrixWorld(true),g))).concat(!WAITER.off?[(WAITER.g.updateMatrixWorld(true),WAITER)]:[]).forEach(c=>c.g.traverse(o=>{if(o.isMesh&&o.visible&&o.geometry.type!=='PlaneGeometry'&&o.geometry.type!=='CircleGeometry'||o.isMesh&&o.visible&&o.parent!==c.g&&o.geometry.type==='CircleGeometry'){let v=true,p=o;while(p){if(!p.visible)v=false;p=p.parent;}if(v)out.push({b:new THREE.Box3().setFromObject(o),c,g:o.geometry.type});}}));return out;}
 const inCarcass=(s,p)=>{const l=p.clone().sub(s.p).applyQuaternion(s.q.clone().invert());return Math.abs(l.x)<1.1-1e-3&&l.y>.1&&l.y<2.15&&l.z<.95-1e-3&&l.z>-.95;};
 function clipFrame(STB,where,tag,log,onlyMoving){const CB=chefBoxes();ST.forEach((s,i)=>{if(onlyMoving&&s.ang<1e-3)return;const P=doorPts(i);
  for(const p of P){if(inCarcass(s,p)){log.push({st:s.n.id,ang:+s.ang.toFixed(3),hit:'own carcass',tag});return;}
@@ -652,7 +750,7 @@ function clipSweep(){const log=[];const STB=staticBoxes();const free=CHEFS.filte
  CHEFS.forEach((c,k)=>{c.g.position.copy(keep[k][0]);c.g.rotation.y=keep[k][1];c.st=keep[k][2];c.job=keep[k][3];c.knife.visible=c.spoon.visible=c.plate.visible=c.mag.visible=c.board.visible=false;});return log;}
 
 function clipSession(secs){const log=[];const STB=staticBoxes();for(let f=0;f<secs*30;f++){for(let k=0;k<4;k++)step(1/120);CHEFS.forEach(c=>c.g.updateMatrixWorld(true));clipFrame(STB,'',`t=${T.toFixed(2)}`,log,true);chefPairs(log,`t=${T.toFixed(2)}`);if(qs.get('dbg')&&T>+qs.get('dbg')&&T<+qs.get('dbg')+2.5&&f%3===0)log.push({st:'dbg',ang:0,hit:CHEFS.slice(0,3).map(c=>c.i+':'+c.st+' '+c.g.position.x.toFixed(2)+','+c.g.position.z.toFixed(2)+' v'+(c.v||0).toFixed(2)+' w'+(c.wait||0).toFixed(1)+' ->'+(c.dest?c.dest.x.toFixed(1)+','+c.dest.z.toFixed(1):'')).join(' | '),tag:'t='+T.toFixed(2)});
-  if(f%3===0)chefBoxes().filter(o=>/Capsule/.test(o.g)&&o.b.getSize(new THREE.Vector3()).y>.6&&o.c.exitT==null).forEach(o=>{const b=o.b.clone().expandByScalar(-.04);for(const x of STB){if(x.m&&x.m.userData.walkable)continue;if(x.b.intersectsBox(b)){log.push({st:'(walk)',ang:0,hit:'chef '+o.c.i+' ('+o.c.st+') at '+o.c.g.position.toArray().map(v=>v.toFixed(2))+' body inside '+x.what+(x.k>=0?' #'+ST[x.k].n.id:''),tag:`t=${T.toFixed(2)}`});break;}}});}if(qs.get('auto')||qs.get('session')){const stuck=allChefs().filter(c=>c.st==='walk'&&(c.wait||0)>.2);if(doneAt<0||stuck.length)log.push({st:'(end)',ang:0,hit:`run did not finish cleanly: doneAt=${doneAt.toFixed?doneAt.toFixed(1):doneAt}, waiting cooks: ${stuck.map(c=>c.i).join(',')||'none'}`,tag:'end'});}return log;}
+  if(f%3===0)chefBoxes().filter(o=>/Capsule/.test(o.g)&&o.b.getSize(new THREE.Vector3()).y>.6&&o.c.exitT==null).forEach(o=>{const b=o.b.clone().expandByScalar(-.04);for(const x of STB){if(x.m&&x.m.userData.walkable)continue;if(x.b.intersectsBox(b)){log.push({st:'(walk)',ang:0,hit:'chef '+o.c.i+' ('+o.c.st+') at '+o.c.g.position.toArray().map(v=>v.toFixed(2))+' body inside '+x.what+(x.k>=0?' #'+ST[x.k].n.id:''),tag:`t=${T.toFixed(2)}`});break;}}});}if(qs.get('auto')||qs.get('session')){const stuck=allChefs().filter(c=>c.st==='walk'&&(c.wait||0)>.2);if(!reached('served')||stuck.length)log.push({st:'(end)',ang:0,hit:`run did not finish cleanly: phase=${S.phase}, waiting cooks: ${stuck.map(c=>c.i).join(',')||'none'}`,tag:'end'});}return log;}
 window.__clip=(secs)=>{const t0=performance.now();const A=clipSweep();const B=secs?clipSession(secs):[];return {sweep:A.length,session:B.length,ms:Math.round(performance.now()-t0),first:A.concat(B).slice(0,40),byStation:Object.entries(A.concat(B).reduce((m,x)=>(m[x.st]=(m[x.st]||0)+1,m),{}))};};
 
 window.__doorShot=(i,u)=>{camE=null;ST.forEach((t,k)=>{t.ang=t.target=0;doorSpr[k].x=0;doorSpr[k].v=0;doorM(t,k);});const s=ST[i];s.ang=s.target=u;doorSpr[i].x=u;doorM(s,i);[door,dpanel,knob,doorB,bpanel,dinner].forEach(m=>m.instanceMatrix.needsUpdate=true);
@@ -666,22 +764,38 @@ const DD={};function updDoorsDemo(dt,T){if(DEMO!=='doors')return;const P=ST.filt
  const u=ease.sin(cl(T/13));view.c=P[0].p.clone().lerp(P[2].p,.5+.5*(u-.5)).setY(1.6).addScaledVector(P[0].fwd,.6);view.h=7.6;}
 
 let hoverS=null,hoverC=null;const ndc=new THREE.Vector3();const scr=v=>{ndc.copy(v).project(cam);return [(ndc.x+1)/2*innerWidth,(1-ndc.y)/2*innerHeight];};
-cv.addEventListener('pointermove',e=>{let best=70,bs=null;ST.forEach(s=>{const [x,y]=scr(s.p.clone().setY(s.p.y+2.2));const d=Math.hypot(x-e.clientX,y-e.clientY);if(d<best){best=d;bs=s;}});hoverS=bs;
+const stationAt=(px,py)=>{let best=70,bs=null;ST.forEach(s=>{const [x,y]=scr(s.p.clone().setY(s.p.y+2.2));const d=Math.hypot(x-px,y-py);if(d<best){best=d;bs=s;}});return bs;};
+cv.addEventListener('pointermove',e=>{hoverS=stationAt(e.clientX,e.clientY);
  let bc=null,b2=55;[...CHEFS,SUP,...GUESTS.filter(g=>g.on)].filter(c=>!c.off).forEach(c=>{const [x,y]=scr(c.g.position.clone().setY(1.6));const d=Math.hypot(x-e.clientX,y-e.clientY);if(d<b2){b2=d;bc=c;}});hoverC=bc;});
-cv.addEventListener('click',e=>{let best=70,bs=null;ST.forEach(s=>{const [x,y]=scr(s.p.clone().setY(s.p.y+2.2));const d=Math.hypot(x-e.clientX,y-e.clientY);if(d<best){best=d;bs=s;}});if(bs)openStation(bs.n.id);});
-const activeIds=()=>{const pid=job.pid||(prev&&prev.pid)||(sess&&sess.pid);return new Set(pid?stepsOf(pid).map(e=>e.target):[]);};
-function updLabels(){const rl=document.getElementById('rail'),fe=rl.querySelector('.tk.fire');rl.classList.toggle('has-fire',!!fe);if(fe&&fe!==rl._f){rl._f=fe;fe.scrollIntoView({inline:'center',block:'nearest'});}const A=activeIds(),zoomed=view.h<11&&qs.get('view')!=='wide';ST.forEach(s=>{if(!s.lb)return;const on=A.has(s.n.id)||s===hoverS||s===focusS||zoomed||qs.get('labels')==='all';s.lb.classList.toggle('off',!on);s.lb.classList.toggle('act',A.has(s.n.id));});
- [...CHEFS,SUP,...GUESTS].forEach(c=>{if(c.lbEl)c.lbEl.classList.toggle('off',c!==hoverC); });if(T>1.2)document.body.classList.add('lbready');
+let downXY=null;cv.addEventListener('pointerdown',e=>{downXY=[e.clientX,e.clientY];});
+cv.addEventListener('click',e=>{if(downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>6)return;const s=stationAt(e.clientX,e.clientY);if(s)startAny('skill:'+s.n.id);});
+ST.forEach(s=>{s.pill.addEventListener('click',e=>{e.stopPropagation();startAny('skill:'+s.n.id);});});
+const activeIds=()=>new Set(S.plan?S.plan.lines.map(e=>e.target):[]);
+let lbN=0;
+function placeLabels(){if(!cam||!innerWidth)return;const rects=[];const fixed=[...document.querySelectorAll('.lb.pass,.lb.chef:not(.off),.badge,.orderup')].map(e=>e.getBoundingClientRect()).filter(r=>r.width);
+ const pri=s=>(s.lb.classList.contains('hot')?0:s.lb.classList.contains('act')?1:2);
+ const L=ST.map(s=>{const [x,y]=scr(s.lbA);if(!s.pw||lbN%20===0){s.pw=s.pill.offsetWidth;s.ph=s.pill.offsetHeight;}return {s,x,y,w:s.pw,h:s.ph};}).sort((a,b)=>pri(a.s)-pri(b.s)||a.y-b.y);lbN++;
+ const hit=(r)=>rects.some(q=>r.l<q.r+3&&r.r>q.l-3&&r.t<q.b+2&&r.b>q.t-2)||fixed.some(q=>r.l<q.right&&r.r>q.left&&r.t<q.bottom&&r.b>q.top);
+ const C=[[0,0],[0,-20],[0,20],[0,-38],[0,38],[-1,-20],[1,-20],[-1,20],[1,20],[0,-56],[0,56],[-1,0],[1,0]];
+ for(const o of L){let pick=null;for(const [kx,dy] of C){const dx=kx*(o.w/2+10);const r={l:o.x+dx-o.w/2,r:o.x+dx+o.w/2,t:o.y+dy-o.h/2,b:o.y+dy+o.h/2};if(!hit(r)){pick=[dx,dy,r];break;}}
+  const must=pri(o.s)<2;if(!pick&&must)pick=[0,-56,{l:o.x-o.w/2,r:o.x+o.w/2,t:o.y-56-o.h/2,b:o.y-56+o.h/2}];
+  const el=o.s.lb;if(!pick){el.classList.add('hide');continue;}el.classList.remove('hide');rects.push(pick[2]);const [dx,dy]=pick;
+  o.s.pill.style.transform=`translate(calc(-50% + ${dx.toFixed(0)}px),calc(-50% + ${dy.toFixed(0)}px))`;const len=Math.hypot(dx,dy);
+  if(len>4){const k=Math.max(0,len-o.h/2-1)/len;o.s.ld.style.display='block';o.s.ld.style.width=(len*k).toFixed(0)+'px';o.s.ld.style.transform=`rotate(${Math.atan2(dy,dx).toFixed(3)}rad)`;}else o.s.ld.style.display='none';}}
+window.__lbOverlap=()=>{const r=ST.filter(s=>!s.lb.classList.contains('hide')).map(s=>s.pill.getBoundingClientRect());let n=0;for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++){const a=r[i],b=r[j];if(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top)n++;}return {shown:r.length,hidden:ST.length-r.length,overlaps:n};};
+function updLabels(){const rl=document.getElementById('rail'),fe=rl.querySelector('.tk.fire');rl.classList.toggle('has-fire',!!fe);if(fe&&fe!==rl._f){rl._f=fe;fe.scrollIntoView({inline:'center',block:'nearest'});}const A=activeIds(),zoomed=view.h<11&&qs.get('view')!=='wide';
+ ST.forEach(s=>{if(!s.lb)return;const hot=s===hoverS||s===focusS||ltState.cur===s;s.lb.classList.remove('off');s.lb.classList.toggle('act',A.has(s.n.id));s.lb.classList.toggle('hot',hot);});
+ placeLabels();
+ [...CHEFS,SUP,...GUESTS].forEach(c=>{if(c.lbEl)c.lbEl.classList.toggle('off',c!==hoverC); });
  if(RULESLB)RULESLB.classList.toggle('off',!(zoomed||(hoverS&&hoverS.run===1)||hoverC===SUP));}
 
-const hint=document.createElement('div');hint.id='hint';document.body.appendChild(hint);let hinted=!!localStorage.getItem('kc.started');
-function updHint(){let txt='',x=0,y=0;if(sess||job.pid){hint.style.opacity=0;return;}
- if(prev){const b=document.getElementById('pvPlay');if(b){const r=b.getBoundingClientRect();txt='② Press Play to watch it cook';x=tkt.getBoundingClientRect().left-16;y=r.top+r.height/2;hint.className='left';}}
- else if(qs.get('hint')!=='0'&&(!hinted||qs.get('hint'))){const t=document.querySelector('#rail .tk');if(t){const r=t.getBoundingClientRect();txt='① Pick a ticket to start cooking';x=r.left+r.width/2;y=r.bottom+14;hint.className='down';}}
+const hint=document.createElement('div');hint.id='hint';document.body.appendChild(hint);let hinted=(()=>{try{return !!localStorage.getItem('kc.started');}catch{return false;}})();
+function updHint(){let txt='',x=0,y=0;if(S.plan){hint.style.opacity=0;return;}
+ if(qs.get('hint')!=='0'&&(!hinted||qs.get('hint'))){const t=document.querySelector('#rail .tk');if(t){const r=t.getBoundingClientRect();txt='① Pick a ticket to start cooking';x=r.left+r.width/2;y=r.bottom+14;hint.className='down';}}
  hint.style.opacity=txt?1:0;if(txt){hint.textContent=txt;hint.style.left=x+'px';hint.style.top=y+'px';}}
 document.addEventListener('pointerdown',e=>{const el=e.target.closest('.tk,.btn,.chip,.flink,button,.seg span');if(el){el.classList.remove('squash');void el.offsetWidth;el.classList.add('squash');}
  else if(e.target===cv){const t=document.createElement('div');t.className='tap';t.style.left=e.clientX+'px';t.style.top=e.clientY+'px';document.body.appendChild(t);setTimeout(()=>t.remove(),520);}
- if(e.target.closest('#rail .tk')){hinted=true;localStorage.setItem('kc.started','1');}},true);
+ if(e.target.closest('#rail .tk')){hinted=true;try{localStorage.setItem('kc.started','1');}catch{}}},true);
 {const v=document.getElementById('visited');v.insertAdjacentHTML('beforeend','<i class="bar"><i></i></i>');}
 let lastVis=-1;function updVisited(){const n=[...visited].filter(id=>N.get(id)?.kind==='skill').length;const v=document.getElementById('visited');v.querySelector('.bar i').style.width=(n/Math.max(1,ST.length)*100)+'%';
  if(lastVis>=0&&n>lastVis){v.classList.remove('pop');void v.offsetWidth;v.classList.add('pop');const t=document.createElement('div');t.className='toast';t.textContent='+1 station visited';document.body.appendChild(t);setTimeout(()=>t.remove(),1800);}lastVis=n;}
@@ -708,10 +822,12 @@ function updFX(dt,T){allChefs().forEach(c=>{});if(fast){fx.visible=false;return;
 
  job.list&&job.list.forEach(J=>{if(J.s&&J.s.glow){const k=J.chef&&!J.landed?1+.07*Math.sin(T*4.2):1;J.s.glow.scale.set(k,k,1);}});
 
- if(doneAt>0&&!FXdone){FXdone=1;emit('sparkle',DISH.clone().setY(DISH.y+.9),46,2.4,2.2);ding();}if(doneAt<0)FXdone=0;}
+ if(reached('orderUp')&&!FXdone){FXdone=1;emit('sparkle',DISH.clone().setY(DISH.y+.9),46,2.4,2.2);ding();}}
 let FXdone=0;function ding(){if(fast)return;const d=document.createElement('div');d.className='ding';d.innerHTML='<span class="bell">🛎</span><i></i><i></i><i></i>';document.body.appendChild(d);const v=DISH.clone().setY(DISH.y+3);v.project(cam);d.style.left=((v.x+1)/2*innerWidth)+'px';d.style.top=((1-v.y)/2*innerHeight)+'px';setTimeout(()=>d.remove(),1700);}
-const pre=Math.min(20,Math.max(0,+(qs.get('t')||0)||0));for(let k=0;k<Math.round(pre*60);k++)step(1/60);
-window.__step=(dt)=>{const n=Math.max(1,Math.round(dt*120));for(let i=0;i<n;i++)step(dt/n);render();};window.__T=()=>T;window.__eye=()=>CHEFS.map(c=>{const h=c.hdP.children[0].getWorldPosition(new THREE.Vector3()),e=c.hdP.children[1].getWorldPosition(new THREE.Vector3());return [c.st,e.sub(h).normalize().toArray().map(v=>+v.toFixed(2)),c.hdP.children.length]});window.__dbg=()=>CHEFS.map(c=>[c.st,c.g.rotation.y,c.body.rotation.toArray().slice(0,3),c.hdP.rotation.toArray().slice(0,3),c.g.position.y]);window.__srv=()=>[doneAt,serve&&serve.ph];window.__ch=()=>CHEFS.map(c=>[c.st,+c.g.position.x.toFixed(2),+c.g.position.z.toFixed(2),+c.g.rotation.y.toFixed(2)]);window.__sp=id=>{const s=ST[stOf.get(id)];return [s.ry,s.fwd.toArray(),s.side.toArray(),workSpot(s).p.toArray()]};window.__st=()=>ST.map(s=>[s.n.id,s.run,+s.p.x.toFixed(1),+s.p.z.toFixed(1)]);window.__jobs=()=>job.list.map(J=>[J.s.n.id,J.chef?.i,J.chef?+J.chef.len.toFixed(1):0,J.chef?.st,J.landed]);window.__info=()=>({calls:R.info.render.calls,tris:R.info.render.triangles,T,done:doneAt});
+// openStation walks a chef, and that walk reads every crew member, so it waits until WAITER exists.
+if(qs.get('open')&&!ENTRY)openStation(qs.get('open'));if(qs.get('file'))setTimeout(()=>openFile(qs.get('file')),50);
+const pre=Math.min(60,Math.max(0,+(qs.get('t')||0)||0));for(let k=0;k<Math.round(pre*60);k++)step(1/60);
+window.__step=(dt)=>{const n=Math.max(1,Math.round(dt*120));for(let i=0;i<n;i++)step(dt/n);render();};window.__T=()=>T;window.__eye=()=>CHEFS.map(c=>{const h=c.hdP.children[0].getWorldPosition(new THREE.Vector3()),e=c.hdP.children[1].getWorldPosition(new THREE.Vector3());return [c.st,e.sub(h).normalize().toArray().map(v=>+v.toFixed(2)),c.hdP.children.length]});window.__dbg=()=>CHEFS.map(c=>[c.st,c.g.rotation.y,c.body.rotation.toArray().slice(0,3),c.hdP.rotation.toArray().slice(0,3),c.g.position.y]);window.__srv=()=>[S.phase,serve&&serve.ph];window.__ch=()=>CHEFS.map(c=>[c.st,+c.g.position.x.toFixed(2),+c.g.position.z.toFixed(2),+c.g.rotation.y.toFixed(2)]);window.__sp=id=>{const s=ST[stOf.get(id)];return [s.ry,s.fwd.toArray(),s.side.toArray(),workSpot(s).p.toArray()]};window.__st=()=>ST.map(s=>[s.n.id,s.run,+s.p.x.toFixed(1),+s.p.z.toFixed(1)]);window.__jobs=()=>job.list.map(J=>[J.s.n.id,J.chef?.i,J.chef?+J.chef.len.toFixed(1):0,J.chef?.st,J.landed]);window.__info=()=>({calls:R.info.render.calls,tris:R.info.render.triangles,T,done:S.orderUpAt});
 function markReady(){if(window.__ready)return;window.__ready=true;document.getElementById('boot')?.remove();}
 if(qs.get('rec')){render();window.__settled=true;markReady();}else{
  let t0=performance.now(),n=0,raf=0;
