@@ -24,6 +24,7 @@ for (const [i, n] of (g.nodes ?? []).entries()) {
   if (typeof n.description !== "string") errors.push(`nodes[${i}].description must be a string`);
   if (ids.has(n.id)) errors.push(`duplicate node id ${n.id}`);
   if (n.kind === "principle" && !(n.appliesWhen === null || isStr(n.appliesWhen))) errors.push(`nodes[${i}].appliesWhen must be a string or null`);
+  if ((n.kind === "skill" || n.kind === "playbook") && !isStr(n.text)) errors.push(`nodes[${i}].text must be a non-empty string`);
   ids.add(n.id);
 }
 if (!(g.nodes ?? []).some((n) => n.kind === "router")) errors.push("no router node");

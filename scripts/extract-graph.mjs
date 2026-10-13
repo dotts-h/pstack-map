@@ -124,12 +124,14 @@ function skillNode(dir, { kind: forcedKind, group: forcedGroup, owner } = {}) {
   const flags = {};
   for (const [k, v] of Object.entries(data)) if (k !== "name" && k !== "description") flags[k] = v;
   const kind = forcedKind ?? (data.mode === true ? "router" : id.startsWith("principle-") ? "principle" : "skill");
-  addNode({
+  const node = {
     id, kind, name: data.name ?? id, title: firstHeading(frontmatter(text).body) || null,
     group: forcedGroup ?? (kind === "router" ? "router" : kind === "principle" ? "principles" : "skills"),
     description: data.description ?? "", path: repoPath(file), owner: owner ?? null,
     lines: lineCount(text), flags,
-  });
+  };
+  if (kind === "skill" || kind === "principle" || kind === "router") node.text = text;
+  addNode(node);
   fileOwner.set(file, id);
   scanFiles.set(id, [file]);
   return id;
@@ -148,7 +150,7 @@ for (const d of skillDirs) {
     const id = `playbook:${f.replace(/\.md$/, "")}`;
     addNode({
       id, kind: "playbook", name: firstHeading(text) || f, title: firstHeading(text) || null, group: "playbooks",
-      description: firstParagraph(text), path: repoPath(file), owner, lines: lineCount(text), flags: {},
+      description: firstParagraph(text), path: repoPath(file), owner, lines: lineCount(text), flags: {}, text,
     });
     fileOwner.set(file, id);
     scanFiles.set(id, [file]);
@@ -542,6 +544,7 @@ const nodeList = [...nodes.values()]
   .map((n) => {
     const d = degree.get(n.id);
     const out = { id: n.id, kind: n.kind, name: n.name, title: n.title, group: n.group, description: n.description };
+    if (typeof n.text === "string") out.text = n.text;
     if (n.descriptionSource) out.descriptionSource = n.descriptionSource;
     if (n.kind === "principle") out.appliesWhen = /^Apply\b/.test(n.description) ? firstSentence(n.description) : null;
     Object.assign(out, { path: n.path, owner: n.owner, lines: n.lines, flags: n.flags });
@@ -667,7 +670,7 @@ ${topRows.map((n) => `| \`${n.id}\` | ${n.kind} | ${n.degree.in} | ${n.degree.ou
 
 Top level: \`schemaVersion\`, \`upstream\` (repo, commit SHA, commit date in UTC, version, \`sourceUrlTemplate\`, license), \`counts\`, \`nodes\`, \`edges\`.
 
-Node fields: \`id\`, \`kind\`, \`name\`, \`title\` (first heading), \`group\`, \`description\`, \`path\` (repo-relative, e.g. \`pstack/skills/how/SKILL.md\`; fill \`{path}\` in \`sourceUrlTemplate\` for "View source"), \`owner\` (skill or pack a playbook, script or reference belongs to), \`lines\`, \`flags\` (every frontmatter key except name and description, e.g. \`disable-model-invocation\`, \`mode\`, \`paths\`, \`is_background\`), \`files\` (directory scripts only), \`degree\`.
+Node fields: \`id\`, \`kind\`, \`name\`, \`title\` (first heading), \`group\`, \`description\`, \`path\` (repo-relative, e.g. \`pstack/skills/how/SKILL.md\`; fill \`{path}\` in \`sourceUrlTemplate\` for "View source"), \`owner\` (skill or pack a playbook, script or reference belongs to), \`lines\`, \`flags\` (every frontmatter key except name and description, e.g. \`disable-model-invocation\`, \`mode\`, \`paths\`, \`is_background\`), \`files\` (directory scripts only), \`degree\`. Skill and playbook nodes include \`text\`, the source file, produced by this script.
 
 Kinds: router, playbook, principle, skill, script, reference, agent, automation. SPEC.md lists router, playbook, principle, script, reference and other; skill, agent and automation are extra kinds that the page should colour separately or show as "other".
 
