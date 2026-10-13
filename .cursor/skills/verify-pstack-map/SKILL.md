@@ -47,11 +47,17 @@ On galaxy, circuit, earth, and brain it opens `architect` with `?focus=architect
 
 On kitchen it opens `/?theme=kitchen&hint=0&open=architect`, clicks **Open skill file**, and checks that the modal contains a sentence from that node's `text` field. The sentence must not be only the one-line description.
 
-It then loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature`. The session starts on load, and there is no Play button. At `window.__ready`, `document.body` has class `fast`. `#hint` has computed `animation-name` `none` and `transition-duration` `0s`, `document.getAnimations()` is empty, and the lower third is showing. `#lt .ttl` must say Order up within 30 seconds, and `#ticket .k` must say ready. The helper clicks **Exit**, and the URL must keep `theme=kitchen` without `session`. It loads `session=skill:architect` and waits for Order up. It loads `/?theme=kitchen&hint=0&fast=1`, clicks the Feature ticket `#rail .tk[data-id="playbook:feature"]`, and waits for Order up in the same document. It repeats the Feature session with reduced motion and no `fast` parameter. The body must still have class `fast`, and the ticket must still say ready. `?hint=0` hides the kitchen hint. The helper does not report fps.
+It then loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature`. The session starts from the ticket on load, and there is no Play button. At `window.__ready`, `document.body` has class `fast`. `#hint` has computed `animation-name` `none` and `transition-duration` `0s`, `document.getAnimations()` is empty, and the lower third is showing. `#lt .ttl` must say Order up within 30 seconds, and `#ticket .k` must say ready. The helper clicks **Exit**, and the URL must keep `theme=kitchen` without `session`. It loads `session=skill:architect` and waits for Order up. It loads `/?theme=kitchen&hint=0&fast=1`, clicks the Feature ticket `#rail .tk[data-id="playbook:feature"]`, and waits for Order up in the same document.
+
+Fast has no question bubble and no waiter. At Order up in each fast row and in the reduced-motion row, the page has no `.qb` element and `window.__srv()[1]` is `null`.
+
+The branch row loads `/?theme=kitchen&hint=0&freeze=1&session=skill:how&pick=1:no` in Cozy and advances the clock with `window.__step(0.25)`. The bubble `.qb .qq` must read `Is the task complex?`, `.qb .qs` must read `SKILL.md:` and a line number, and no step is skipped yet. After the forced No, `#ticket li.skip` must list `Explore (complex only)` and `Synthesize (complex only)`. The waiter must reach `window.__srv()[1] === 'carry'`, and `#ticket .k` must say served. The empty-ticket row loads `session=playbook:opening-a-pr` with `freeze=1`, which has nothing to cook. After eight steps `window.__T()` must have advanced, and `window.__srv()` must be `['served', null]`.
+
+Last, it repeats the Feature session with reduced motion and no `fast` parameter. The body must still have class `fast`, and the ticket must still say ready. `?hint=0` hides the kitchen hint. The helper does not report fps.
 
 ## Evidence
 
-Proof goes to `/tmp/verify-pstack-map/`. `result.json` is the pass or fail record. Screenshots in that directory are the overview of each theme, the opened skill, and the kitchen sessions in `session-kitchen.png` and `skill-flow-kitchen.png`. Cleanup must not delete `/tmp/verify-pstack-map`.
+Proof goes to `/tmp/verify-pstack-map/`. `result.json` is the pass or fail record. Screenshots in that directory are the overview of each theme, the opened skill, and the kitchen sessions in `session-kitchen.png` and `skill-flow-kitchen.png`. The branch row saves the open question in `branch-kitchen.png` and the carried plate in `waiter-kitchen.png`. Cleanup must not delete `/tmp/verify-pstack-map`.
 
 ## Cleanup
 

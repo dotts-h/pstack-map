@@ -155,9 +155,19 @@ try {
       playButton: Boolean(document.getElementById('pvPlay')),
       lowerThird: document.getElementById('lt')?.style.display === 'block',
       kicker: document.querySelector('#ticket .k')?.textContent || '',
+      bubbles: document.querySelectorAll('.qb').length,
+      waiter: window.__srv()[1],
     };
   };
   const orderUpShown = () => (document.querySelector('#lt .ttl')?.textContent || '').includes('Order up');
+
+  async function stepUntil(label, test, arg) {
+    for (let i = 0; i < 400; i++) {
+      if (await page.evaluate(test, arg)) return;
+      await page.evaluate(() => window.__step(0.25));
+    }
+    throw new Error(`${label} not reached after 400 steps of 0.25 s`);
+  }
 
   async function orderUp(url) {
     notes.length = 0;
@@ -179,9 +189,15 @@ try {
     if (!row.atReady.lowerThird) fail(`${label}: ?session= did not start the session`);
   }
 
+  function noAskNoWaiter(view, label) {
+    if (view.bubbles) fail(`${label}: ${view.bubbles} question bubbles at Order up`);
+    if (view.waiter !== null) fail(`${label}: the waiter is at serve phase ${view.waiter} at Order up`);
+  }
+
   result.fast = await orderUp(`${base}/?theme=kitchen&hint=0&fast=1&session=playbook:feature`);
   await shot('session-kitchen.png');
   motionOff(result.fast, 'fast session');
+  noAskNoWaiter(result.fast.done, 'fast session');
   if (!result.fast.done.kicker.includes('ready')) fail('ticket did not reach Order up · ready');
 
   await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('#ltExit')]);
@@ -193,6 +209,7 @@ try {
   result.skillFlow = await orderUp(`${base}/?theme=kitchen&hint=0&fast=1&session=skill:architect`);
   await shot('skill-flow-kitchen.png');
   if (result.skillFlow.problems.length) fail(`skill flow: ${result.skillFlow.problems.join('; ')}`);
+  noAskNoWaiter(result.skillFlow.done, 'fast skill flow');
   if (!result.skillFlow.done.kicker.includes('order up')) fail('skill flow ticket did not reach order up');
 
   notes.length = 0;
@@ -203,13 +220,55 @@ try {
   await page.click(`#rail .tk[data-id="${ticketId}"]`);
   await page.waitForFunction(orderUpShown, { timeout: 30000 });
   const clicked = await page.evaluate(() => ({ sameDocument: window.__sameDocument === true, search: location.search }));
-  result.ticketClick = { ticketId, ...clicked, problems: [...notes] };
+  result.ticketClick = { ticketId, ...clicked, done: await page.evaluate(sessionView), problems: [...notes] };
   if (result.ticketClick.problems.length) fail(`ticket click: ${result.ticketClick.problems.join('; ')}`);
   if (!clicked.sameDocument) fail('a ticket click from the overview reloaded the page');
+  noAskNoWaiter(result.ticketClick.done, 'ticket click');
+
+  notes.length = 0;
+  const branchUrl = `${base}/?theme=kitchen&hint=0&freeze=1&session=skill:how&pick=1:no`;
+  await page.goto(branchUrl, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true);
+  const question = 'Is the task complex?';
+  await stepUntil(`branch: the question "${question}"`, (q) => document.querySelector('.qb .qq')?.textContent === q, question);
+  const asked = await page.evaluate(() => ({
+    source: document.querySelector('.qb .qs')?.textContent || '',
+    skippedBefore: document.querySelectorAll('#ticket li.skip').length,
+  }));
+  await shot('branch-kitchen.png');
+  await stepUntil('branch: the waiter carrying the plate', () => window.__srv()[1] === 'carry');
+  await shot('waiter-kitchen.png');
+  await stepUntil('branch: served', () => window.__srv()[0] === 'served');
+  result.branch = {
+    url: branchUrl,
+    question,
+    ...asked,
+    skipped: await page.evaluate(() => [...document.querySelectorAll('#ticket li.skip')].map((li) => li.textContent.replace(li.querySelector('.o')?.textContent || '', '').trim())),
+    kicker: await page.evaluate(() => document.querySelector('#ticket .k')?.textContent || ''),
+    problems: [...notes],
+  };
+  if (result.branch.problems.length) fail(`branch: ${result.branch.problems.join('; ')}`);
+  if (!/^SKILL\.md:\d+$/.test(asked.source)) fail(`branch: the bubble source is ${JSON.stringify(asked.source)}`);
+  if (asked.skippedBefore) fail(`branch: ${asked.skippedBefore} steps were skipped before the answer`);
+  const expectSkipped = ['Explore (complex only)', 'Synthesize (complex only)'];
+  if (JSON.stringify(result.branch.skipped) !== JSON.stringify(expectSkipped)) fail(`branch: skipped ${JSON.stringify(result.branch.skipped)} after No, expected ${JSON.stringify(expectSkipped)}`);
+  if (!result.branch.kicker.includes('served')) fail(`branch: the ticket kicker is ${JSON.stringify(result.branch.kicker)}, not served`);
+
+  notes.length = 0;
+  const emptyUrl = `${base}/?theme=kitchen&hint=0&freeze=1&session=playbook:opening-a-pr`;
+  await page.goto(emptyUrl, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true);
+  const t0 = await page.evaluate(() => window.__T());
+  for (let i = 0; i < 8; i++) await page.evaluate(() => window.__step(0.25));
+  result.emptyTicket = { url: emptyUrl, t0, ...(await page.evaluate(() => ({ t: window.__T(), srv: window.__srv() }))), problems: [...notes] };
+  if (result.emptyTicket.problems.length) fail(`empty ticket: ${result.emptyTicket.problems.join('; ')}`);
+  if (!(result.emptyTicket.t > t0)) fail('empty ticket: the clock did not advance under __step');
+  if (result.emptyTicket.srv[0] !== 'served' || result.emptyTicket.srv[1] !== null) fail(`empty ticket: ended at ${JSON.stringify(result.emptyTicket.srv)}, expected served with no waiter`);
 
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   result.reduced = await orderUp(`${base}/?theme=kitchen&hint=0&session=playbook:feature`);
   motionOff(result.reduced, 'reduced motion');
+  noAskNoWaiter(result.reduced.done, 'reduced motion');
   if (!result.reduced.done.kicker.includes('ready')) fail('reduced motion ticket did not reach Order up · ready');
 } catch (err) {
   fail(err.message || String(err));
