@@ -210,7 +210,7 @@ let userFast=qs.get('fast')==='1';
 let fast=false,CREW=true;
 function applyFast(){fast=userFast||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>{const on=el.dataset.pace===(fast?'fast':'cozy');el.classList.toggle('on',on);el.setAttribute('aria-pressed',String(on));if(reduceMotion&&el.dataset.pace==='cozy')el.setAttribute('aria-disabled','true');});}
 applyFast();
-document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast)send('fast');});
+document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast){dropCarry();send('fast');}});
 document.getElementById('pace').addEventListener('keydown',(e)=>{if(e.key!=='Enter'&&e.key!==' ')return;const b=e.target.closest('[data-pace]');if(!b)return;e.preventDefault();b.click();});
 const ease={io:u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,sin:u=>-(Math.cos(Math.PI*u)-1)/2,out:u=>1-Math.pow(1-u,3)};
 const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
@@ -337,7 +337,7 @@ function updChef(c,T,dt){if(c.off)return;c.t+=dt;if(c.st==='walk'||c.st==='antic
 
 const DISH=new THREE.Vector3(0,2.34,1.15);const dishPlate=new THREE.Mesh(new THREE.CylinderGeometry(.66,.5,.09,64),M('#FFFDF8',MG));dishPlate.position.copy(DISH);dishPlate.visible=false;scene.add(dishPlate);
 const FOODC=['#E9A23B','#7FA37A','#D9604A','#B5653E','#F2C46B'];const FLY=[],STACK=[];let stackH=.06;
-function launch(j){clearItems(j);if(!fast&&!HEAD_LEG&&job.list.every(x=>x===j||x.landed))HEAD_LEG={ph:'call'};const m=new THREE.Group();const bw=new THREE.Mesh(new THREE.CylinderGeometry(.24,.15,.2,32),M('#F4EDE2',MG));m.add(bw);const fd=new THREE.Mesh(new THREE.SphereGeometry(.22,28,16,0,Math.PI*2,0,Math.PI/2),M(FOODC[j.k%5],MG));fd.scale.y=.6;fd.position.y=.06;m.add(fd);
+function launch(j){if(j.landed||fast)return;clearItems(j);if(!HEAD_LEG&&job.list.every(x=>x===j||x.landed))HEAD_LEG={ph:'call'};const m=new THREE.Group();const bw=new THREE.Mesh(new THREE.CylinderGeometry(.24,.15,.2,32),M('#F4EDE2',MG));m.add(bw);const fd=new THREE.Mesh(new THREE.SphereGeometry(.22,28,16,0,Math.PI*2,0,Math.PI/2),M(FOODC[j.k%5],MG));fd.scale.y=.6;fd.position.y=.06;m.add(fd);
  const p0=j.s.p.clone().setY(j.s.p.y+2.7).addScaledVector(j.s.fwd,.7);m.position.copy(p0);scene.add(m);const d=p0.distanceTo(DISH);FLY.push({m,j,p0,t:0,dur:1.1+d*.04,h:3.2+d*.18});}
 function updFly(dt,T){for(const f of FLY){if(f.done)continue;f.t+=dt;const u=cl(f.t/f.dur),e=ease.sin(u);const end=DISH.clone().setY(DISH.y+stackH+.1);
  const mid=f.p0.clone().lerp(end,.5).setY(Math.max(f.p0.y,end.y)+f.h);const p=new THREE.QuadraticBezierCurve3(f.p0,mid,end).getPoint(e);f.m.position.copy(p);f.m.scale.setScalar(1.45);f.m.rotation.y=e*Math.PI*2;f.tr=(f.tr||0)+dt;if(f.tr>.05){f.tr=0;puff(p.clone().setY(p.y-.15),.32,.55,-.1);}f.m.rotation.z=Math.sin(e*Math.PI)*.5;
@@ -418,13 +418,13 @@ const PHASE=Object.freeze({
  idle:{rank:0,on:{enter:f=>!f.plates?'served':f.fast?'orderUp':'cooking'}},
  cooking:{rank:1,kicker:['Order up · fired','Skill · cooking'],on:{landed:f=>!f.allLanded?null:f.fast?'orderUp':'tasting',fast:()=>'orderUp'}},
  tasting:{rank:2,kicker:['Order up · fired','Skill · cooking'],title:['Poteto Mode tastes','The head chef steps to the pass and tastes the plate before it can leave.'],on:{tasted:()=>'orderUp',fast:()=>'orderUp'}},
- orderUp:{rank:3,kicker:['Order up · ready','Skill · order up'],title:['Order up!','Poteto Mode approves the plate. A waiter comes to the pass for it.'],on:{pickedUp:()=>'serving'}},
- serving:{rank:4,kicker:['Order up · ready','Skill · order up'],title:['Out to the guest','A waiter picks the plate up at the pass and carries it out.'],on:{out:()=>'served'}},
+ orderUp:{rank:3,kicker:['Order up · ready','Skill · order up'],title:['Order up!','Poteto Mode approves the plate. A waiter comes to the pass for it.'],on:{pickedUp:()=>'serving',fast:()=>'orderUp'}},
+ serving:{rank:4,kicker:['Order up · ready','Skill · order up'],title:['Out to the guest','A waiter picks the plate up at the pass and carries it out.'],on:{out:()=>'served',fast:()=>'served'}},
  served:{rank:5,kicker:['Served · ticket closed','Skill · served'],title:['Served','The waiter has carried the plate out. Every step is done.'],on:{}}});
 const S={phase:'idle',id:null,plan:null,t0:0,orderUpAt:null,paused:false};
 const reached=p=>PHASE[S.phase].rank>=PHASE[p].rank;
 const facts=()=>({fast,plates:job.list.length,allLanded:job.list.every(J=>J.landed)});
-function send(event){const to=PHASE[S.phase].on[event]?.(facts());if(!to||to===S.phase)return;S.phase=to;if(PHASE[to].rank>=PHASE.orderUp.rank&&S.orderUpAt===null)plateUp();updTicket();}
+function send(event){const to=PHASE[S.phase].on[event]?.(facts());if(!to||to===S.phase)return;S.phase=to;if(PHASE[to].rank>=PHASE.orderUp.rank&&S.orderUpAt===null&&job.list.length)plateUp();updTicket();}
 
 function readMirror(FR){if(!FR||!Array.isArray(FR.ranInOrder)||!Array.isArray(FR.events)||N.get('playbook:'+FR.playbook)?.kind!=='playbook')return null;
  const subs=Array.isArray(FR.subagents)?FR.subagents:[],ran=[...new Set(FR.ranInOrder.flat())].filter(id=>stOf.has(id)),pre=new Map();let buf=[],delPre=[];
@@ -504,6 +504,7 @@ let serve=null;
 W(2.6,.02,8.3,2.4,.04,1.3,M('#E9A23B',MG));W(2.6,.05,8.3,1.9,.04,.85,M('#F6D88E',MG));
 const P_INSP=new THREE.Vector3(3.7,0,2.9);let HEAD_LEG=null;
 const SERVE=Object.freeze({stand:3.0,hold:new THREE.Vector3(0,1.47,1.08),holdScale:.7,pick:1.7,turn:.75,out:1.3});
+function dropCarry(){if(serve?.g){serve.g.visible=false;serve.g.parent?.remove(serve.g);}if(WAITER){WAITER.carry=false;WAITER.reach=0;WAITER.turnHop=0;WAITER.off=1;WAITER.g.visible=false;WAITER.g.position.copy(FAR);WAITER.g.scale.setScalar(1);WAITER.st='idle';WAITER.curve=null;WAITER.len=0;}serve=null;HEAD.spoon.visible=false;HEAD_LEG=null;job.list.forEach(J=>{const c=J.chef;if(c&&(c.st==='work'||c.st==='walk'||c.st==='antic'||c.st==='arrive')){c.st='idle';c.job=null;c.curve=null;c.len=0;}});}
 function updServe(dt,T){if(fast||!S.plan||(S.phase!=='tasting'&&S.phase!=='orderUp'&&S.phase!=='serving'))return;
  if(!HEAD_LEG&&S.phase==='tasting')HEAD_LEG={ph:'call'};
  if(HEAD_LEG?.ph==='call'&&!reached('orderUp')){HEAD_LEG={ph:'walk'};HEAD.job=null;walkTo(HEAD,P_INSP.clone());}
@@ -774,7 +775,6 @@ function clipSession(secs){const log=[];const STB=staticBoxes();window.__plate={
   if(f%3===0)chefBoxes().filter(o=>/Capsule/.test(o.g)&&o.b.getSize(new THREE.Vector3()).y>.6&&o.c.exitT==null).forEach(o=>{const b=o.b.clone().expandByScalar(-.04);for(const x of STB){if(x.m&&x.m.userData.walkable)continue;if(x.b.intersectsBox(b)){log.push({st:'(walk)',ang:0,hit:'chef '+o.c.i+' ('+o.c.st+') at '+o.c.g.position.toArray().map(v=>v.toFixed(2))+' body inside '+x.what+(x.k>=0?' #'+ST[x.k].n.id:''),tag:`t=${T.toFixed(2)}`});break;}}});}if(qs.get('auto')||qs.get('session')){const stuck=allChefs().filter(c=>c.st==='walk'&&(c.wait||0)>.2);if(!reached('served')||stuck.length)log.push({st:'(end)',ang:0,hit:`run did not finish cleanly: phase=${S.phase}, waiting cooks: ${stuck.map(c=>c.i).join(',')||'none'}`,tag:'end'});}return log;}
 function plateCheck(STB,log){const sv=serve,W=WAITER;if(!sv?.g?.visible||sv.ph==='go'||W.off)return;W.g.updateMatrixWorld(true);sv.g.updateMatrixWorld(true);window.__plate.frames++;
  const inv=W.body.matrixWorld.clone().invert(),loc=o=>{if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();return o.geometry.boundingBox.clone().applyMatrix4(inv.clone().multiply(o.matrixWorld));};
- // the plate starts out resting on the pass, so what it touches there is no hit early in the lift
  if(sv.ph==='pick'&&!sv.rest){const pb=new THREE.Box3().setFromObject(sv.g);sv.rest=new Set(STB.filter(x=>pb.intersectsBox(x.b)&&x.b.distanceToPoint(DISH)<1.2));}
  const P=[],self=[];sv.g.traverse(o=>{if(o.isMesh)P.push(o);});
  W.body.traverse(o=>{if(!o.isMesh||!o.visible||o.userData.carried)return;let p=o,arm=false,v=true;while(p&&p!==W.body){if(W.arms.includes(p))arm=true;if(!p.visible)v=false;p=p.parent;}if(v&&!arm)self.push(o);});

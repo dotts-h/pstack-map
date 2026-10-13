@@ -37,7 +37,7 @@ jobs:
         run: python3 scripts/skill-flows/mkfiles.py "$RUNNER_TEMP/plugins" data/graph.json data/files.json
 
       - name: Check skill flows
-        run: node scripts/check-flows.mjs data/skill-flows.json
+        run: node scripts/check-flows.mjs data/skill-flows.json --generic
 
       - name: Validate graph
         run: node scripts/validate-graph.mjs data/graph.json

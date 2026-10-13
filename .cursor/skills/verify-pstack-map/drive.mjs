@@ -264,6 +264,18 @@ try {
   if (result.emptyTicket.problems.length) fail(`empty ticket: ${result.emptyTicket.problems.join('; ')}`);
   if (!(result.emptyTicket.t > t0)) fail('empty ticket: the clock did not advance under __step');
   if (result.emptyTicket.srv[0] !== 'served' || result.emptyTicket.srv[1] !== null) fail(`empty ticket: ended at ${JSON.stringify(result.emptyTicket.srv)}, expected served with no waiter`);
+  if (await page.evaluate(() => document.querySelector('.orderup'))) fail('empty ticket: the pass still says Order up');
+
+  notes.length = 0;
+  await page.goto(`${base}/?theme=kitchen&hint=0&freeze=1&session=skill:how`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true);
+  await stepUntil('fast during carry', () => window.__srv()[1] === 'carry');
+  await page.click('#pace [data-pace=fast]');
+  for (let i = 0; i < 8; i++) await page.evaluate(() => window.__step(0.25));
+  result.fastDuringCarry = { ...(await page.evaluate(() => ({ srv: window.__srv(), fast: document.body.classList.contains('fast'), t: window.__T() }))), problems: [...notes] };
+  if (result.fastDuringCarry.problems.length) fail(`fast during carry: ${result.fastDuringCarry.problems.join('; ')}`);
+  if (!result.fastDuringCarry.fast) fail('fast during carry: body is missing class fast');
+  if (result.fastDuringCarry.srv[0] !== 'served' || result.fastDuringCarry.srv[1] !== null) fail(`fast during carry: ended at ${JSON.stringify(result.fastDuringCarry.srv)}`);
 
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   result.reduced = await orderUp(`${base}/?theme=kitchen&hint=0&session=playbook:feature`);

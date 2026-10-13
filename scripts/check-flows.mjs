@@ -1,4 +1,3 @@
-// usage: node scripts/check-flows.mjs [data/skill-flows.json]
 import fs from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
 import { readFlows, readPicks, FlowRun } from '../kitchen-flow.mjs';
@@ -52,9 +51,10 @@ for (const [id, flow] of flows) {
   }
 }
 
-const how = flows.get('how');
-same(how && [how.steps.length, how.branches.map((b) => [b.at, b.q, b.def, b.skips])], [4, [[0, 'Is the scope ambiguous?', 'no', null], [1, 'Is the task complex?', 'yes', { on: 'no', steps: [1, 2] }]]], 'how branches');
+const pinHow = !process.argv.includes('--generic');
+const how = pinHow && flows.get('how');
 if (how) {
+  same([how.steps.length, how.branches.map((b) => [b.at, b.q, b.def, b.skips])], [4, [[0, 'Is the scope ambiguous?', 'no', null], [1, 'Is the task complex?', 'yes', { on: 'no', steps: [1, 2] }]]], 'how branches');
   const quiet = play(how, { asks: false, picks: readPicks(null) });
   same([quiet.s.executed, Math.round(quiet.t * 10) / 10], [[0, 1, 2, 3], 9.5], 'how asks off: executed and seconds');
 

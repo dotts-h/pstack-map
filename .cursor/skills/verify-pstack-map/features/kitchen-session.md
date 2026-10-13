@@ -51,6 +51,7 @@ Preconditions:
 ## Gotchas
 
 - Fast mode skips the waiter, so a fast ticket stays at `Order up · ready` and never says Served.
+- Choosing Fast while the waiter is already carrying ends the session at Served and clears the waiter. An empty ticket reaches Served without an Order up label.
 - Fast, reduced motion, and playbook sessions never ask a question. Only a cozy skill session shows `.qb`.
 - The branch and empty-ticket rows use `?freeze=1`, so the clock moves only on `window.__step`. Without it, the live loop also advances time, and a real-time cozy run under swiftshader is slow.
 - The `.qb` bubble is a CSS2D element. It joins the DOM on the next render, which `window.__step` performs.

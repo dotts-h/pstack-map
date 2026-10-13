@@ -1,11 +1,11 @@
 /** @typedef {'yes'|'no'} Answer */
 /** @typedef {Readonly<{kind:'file'|'skill'|'principle'|'rule', name:string, line:number}>} Input */
 /** @typedef {Readonly<{n:number, caption:string, line:number}>} Step */
-/** steps are sorted, unique, and each >= the branch's at. @typedef {Readonly<{on:Answer, steps:readonly number[]}>} Skips */
-/** at is the step the question comes before. def is the answer that skips nothing. @typedef {Readonly<{at:number, q:string, line:number, text:string, yes:string, no:string, skips:Skips|null, def:Answer}>} Branch */
+/** @typedef {Readonly<{on:Answer, steps:readonly number[]}>} Skips */
+/** @typedef {Readonly<{at:number, q:string, line:number, text:string, yes:string, no:string, skips:Skips|null, def:Answer}>} Branch */
 /** @typedef {Readonly<{file:string, stepSource:string, inputs:readonly Input[], steps:readonly Step[], branches:readonly Branch[]}>} Flow */
 /** @typedef {Readonly<{input:number, step:number}>} Pace */
-/** Keys are a branch index as a decimal string, or '*'. @typedef {ReadonlyMap<string, Answer>} Picks */
+/** @typedef {ReadonlyMap<string, Answer>} Picks */
 /** @typedef {Readonly<{branch:Branch, index:number, answer:Answer|null}>} Asking */
 /** @typedef {Readonly<{index:number, answer:Answer, by:'user'|'pick'|'default', skipped:readonly number[]}>} Decision */
 /** @typedef {Readonly<{head:string, effect:string}>} Note */
@@ -41,7 +41,6 @@ function readInputs(raw) {
   return Object.freeze(raw.filter((x) => x && INPUT_KINDS.has(x.kind) && typeof x.name === 'string' && isInt(x.line, 0)).map((x) => Object.freeze({ kind: x.kind, name: x.name, line: x.line })));
 }
 
-/** @returns {Branch | null} null when the wire branch breaks a rule */
 function readBranch(w, n) {
   if (!w || !isInt(w.ask, 0) || w.ask >= n || !isText(w.q) || !isText(w.text) || !isInt(w.line, 1)) return null;
   const yes = optText(w.yes), no = optText(w.no);
@@ -57,8 +56,6 @@ function readBranch(w, n) {
 }
 
 /**
- * Parses the skill-flows.json document into frozen Flow records keyed by skill id.
- * A skill keeps all of its branches or none, so ?pick= indexes always match the file.
  * @param {unknown} raw
  * @param {(id: string) => boolean} isStation
  * @returns {ReadonlyMap<string, Flow>}
@@ -81,7 +78,6 @@ export function readFlows(raw, isStation) {
 }
 
 /**
- * Parses ?pick=. "no" sets '*'. "1:no" sets branch 1. "0:yes,1:no" sets both. Other parts are ignored.
  * @param {string | null} param
  * @returns {Picks}
  */
@@ -94,7 +90,6 @@ export function readPicks(param) {
   return picks;
 }
 
-/** One plate's walk through its flow. Only this class writes run state. */
 export class FlowRun {
   #flow;
   #picks;
@@ -112,8 +107,6 @@ export class FlowRun {
   #done = false;
 
   /**
-   * Compiles the timeline: one op per input, then for each step k the asks with at === k in file order, then step k.
-   * With asks false the timeline has no ask ops, so the run never pauses and never skips.
    * @param {Flow} flow
    * @param {Pace} pace
    * @param {{asks: boolean, picks: Picks}} opts
@@ -164,8 +157,6 @@ export class FlowRun {
   }
 
   /**
-   * Advances dt seconds of work. Returns the ops entered and the decision applied this tick, in order.
-   * The first call enters the first op. After the last op it returns [{kind:'done'}] once, then [].
    * @param {number} dt
    * @returns {readonly FlowEvent[]}
    */
@@ -198,9 +189,8 @@ export class FlowRun {
   }
 
   /**
-   * Answers the open question as the user. The first answer wins.
    * @param {Answer} answer
-   * @returns {boolean} false when no question is open or it already has an answer
+   * @returns {boolean}
    */
   choose(answer) {
     const a = this.#ask;
@@ -210,10 +200,10 @@ export class FlowRun {
     return true;
   }
 
-  /** @returns {number} index of the input being laid out or last laid out, or -1 */
+  /** @returns {number} */
   get inI() { return this.#inI; }
 
-  /** @returns {number} index of the step running or last run, or -1 */
+  /** @returns {number} */
   get stepI() { return this.#stepI; }
 
   /** @returns {Asking | null} */
@@ -222,13 +212,13 @@ export class FlowRun {
     return a ? Object.freeze({ branch: a.branch, index: a.index, answer: a.answer }) : null;
   }
 
-  /** @returns {Note | null} the last decision, for a few seconds after it */
+  /** @returns {Note | null} */
   get note() { return this.#note; }
 
   /** @returns {boolean} */
   get done() { return this.#done; }
 
-  /** @returns {number} live work done over live work in total. It equals 1 only when done. */
+  /** @returns {number} */
   get progress() {
     if (this.#done) return 1;
     let doneDur = 0, total = 0;
