@@ -74,28 +74,30 @@ def ranges(L,src,st):
     return out
 def branches(L,src,st,steps_out):
     R=ranges(L,src,st);D=[];only=None;only_cond=None
+    def stamp(d):
+        d['default']='yes' if d['kind']=='only' else 'no';D.append(d);return d
     for k,(a,b) in enumerate(R):
         head=L[a]
         m=re.search(r'\(([a-z -]+) only\)',head)
         if m:
             if only and only_cond==m.group(1) and only['skip'][-1]==k-1:only['skip'].append(k)
-            else:only_cond=m.group(1);only={'ask':k,'kind':'only','q':f"Is the task {only_cond}?",'skip':[k],'skipOn':'no','line':a+1,'text':head.strip('# ').strip()};D.append(only)
+            else:only_cond=m.group(1);only=stamp({'ask':k,'kind':'only','q':f"Is the task {only_cond}?",'skip':[k],'skipOn':'no','line':a+1,'text':head.strip('# ').strip()})
         if re.search(r'\((opt-in|optional)\)',head):
             opt=None
             for j in range(a+1,b):
                 mm=re.search(r'\bOpt in\b[^.]*?\bwhen ([^.:]+)',L[j])
                 if mm:opt=(j,mm.group(1));break
             dflt=next((L[j] for j in range(a+1,b) if L[j].startswith('Default:')),None)
-            D.append({'ask':k,'kind':'opt-in','q':question(opt[1]) if opt else f"Opt in to {steps_out[k]['caption']}?",'yes':'surface it and pause for sign-off' if opt else steps_out[k]['caption'],'no':(re.sub(r'^Default:\s*','',dflt).split('.')[0] if dflt else 'skip it'),'skip':[],'line':(opt[0] if opt else a)+1,'text':(L[opt[0]] if opt else head).strip()})
+            stamp({'ask':k,'kind':'opt-in','q':question(opt[1]) if opt else f"Opt in to {steps_out[k]['caption']}?",'yes':'surface it and pause for sign-off' if opt else steps_out[k]['caption'],'no':(re.sub(r'^Default:\s*','',dflt).split('.')[0] if dflt else 'skip it'),'skip':[k],'skipOn':'no','line':(opt[0] if opt else a)+1,'text':(L[opt[0]] if opt else head).strip()})
         for j in range(a,b):
             l=L[j]
             for mm in re.finditer(r'\bSkip (Phase ([A-Z])|step (\d+)|this step)\b[^.]*?\b(?:only )?(?:when|if) ([^.]+)\.',l):
                 t=(ord(mm.group(2))-65) if mm.group(2) else (int(mm.group(3))-1 if mm.group(3) else k)
-                if 0<=t<len(R):D.append({'ask':t,'kind':'skip','q':question(mm.group(4)),'skip':[t],'skipOn':'yes','line':j+1,'text':mm.group(0)})
+                if 0<=t<len(R):stamp({'ask':t,'kind':'skip','q':question(mm.group(4)),'skip':[t],'skipOn':'yes','line':j+1,'text':mm.group(0)})
             mm=re.match(r'^\s*(?:[-*]|\d+\.)?\s*(?:\*\*)?(If|When) ([^,]{3,110}),\s*(.+)$',l)
             if mm and not re.match(r'in doubt',mm.group(2)):
                 act=re.split(r'(?<=[.;])\s',re.sub(r'[*`]','',mm.group(3)))[0].rstrip('.;')
-                D.append({'ask':k,'kind':mm.group(1).lower(),'q':question(mm.group(2)),'yes':act[:90],'no':'carry on','skip':[],'line':j+1,'text':l.strip()})
+                stamp({'ask':k,'kind':mm.group(1).lower(),'q':question(mm.group(2)),'yes':act[:90],'no':'carry on','skip':[],'line':j+1,'text':l.strip()})
     D.sort(key=lambda d:(d['ask'],d['line']));return D
 flows={}
 for n in NAMES:
