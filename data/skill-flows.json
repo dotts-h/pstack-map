@@ -192,6 +192,11 @@
    ],
    "inputs": [
     {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 17
+    },
+    {
      "kind": "principle",
      "name": "principle-separate-before-serializing-shared-state",
      "line": 18
@@ -245,7 +250,7 @@
     {
      "kind": "skill",
      "name": "poteto-mode",
-     "line": 63
+     "line": 31
     }
    ],
    "branches": []
@@ -528,6 +533,11 @@
      "line": 11
     },
     {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 11
+    },
+    {
      "kind": "file",
      "name": "references/explainer-prompt.md",
      "line": 17
@@ -564,6 +574,13 @@
      "default": "yes"
     }
    ]
+  },
+  "in-your-own-words": {
+   "file": "skills/in-your-own-words/SKILL.md",
+   "stepSource": "no ordered steps in the file",
+   "steps": [],
+   "inputs": [],
+   "branches": []
   },
   "interrogate": {
    "file": "skills/interrogate/SKILL.md",
@@ -609,6 +626,11 @@
     {
      "kind": "file",
      "name": "references/code-quality-review.md",
+     "line": 38
+    },
+    {
+     "kind": "skill",
+     "name": "poteto-mode",
      "line": 38
     },
     {
@@ -659,7 +681,7 @@
      "no": "carry on",
      "skip": [],
      "line": 36,
-     "text": "If the Task tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*` and `grok-*`. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.",
+     "text": "If the Task tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*`, and `grok-*` with `cursor-grok-*` and `composer-*`. A refused `composer-*` entry runs on Reviewer B's default. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.",
      "default": "no"
     }
    ]
@@ -671,12 +693,17 @@
     {
      "n": 1,
      "caption": "Gather what changed",
-     "line": 11
+     "line": 13
     },
     {
      "n": 2,
      "caption": "Write the reply",
-     "line": 17
+     "line": 19
+    },
+    {
+     "n": 3,
+     "caption": "Visuals",
+     "line": 31
     }
    ],
    "inputs": [],
@@ -856,6 +883,11 @@
    ],
    "inputs": [
     {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 19
+    },
+    {
      "kind": "principle",
      "name": "principle-fix-root-causes",
      "line": 22
@@ -895,17 +927,17 @@
     {
      "n": 5,
      "caption": "Playbooks and principles",
-     "line": 111
+     "line": 113
     },
     {
      "n": 6,
      "caption": "Fix a run that went wrong",
-     "line": 128
+     "line": 130
     },
     {
      "n": 7,
      "caption": "Make pstack my own",
-     "line": 143
+     "line": 145
     }
    ],
    "inputs": [
@@ -922,7 +954,7 @@
     {
      "kind": "file",
      "name": "references/recipes.md",
-     "line": 154
+     "line": 156
     }
    ],
    "branches": [
@@ -955,7 +987,7 @@
      "yes": "read its frontmatter and route by its description",
      "no": "carry on",
      "skip": [],
-     "line": 94,
+     "line": 96,
      "text": "If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.",
      "default": "no"
     }
@@ -968,17 +1000,17 @@
     {
      "n": 1,
      "caption": "Principles",
-     "line": 40
+     "line": 38
     },
     {
      "n": 2,
      "caption": "Autonomy",
-     "line": 83
+     "line": 81
     },
     {
      "n": 3,
      "caption": "Subagents",
-     "line": 93
+     "line": 91
     },
     {
      "n": 4,
@@ -1000,77 +1032,77 @@
     {
      "kind": "skill",
      "name": "how",
-     "line": 21
+     "line": 19
     },
     {
      "kind": "principle",
      "name": "principle-model-the-domain",
-     "line": 23
+     "line": 21
     },
     {
      "kind": "skill",
      "name": "architect",
-     "line": 24
+     "line": 22
     },
     {
      "kind": "skill",
      "name": "swarm",
-     "line": 25
+     "line": 23
     },
     {
      "kind": "skill",
      "name": "arena",
-     "line": 25
+     "line": 23
     },
     {
      "kind": "skill",
      "name": "interrogate",
-     "line": 26
+     "line": 24
     },
     {
      "kind": "skill",
      "name": "unslop",
-     "line": 28
+     "line": 26
     },
     {
      "kind": "skill",
      "name": "technical-writing",
-     "line": 29
+     "line": 27
     },
     {
      "kind": "skill",
      "name": "no-comments",
-     "line": 31
+     "line": 29
     },
     {
      "kind": "skill",
      "name": "benchmark-checklist",
-     "line": 33
+     "line": 31
     },
     {
      "kind": "file",
      "name": "references/bugbot-triage.md",
-     "line": 36
+     "line": 34
     },
     {
      "kind": "skill",
      "name": "show-me-your-work",
-     "line": 38
+     "line": 36
     },
     {
      "kind": "principle",
      "name": "principle-sequence-verifiable-units",
-     "line": 70
+     "line": 68
     },
     {
      "kind": "skill",
      "name": "why",
-     "line": 95
+     "line": 93
     },
     {
      "kind": "skill",
      "name": "reflect",
-     "line": 95
+     "line": 93
     },
     {
      "kind": "skill",
@@ -1128,6 +1160,11 @@
     },
     {
      "kind": "skill",
+     "name": "poteto-mode",
+     "line": 19
+    },
+    {
+     "kind": "skill",
      "name": "unslop",
      "line": 33
     }
@@ -1176,6 +1213,11 @@
      "line": 27
     },
     {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 27
+    },
+    {
      "kind": "file",
      "name": "references/judgment-reviewer.md",
      "line": 31
@@ -1217,6 +1259,13 @@
   },
   "setup-pstack": {
    "file": "skills/setup-pstack/SKILL.md",
+   "stepSource": "no ordered steps in the file",
+   "steps": [],
+   "inputs": [],
+   "branches": []
+  },
+  "sharpen": {
+   "file": "skills/sharpen/SKILL.md",
    "stepSource": "no ordered steps in the file",
    "steps": [],
    "inputs": [],
@@ -1277,6 +1326,11 @@
      "kind": "principle",
      "name": "principle-encode-lessons-in-structure",
      "line": 53
+    },
+    {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 67
     }
    ],
    "branches": []
@@ -1306,7 +1360,13 @@
      "line": 18
     }
    ],
-   "inputs": [],
+   "inputs": [
+    {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 25
+    }
+   ],
    "branches": [
     {
      "ask": 1,
@@ -1681,6 +1741,11 @@
      "line": 11
     },
     {
+     "kind": "skill",
+     "name": "poteto-mode",
+     "line": 11
+    },
+    {
      "kind": "file",
      "name": "references/epistemics.md",
      "line": 17
@@ -1786,38 +1851,38 @@
    "file": "skills/poteto-mode/playbooks/autopilot-full.md",
    "steps": [
     {
-     "line": 5,
-     "text": "Mark the operator's items and honor state-then-wait",
-     "skill": null
-    },
-    {
-     "line": 6,
-     "text": "Spawn one owner per PR with the full lifecycle and an early…",
-     "skill": "no-comments"
-    },
-    {
      "line": 7,
-     "text": "Run owners in true parallel and never stack",
+     "text": "The operator's gates come first",
      "skill": null
     },
     {
      "line": 8,
-     "text": "Swarm-verify every round before its merge",
-     "skill": "swarm"
-    },
-    {
-     "line": 9,
-     "text": "On a clean verdict the owner merges, and a fresh owner takes…",
+     "text": "Spawn one owner per PR, and keep its work where a…",
      "skill": null
     },
     {
-     "line": 10,
+     "line": 13,
+     "text": "Run owners in parallel off trunk, never stacked,",
+     "skill": null
+    },
+    {
+     "line": 14,
+     "text": "Swarm-verify once",
+     "skill": "swarm"
+    },
+    {
+     "line": 17,
+     "text": "The owner merges only what you verified, tested on the trunk…",
+     "skill": null
+    },
+    {
+     "line": 20,
      "text": "Run the root layer",
      "skill": null
     },
     {
-     "line": 11,
-     "text": "Stand down instantly on the operator's stop",
+     "line": 23,
+     "text": "Stand down at once on the operator's stop",
      "skill": null
     }
    ]
@@ -1827,42 +1892,22 @@
    "steps": [
     {
      "line": 5,
-     "text": "Run the owner loop unchanged",
-     "skill": "no-comments"
+     "text": "Run Autopilot-full's owners, minus the landing",
+     "skill": null
     },
     {
      "line": 6,
-     "text": "Audit on a real loop",
+     "text": "Give the topology one writer",
      "skill": null
     },
     {
      "line": 7,
-     "text": "Hold the operator gates",
+     "text": "Absorb drift at the root",
      "skill": null
     },
     {
      "line": 8,
-     "text": "Verify each round",
-     "skill": null
-    },
-    {
-     "line": 9,
-     "text": "Append on a clean verdict, never ship",
-     "skill": null
-    },
-    {
-     "line": 10,
-     "text": "Single writer on topology, parallel writers on builds",
-     "skill": null
-    },
-    {
-     "line": 11,
-     "text": "Absorb drift at the root, then re-verify what moved",
-     "skill": null
-    },
-    {
-     "line": 12,
-     "text": "Deliver the chain",
+     "text": "Deliver the chain, then keep your hands off it",
      "skill": null
     }
    ]
@@ -2155,37 +2200,37 @@
    "file": "skills/poteto-mode/playbooks/orchestrate.md",
    "steps": [
     {
-     "line": 60,
+     "line": 61,
      "text": "Frame",
      "skill": null
     },
     {
-     "line": 61,
+     "line": 62,
      "text": "Install the runtime",
      "skill": null
     },
     {
-     "line": 62,
+     "line": 63,
      "text": "Pilot",
      "skill": null
     },
     {
-     "line": 63,
+     "line": 64,
      "text": "Scale",
      "skill": null
     },
     {
-     "line": 64,
+     "line": 65,
      "text": "Drain",
      "skill": null
     },
     {
-     "line": 65,
+     "line": 66,
      "text": "Land",
      "skill": null
     },
     {
-     "line": 66,
+     "line": 67,
      "text": "Close",
      "skill": null
     }
@@ -2395,47 +2440,32 @@
    "file": "skills/poteto-mode/playbooks/shipping.md",
    "steps": [
     {
-     "line": 7,
-     "text": "Resolve the forge, then verify every PR independently",
+     "line": 5,
+     "text": "Resolve the forge, then verify each PR independently before…",
      "skill": null
     },
     {
-     "line": 8,
+     "line": 6,
      "text": "Land only the contiguous verified run rooted at the bottom",
      "skill": null
     },
     {
+     "line": 7,
+     "text": "Re-check that the verdicts still describe the code",
+     "skill": null
+    },
+    {
+     "line": 8,
+     "text": "Land bottom-up, one PR at a time",
+     "skill": null
+    },
+    {
      "line": 9,
-     "text": "Re-check that each verdict still describes the patch",
+     "text": "Leave the stack alone while it lands",
      "skill": null
     },
     {
      "line": 10,
-     "text": "Prepare only the bottom PR",
-     "skill": null
-    },
-    {
-     "line": 11,
-     "text": "Land one PR at a time",
-     "skill": null
-    },
-    {
-     "line": 12,
-     "text": "Do not read GitHub autoMergeRequest as stack readiness",
-     "skill": null
-    },
-    {
-     "line": 13,
-     "text": "Recompute after every merge",
-     "skill": null
-    },
-    {
-     "line": 14,
-     "text": "Watch the current frontier until it merges or fails",
-     "skill": null
-    },
-    {
-     "line": 15,
      "text": "Stop at the ceiling",
      "skill": null
     }
