@@ -45,7 +45,7 @@ The helper loads `/?hint=0&theme=galaxy`, `circuit`, `earth`, `brain`, and `kitc
 
 On galaxy, circuit, earth, and brain it opens `architect` with `?focus=architect`. The card title must be the skill title. The card sentence must equal `oneLiner` from `copy.mjs` for that node.
 
-On kitchen it opens `/?theme=kitchen&hint=0&open=architect`, clicks **Open skill file**, and checks that the modal contains a sentence from that node's `text` field. The sentence must not be only the one-line description.
+On kitchen it opens `/?theme=kitchen&hint=0&open=architect`, clicks **Open skill file**, and waits until the modal body contains a sentence from that node's `text` field. The sentence must not be only the one-line description. That open requests `data/files.json`. The page does not request it before the click. It then loads `/?theme=kitchen&hint=0&file=pstack/skills/principle-laziness-protocol/SKILL.md` and waits until the modal body contains `Do not repeat the same choice in several places.` It loads `/?theme=kitchen&hint=0&file=pstack/skills/poteto-mode/SKILL.md` and waits until the modal body contains `Cite only principles whose leaf SKILL.md you read this session.`
 
 It then loads `/?theme=kitchen&hint=0&fast=1&session=playbook:feature`. The session starts from the ticket on load, and there is no Play button. At `window.__ready`, `document.body` has class `fast`. `#hint` has computed `animation-name` `none` and `transition-duration` `0s`, `document.getAnimations()` is empty, and the lower third is showing. `#lt .ttl` must say Order up within 30 seconds, and `#ticket .k` must say ready. The helper clicks **Exit**, and the URL must keep `theme=kitchen` without `session`. It loads `session=skill:architect` and waits for Order up. It loads `/?theme=kitchen&hint=0&fast=1`, clicks the Feature ticket `#rail .tk[data-id="playbook:feature"]`, and waits for Order up in the same document.
 
@@ -53,7 +53,9 @@ Fast has no question bubble and no waiter. At Order up in each fast row and in t
 
 The branch row loads `/?theme=kitchen&hint=0&freeze=1&session=skill:how&pick=1:no` in Cozy and advances the clock with `window.__step(0.25)`. The bubble `.qb .qq` must read `Is the task complex?`, `.qb .qs` must read `SKILL.md:` and a line number, and no step is skipped yet. After the forced No, `#ticket li.skip` must list `Explore (complex only)` and `Synthesize (complex only)`. The waiter must reach `window.__srv()[1] === 'carry'`, and `#ticket .k` must say served. The empty-ticket row loads `session=playbook:opening-a-pr` with `freeze=1`, which has nothing to cook. After eight steps `window.__T()` must have advanced, `window.__srv()` must be `['served', null]`, and the pass has no Order up label. Another row loads `session=skill:how` in Cozy, steps until the waiter is carrying, clicks Fast, and must end at Served with no waiter.
 
-Last, it repeats the Feature session with reduced motion and no `fast` parameter. The body must still have class `fast`, and the ticket must still say ready. `?hint=0` hides the kitchen hint. The helper does not report fps.
+A pace row loads `/?theme=kitchen&hint=0&session=playbook:feature` with no `fast` parameter. It clicks **Fast** and the same document's URL has `fast=1` and `body` has class `fast`. It clicks **Cozy** and `fast` is gone and `body` does not have class `fast`. It clicks **Fast**, then **Exit**. The URL keeps `theme=kitchen` and `fast=1`, and the new page has class `fast`.
+
+Last, it repeats the Feature session with reduced motion and no `fast` parameter. The URL has no `fast`. The body must still have class `fast`, and the ticket must still say ready. It clicks **Cozy**. The URL still has no `fast`, and `body` stays fast. `?hint=0` hides the kitchen hint. The helper does not report fps.
 
 ## Evidence
 

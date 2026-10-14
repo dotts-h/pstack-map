@@ -68,6 +68,10 @@ page.on('console', (msg) => {
 page.on('response', (res) => {
   if (res.status() >= 400) notes.push(`${res.status()} ${res.url()}`);
 });
+const fileRequests = [];
+page.on('request', (req) => {
+  if (req.url().includes('data/files.json')) fileRequests.push(req.url());
+});
 
 async function shot(name) {
   const file = path.join(outDir, name);
@@ -132,8 +136,13 @@ try {
   const kitchen = await openTheme('kitchen', '&open=architect');
   await page.waitForSelector('#card .flink');
   const cardTitle = await page.$eval('#card h3', (el) => el.textContent);
+  if (fileRequests.length) fail('data/files.json was requested before the file was opened');
   await page.click('#card .flink');
-  await page.waitForFunction(() => document.querySelector('#modal')?.style.display === 'block');
+  await page.waitForFunction(
+    (text) => (document.querySelector('#modal .mb')?.innerText || '').includes(text),
+    {},
+    sentence,
+  );
   const modalText = await page.evaluate(() => document.querySelector('#modal .mb')?.innerText || '');
   await shot('skill-kitchen.png');
   result.kitchen = {
@@ -145,6 +154,37 @@ try {
   };
   if (kitchen.problems.length) fail(`kitchen station: ${kitchen.problems.join('; ')}`);
   if (!modalText.includes(sentence)) fail('kitchen modal does not contain a body sentence from architect text');
+  if (!fileRequests.length) fail('opening the architect file did not request data/files.json');
+
+  async function fileQuery(label, filePath, needle) {
+    const before = fileRequests.length;
+    notes.length = 0;
+    const url = `${base}/?theme=kitchen&hint=0&file=${encodeURIComponent(filePath)}`;
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => window.__ready === true);
+    await page.waitForFunction(
+      (text) => (document.querySelector('#modal .mb')?.innerText || '').includes(text),
+      {},
+      needle,
+    );
+    const body = await page.evaluate(() => document.querySelector('#modal .mb')?.innerText || '');
+    const row = { url, found: body.includes(needle), requested: fileRequests.length > before, problems: [...notes] };
+    if (row.problems.length) fail(`${label}: ${row.problems.join('; ')}`);
+    if (!row.found) fail(`${label}: the modal body did not include ${JSON.stringify(needle)}`);
+    if (!row.requested) fail(`${label}: did not request data/files.json`);
+    return row;
+  }
+
+  result.principleFile = await fileQuery(
+    'principle-laziness-protocol',
+    'pstack/skills/principle-laziness-protocol/SKILL.md',
+    'Do not repeat the same choice in several places.',
+  );
+  result.routerFile = await fileQuery(
+    'poteto-mode',
+    'pstack/skills/poteto-mode/SKILL.md',
+    'Cite only principles whose leaf SKILL.md you read this session.',
+  );
 
   const sessionView = () => {
     const hint = document.getElementById('hint');
@@ -277,11 +317,47 @@ try {
   if (!result.fastDuringCarry.fast) fail('fast during carry: body is missing class fast');
   if (result.fastDuringCarry.srv[0] !== 'served' || result.fastDuringCarry.srv[1] !== null) fail(`fast during carry: ended at ${JSON.stringify(result.fastDuringCarry.srv)}`);
 
+  notes.length = 0;
+  await page.goto(`${base}/?theme=kitchen&hint=0&session=playbook:feature`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true);
+  await page.evaluate(() => { window.__paceDoc = true; });
+  const paceQuery = () => page.evaluate(() => ({
+    sameDocument: window.__paceDoc === true,
+    fast: new URLSearchParams(location.search).get('fast'),
+    bodyFast: document.body.classList.contains('fast'),
+  }));
+  await page.click('#pace [data-pace=fast]');
+  const pacedFast = await paceQuery();
+  await page.click('#pace [data-pace=cozy]');
+  const pacedCozy = await paceQuery();
+  await page.click('#pace [data-pace=fast]');
+  await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('#ltExit')]);
+  await page.waitForFunction(() => window.__ready === true);
+  const paceExit = await page.evaluate(() => ({
+    search: location.search,
+    bodyFast: document.body.classList.contains('fast'),
+  }));
+  const paceExitQuery = new URLSearchParams(paceExit.search);
+  result.pace = { fast: pacedFast, cozy: pacedCozy, exit: paceExit.search, exitFast: paceExit.bodyFast, problems: [...notes] };
+  if (result.pace.problems.length) fail(`pace: ${result.pace.problems.join('; ')}`);
+  if (!pacedFast.sameDocument || pacedFast.fast !== '1' || !pacedFast.bodyFast) fail(`Fast did not set fast=1 and class fast in the same document (${JSON.stringify(pacedFast)})`);
+  if (!pacedCozy.sameDocument || pacedCozy.fast !== null || pacedCozy.bodyFast) fail(`Cozy did not remove fast and class fast in the same document (${JSON.stringify(pacedCozy)})`);
+  if (paceExitQuery.get('theme') !== 'kitchen' || paceExitQuery.get('fast') !== '1' || paceExitQuery.has('session') || !paceExit.bodyFast) fail(`pace Exit went to ?${paceExitQuery} bodyFast=${paceExit.bodyFast}`);
+
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   result.reduced = await orderUp(`${base}/?theme=kitchen&hint=0&session=playbook:feature`);
   motionOff(result.reduced, 'reduced motion');
   noAskNoWaiter(result.reduced.done, 'reduced motion');
   if (!result.reduced.done.kicker.includes('ready')) fail('reduced motion ticket did not reach Order up · ready');
+  const reducedQuery = new URLSearchParams(await page.evaluate(() => location.search));
+  if (reducedQuery.has('fast')) fail(`reduced motion wrote fast=${reducedQuery.get('fast')}`);
+  await page.click('#pace [data-pace=cozy]');
+  const reducedCozy = await page.evaluate(() => ({
+    fast: new URLSearchParams(location.search).get('fast'),
+    bodyFast: document.body.classList.contains('fast'),
+  }));
+  result.reducedCozy = reducedCozy;
+  if (reducedCozy.fast !== null || !reducedCozy.bodyFast) fail(`Cozy under reduced motion changed pace (${JSON.stringify(reducedCozy)})`);
 } catch (err) {
   fail(err.message || String(err));
 } finally {

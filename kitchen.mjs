@@ -32,7 +32,6 @@ try {
   throw new Error('graph unavailable');
 }
 const N = new Map(G.nodes.map((n) => [n.id, n]));
-const textByPath = new Map(G.nodes.filter((n) => typeof n.text === 'string' && n.text && n.path).map((n) => [n.path, n.text]));
 const flowsRaw = await flowsReq;
 
 const nm=n=>(n.title||n.name).replace(/^principle-/,'').replace(/-/g,' ').replace(/^./,c=>c.toUpperCase());
@@ -206,11 +205,12 @@ function path(a,b){const key=(i,j)=>i*100+j;const s=[GX(a.x),GZ(a.z)],t=[GX(b.x)
  const k3=[k2[0]];for(let i=1;i<k2.length;i++){const d=k2[i].distanceTo(k2[i-1]);const n=Math.floor(d/1.2);for(let m=1;m<=n;m++)k3.push(k2[i-1].clone().lerp(k2[i],m/(n+1)));k3.push(k2[i]);}return k3;}
 
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let userFast=qs.get('fast')==='1';
 let fast=false,CREW=true;
-function applyFast(){fast=userFast||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>{const on=el.dataset.pace===(fast?'fast':'cozy');el.classList.toggle('on',on);el.setAttribute('aria-pressed',String(on));if(reduceMotion&&el.dataset.pace==='cozy')el.setAttribute('aria-disabled','true');});}
+function wantsFast(){return new URLSearchParams(location.search).get('fast')==='1';}
+function applyFast(){fast=wantsFast()||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>{const on=el.dataset.pace===(fast?'fast':'cozy');el.classList.toggle('on',on);el.setAttribute('aria-pressed',String(on));if(reduceMotion&&el.dataset.pace==='cozy')el.setAttribute('aria-disabled','true');});}
+function choosePace(pace){const u=new URL(location.href);if(pace==='fast')u.searchParams.set('fast','1');else u.searchParams.delete('fast');history.replaceState(null,'',u);applyFast();}
 applyFast();
-document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast){dropCarry();send('fast');}});
+document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;choosePace(b.dataset.pace);fx.visible=!fast;if(fast){dropCarry();send('fast');}});
 document.getElementById('pace').addEventListener('keydown',(e)=>{if(e.key!=='Enter'&&e.key!==' ')return;const b=e.target.closest('[data-pace]');if(!b)return;e.preventDefault();b.click();});
 const ease={io:u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,sin:u=>-(Math.cos(Math.PI*u)-1)/2,out:u=>1-Math.pow(1-u,3)};
 const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
@@ -602,11 +602,13 @@ function md(src){let fm='';const m=src.match(/^---\n([\s\S]*?)\n---\n?/);if(m){f
   if(/^\s*\|/.test(l)){flush();out.push(`<pre class="tb">${esc(l)}</pre>`);continue;}
   if(!l.trim()){flush();continue;}if(list){flush();}para.push(l.trim());}
  if(code!==null)out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`);flush();return fm+out.join('');}
-const modal=document.createElement('div');modal.id='modal';modal.innerHTML=`<div class="scrim"></div><div class="box" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="mh"><div><div class="k">Original file</div><h3 id="mTitle"></h3><div class="pth"></div></div><button class="x" aria-label="Close">✕</button></div><div class="mb" tabindex="0"></div></div>`;document.body.appendChild(modal);let lastFocus=null,modalT=-1;
-function openFile(path){lastFocus=document.activeElement;const txt=textByPath.get(path);modal.querySelector('#mTitle').textContent=path.split('/').slice(-2).join('/');modal.querySelector('.pth').textContent=path;
- modal.querySelector('.mb').innerHTML=txt!=null?md(txt):`<p class="miss">The file is not in the map data. Path: <code>${esc(path)}</code></p>`;
- modal.style.display='block';modalT=0;if(qs.get('freeze')||fast){modalT=9;modal.style.opacity=1;}modal.querySelector('.x').focus();}
-function closeFile(){modal.style.display='none';modalT=-1;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+const modal=document.createElement('div');modal.id='modal';modal.innerHTML=`<div class="scrim"></div><div class="box" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="mh"><div><div class="k">Original file</div><h3 id="mTitle"></h3><div class="pth"></div></div><button class="x" aria-label="Close">✕</button></div><div class="mb" tabindex="0"></div></div>`;document.body.appendChild(modal);let lastFocus=null,modalT=-1,openPath='',filesReq=null;
+function loadFiles(){if(!filesReq)filesReq=fetch(new URL('data/files.json',import.meta.url)).then((r)=>{if(!r.ok)throw new Error(String(r.status));return r.json();}).then((data)=>{const files=data&&typeof data==='object'&&data.files&&typeof data.files==='object'&&!Array.isArray(data.files)?data.files:null;if(!files)throw new Error('files');return files;}).catch((err)=>{filesReq=null;throw err;});return filesReq;}
+function missFile(path){return `<p class="miss">The file is not in the map data. Path: <code>${esc(path)}</code></p>`;}
+function openFile(path){lastFocus=document.activeElement;openPath=path;modal.querySelector('#mTitle').textContent=path.split('/').slice(-2).join('/');modal.querySelector('.pth').textContent=path;
+ modal.querySelector('.mb').textContent='';modal.style.display='block';modalT=0;if(qs.get('freeze')||fast){modalT=9;modal.style.opacity=1;}modal.querySelector('.x').focus();
+ loadFiles().then((files)=>{if(openPath!==path)return;const txt=Object.prototype.hasOwnProperty.call(files,path)?files[path]:null;modal.querySelector('.mb').innerHTML=typeof txt==='string'?md(txt):missFile(path);},()=>{if(openPath!==path)return;modal.querySelector('.mb').innerHTML=missFile(path);});}
+function closeFile(){openPath='';modal.style.display='none';modalT=-1;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
 modal.querySelector('.x').onclick=closeFile;modal.querySelector('.scrim').onclick=closeFile;
 addEventListener('keydown',e=>{
  if(e.key==='Escape'){e.preventDefault();

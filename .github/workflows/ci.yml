@@ -18,3 +18,28 @@ jobs:
 
       - name: Check skill flows
         run: node scripts/check-flows.mjs data/skill-flows.json
+
+      - name: Check file index
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const graph = JSON.parse(fs.readFileSync('data/graph.json', 'utf8'));
+          const index = JSON.parse(fs.readFileSync('data/files.json', 'utf8'));
+          const want = new Map(graph.nodes.filter((n) => n.text && n.path).map((n) => [n.path, n.text]));
+          const got = index.files && typeof index.files === 'object' && !Array.isArray(index.files) ? index.files : null;
+          if (!got) {
+            console.error('files.json has no files object');
+            process.exit(1);
+          }
+          const failures = [];
+          for (const [p, text] of want) {
+            if (!Object.hasOwn(got, p)) failures.push(`missing ${p}`);
+            else if (got[p] !== text) failures.push(`differs ${p}`);
+          }
+          for (const p of Object.keys(got)) if (!want.has(p)) failures.push(`extra ${p}`);
+          if (failures.length) {
+            console.error(failures.join('\n'));
+            process.exit(1);
+          }
+          console.log(`ok ${want.size} files`);
+          EOF

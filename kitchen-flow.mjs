@@ -42,7 +42,7 @@ function readInputs(raw) {
 }
 
 function readBranch(w, n) {
-  if (!w || !isInt(w.ask, 0) || w.ask >= n || !isText(w.q) || !isText(w.text) || !isInt(w.line, 1)) return null;
+  if (!w || !isInt(w.ask, 0) || w.ask >= n || !isText(w.q) || !isText(w.text) || !isInt(w.line, 1) || !ANSWERS.has(w.default)) return null;
   const yes = optText(w.yes), no = optText(w.no);
   if (yes === null || no === null) return null;
   const at = w.ask, raw = w.skip ?? [];
@@ -52,7 +52,7 @@ function readBranch(w, n) {
     if (!ANSWERS.has(w.skipOn) || !raw.every((k) => Number.isInteger(k) && k >= at && k < n)) return null;
     skips = Object.freeze({ on: w.skipOn, steps: Object.freeze([...new Set(raw)].sort((a, b) => a - b)) });
   }
-  return Object.freeze({ at, q: w.q, line: w.line, text: w.text, yes, no, skips, def: skips?.on === 'no' ? 'yes' : 'no' });
+  return Object.freeze({ at, q: w.q, line: w.line, text: w.text, yes, no, skips, def: w.default });
 }
 
 /**
@@ -122,7 +122,10 @@ export class FlowRun {
   }
 
   #dead(op) {
-    return op.kind === 'step' ? this.#skip.has(op.k) : op.kind === 'ask' && this.#skip.has(this.#flow.branches[op.index].at);
+    if (op.kind === 'step') return this.#skip.has(op.k);
+    if (op.kind !== 'ask') return false;
+    const at = this.#flow.branches[op.index].at;
+    return this.#decisions.some((d) => d.skipped.includes(at) && this.#flow.branches[d.index].at < at);
   }
 
   #enter(from, ev) {
@@ -149,7 +152,7 @@ export class FlowRun {
     this.#decisions.push(decision);
     this.#note = Object.freeze({
       head: `${a.answer === 'yes' ? 'Yes' : 'No'}: ${b.q}`,
-      effect: b.skips ? (skipped.length ? `skips ${skipped.map((k) => `step ${k + 1}`).join(', ')}` : 'every step stays') : b[a.answer],
+      effect: [b[a.answer], skipped.length ? `skips ${skipped.map((k) => `step ${k + 1}`).join(', ')}` : ''].filter(Boolean).join('; ') || (b.skips ? 'every step stays' : ''),
     });
     this.#noteT = NOTE_SHOW;
     this.#ask = null;

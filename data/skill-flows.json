@@ -114,7 +114,8 @@
      ],
      "skipOn": "yes",
      "line": 25,
-     "text": "Skip Phase A only when the work is genuinely greenfield with no surrounding system to integrate."
+     "text": "Skip Phase A only when the work is genuinely greenfield with no surrounding system to integrate.",
+     "default": "no"
     },
     {
      "ask": 2,
@@ -122,9 +123,13 @@
      "q": "Does the invoker explicitly ask?",
      "yes": "surface it and pause for sign-off",
      "no": "proceed directly to implementation with the synthesized design",
-     "skip": [],
+     "skip": [
+      2
+     ],
+     "skipOn": "no",
      "line": 45,
-     "text": "Opt in to a checkpoint when the invoker explicitly asks: \"/architect with checkpoint,\" \"stop and show me before implementing,\" or similar. Then surface the synthesized design and pause for sign-off."
+     "text": "Opt in to a checkpoint when the invoker explicitly asks: \"/architect with checkpoint,\" \"stop and show me before implementing,\" or similar. Then surface the synthesized design and pause for sign-off.",
+     "default": "no"
     },
     {
      "ask": 2,
@@ -134,7 +139,8 @@
      "no": "carry on",
      "skip": [],
      "line": 49,
-     "text": "If the human pushes back on the shape (in a checkpoint or after the fact), treat that as Phase A evidence. Re-ground and re-run Phase B before writing more code."
+     "text": "If the human pushes back on the shape (in a checkpoint or after the fact), treat that as Phase A evidence. Re-ground and re-run Phase B before writing more code.",
+     "default": "no"
     },
     {
      "ask": 4,
@@ -144,7 +150,8 @@
      "no": "carry on",
      "skip": [],
      "line": 57,
-     "text": "If implementation keeps producing friction the sketch can't absorb, throw the sketch out. Don't bolt fixes onto a wrong design, per the **redesign-from-first-principles** and **fix-root-causes** principle skills."
+     "text": "If implementation keeps producing friction the sketch can't absorb, throw the sketch out. Don't bolt fixes onto a wrong design, per the **redesign-from-first-principles** and **fix-root-causes** principle skills.",
+     "default": "no"
     }
    ]
   },
@@ -209,7 +216,8 @@
      "no": "carry on",
      "skip": [],
      "line": 24,
-     "text": "If a candidate produces no output, proceed with N-1 and note the dropout."
+     "text": "If a candidate produces no output, proceed with N-1 and note the dropout.",
+     "default": "no"
     },
     {
      "ask": 4,
@@ -219,7 +227,8 @@
      "no": "carry on",
      "skip": [],
      "line": 40,
-     "text": "If the candidates converge on one shape, that is strong agreement. Note it and ship the consensus shape. No graft is needed. If they wildly diverge, Phase A was under-specified. Reframe and re-run rather than averaging the divergence."
+     "text": "If the candidates converge on one shape, that is strong agreement. Note it and ship the consensus shape. No graft is needed. If they wildly diverge, Phase A was under-specified. Reframe and re-run rather than averaging the divergence.",
+     "default": "no"
     }
    ]
   },
@@ -393,7 +402,8 @@
      "no": "carry on",
      "skip": [],
      "line": 21,
-     "text": "If the checkout doesn't build or start as-is, fix that first (or report it precisely) before generating; a skill written against a broken base teaches wrong steps. When an irrelevant missing asset blocks startup (a static dir the API never serves, a sample config), the generated skill may create it, clearly marked as verification scaffolding, and remove it in cleanup."
+     "text": "If the checkout doesn't build or start as-is, fix that first (or report it precisely) before generating; a skill written against a broken base teaches wrong steps. When an irrelevant missing asset blocks startup (a static dir the API never serves, a sample config), the generated skill may create it, clearly marked as verification scaffolding, and remove it in cleanup.",
+     "default": "no"
     }
    ]
   },
@@ -537,7 +547,8 @@
      "no": "carry on",
      "skip": [],
      "line": 15,
-     "text": "If the scope is ambiguous, state your interpretation and explore. The user can redirect."
+     "text": "If the scope is ambiguous, state your interpretation and explore. The user can redirect.",
+     "default": "no"
     },
     {
      "ask": 1,
@@ -549,7 +560,8 @@
      ],
      "skipOn": "no",
      "line": 22,
-     "text": "2. Explore (complex only)"
+     "text": "2. Explore (complex only)",
+     "default": "yes"
     }
    ]
   },
@@ -614,7 +626,8 @@
      "no": "carry on",
      "skip": [],
      "line": 15,
-     "text": "- If the user points at specific files or a diff, use that."
+     "text": "- If the user points at specific files or a diff, use that.",
+     "default": "no"
     },
     {
      "ask": 0,
@@ -624,7 +637,8 @@
      "no": "carry on",
      "skip": [],
      "line": 16,
-     "text": "- If on a feature branch, run `git diff main...HEAD` (or the appropriate base branch) for the full changeset."
+     "text": "- If on a feature branch, run `git diff main...HEAD` (or the appropriate base branch) for the full changeset.",
+     "default": "no"
     },
     {
      "ask": 0,
@@ -634,7 +648,8 @@
      "no": "carry on",
      "skip": [],
      "line": 17,
-     "text": "- If the user's message references recent work, gather the relevant files."
+     "text": "- If the user's message references recent work, gather the relevant files.",
+     "default": "no"
     },
     {
      "ask": 2,
@@ -644,7 +659,8 @@
      "no": "carry on",
      "skip": [],
      "line": 36,
-     "text": "If the Task tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*` and `grok-*`. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it."
+     "text": "If the Task tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*` and `grok-*`. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.",
+     "default": "no"
     }
    ]
   },
@@ -754,7 +770,8 @@
      "no": "carry on",
      "skip": [],
      "line": 20,
-     "text": "If `update_state` shows a confirm card, wait for the user to confirm."
+     "text": "If `update_state` shows a confirm card, wait for the user to confirm.",
+     "default": "no"
     },
     {
      "ask": 3,
@@ -764,7 +781,8 @@
      "no": "carry on",
      "skip": [],
      "line": 73,
-     "text": "If a POST can fail, append the same JSON to a local log. Drain that log from the routine. Do not poll as the primary path. Do not send media bytes on the webhook."
+     "text": "If a POST can fail, append the same JSON to a local log. Drain that log from the routine. Do not poll as the primary path. Do not send media bytes on the webhook.",
+     "default": "no"
     },
     {
      "ask": 4,
@@ -774,7 +792,8 @@
      "no": "carry on",
      "skip": [],
      "line": 79,
-     "text": "If `tailscale status` shows an online node, skip install. Read the hostname from `tailscale status`. Read the IPv4 address from `tailscale ip -4`. Give the user both URLs:"
+     "text": "If `tailscale status` shows an online node, skip install. Read the hostname from `tailscale status`. Read the IPv4 address from `tailscale ip -4`. Give the user both URLs:",
+     "default": "no"
     },
     {
      "ask": 4,
@@ -784,7 +803,8 @@
      "no": "carry on",
      "skip": [],
      "line": 86,
-     "text": "If Tailscale is not installed, install it:"
+     "text": "If Tailscale is not installed, install it:",
+     "default": "no"
     },
     {
      "ask": 4,
@@ -794,7 +814,8 @@
      "no": "carry on",
      "skip": [],
      "line": 103,
-     "text": "If the login URL expires, run `tailscale up` again and send the new URL."
+     "text": "If the login URL expires, run `tailscale up` again and send the new URL.",
+     "default": "no"
     }
    ]
   },
@@ -913,7 +934,8 @@
      "no": "carry on",
      "skip": [],
      "line": 30,
-     "text": "When the model rule is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:"
+     "text": "When the model rule is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:",
+     "default": "no"
     },
     {
      "ask": 1,
@@ -923,7 +945,8 @@
      "no": "carry on",
      "skip": [],
      "line": 43,
-     "text": "If cost is the worry, say where the tokens go and how to spend fewer. pstack spends extra tokens on subagents and review panels. Rerun `/setup-pstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on Auto or a cheaper model. A shorter panel list runs fewer subagents, one for each entry. Save `/poteto-mode` for work that needs rigor."
+     "text": "If cost is the worry, say where the tokens go and how to spend fewer. pstack spends extra tokens on subagents and review panels. Rerun `/setup-pstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on Auto or a cheaper model. A shorter panel list runs fewer subagents, one for each entry. Save `/poteto-mode` for work that needs rigor.",
+     "default": "no"
     },
     {
      "ask": 3,
@@ -933,7 +956,8 @@
      "no": "carry on",
      "skip": [],
      "line": 94,
-     "text": "If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below."
+     "text": "If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.",
+     "default": "no"
     }
    ]
   },
@@ -1186,7 +1210,8 @@
      "no": "carry on",
      "skip": [],
      "line": 58,
-     "text": "If your environment ships a SKILL.md validator, run it on every touched skill before declaring done."
+     "text": "If your environment ships a SKILL.md validator, run it on every touched skill before declaring done.",
+     "default": "no"
     }
    ]
   },
@@ -1291,7 +1316,8 @@
      "no": "carry on",
      "skip": [],
      "line": 32,
-     "text": "When a worker must start from a non-default pushed branch, pass `cloud_base_branch`."
+     "text": "When a worker must start from a non-default pushed branch, pass `cloud_base_branch`.",
+     "default": "no"
     },
     {
      "ask": 1,
@@ -1301,7 +1327,8 @@
      "no": "carry on",
      "skip": [],
      "line": 36,
-     "text": "If a worker drops out, proceed with N-1 and note it."
+     "text": "If a worker drops out, proceed with N-1 and note it.",
+     "default": "no"
     }
    ]
   },
@@ -1688,7 +1715,8 @@
      "no": "carry on",
      "skip": [],
      "line": 23,
-     "text": "If the target is vague (\"why do we do it this way?\" with no clear referent), make your best guess from conversation context (open files, recent edits, cursor location, what was just discussed). State your interpretation briefly so the user can redirect if you're off, then proceed."
+     "text": "If the target is vague (\"why do we do it this way?\" with no clear referent), make your best guess from conversation context (open files, recent edits, cursor location, what was just discussed). State your interpretation briefly so the user can redirect if you're off, then proceed.",
+     "default": "no"
     }
    ]
   }

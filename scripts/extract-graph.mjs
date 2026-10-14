@@ -123,7 +123,7 @@ function skillNode(dir, { kind: forcedKind, group: forcedGroup, owner } = {}) {
   const id = path.basename(dir);
   const flags = {};
   for (const [k, v] of Object.entries(data)) if (k !== "name" && k !== "description") flags[k] = v;
-  const kind = forcedKind ?? (data.mode === true ? "router" : id.startsWith("principle-") ? "principle" : "skill");
+  const kind = forcedKind ?? (data.mode === true || id === "poteto-mode" ? "router" : id.startsWith("principle-") ? "principle" : "skill");
   const node = {
     id, kind, name: data.name ?? id, title: firstHeading(frontmatter(text).body) || null,
     group: forcedGroup ?? (kind === "router" ? "router" : kind === "principle" ? "principles" : "skills"),
