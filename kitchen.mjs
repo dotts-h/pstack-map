@@ -603,12 +603,12 @@ function md(src){let fm='';const m=src.match(/^---\n([\s\S]*?)\n---\n?/);if(m){f
   if(!l.trim()){flush();continue;}if(list){flush();}para.push(l.trim());}
  if(code!==null)out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`);flush();return fm+out.join('');}
 const modal=document.createElement('div');modal.id='modal';modal.innerHTML=`<div class="scrim"></div><div class="box" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="mh"><div><div class="k">Original file</div><h3 id="mTitle"></h3><div class="pth"></div></div><button class="x" aria-label="Close">✕</button></div><div class="mb" tabindex="0"></div></div>`;document.body.appendChild(modal);let lastFocus=null,modalT=-1,openPath='',filesReq=null;
-function loadFiles(){if(!filesReq)filesReq=fetch(new URL('data/files.json',import.meta.url)).then((r)=>{if(!r.ok)throw new Error(String(r.status));return r.json();}).then((data)=>{const files=data&&typeof data==='object'&&data.files&&typeof data.files==='object'?data.files:null;if(!files)throw new Error('files');return files;});return filesReq;}
+function loadFiles(){if(!filesReq)filesReq=fetch(new URL('data/files.json',import.meta.url)).then((r)=>{if(!r.ok)throw new Error(String(r.status));return r.json();}).then((data)=>{const files=data&&typeof data==='object'&&data.files&&typeof data.files==='object'?data.files:null;if(!files)throw new Error('files');return files;}).catch((err)=>{filesReq=null;throw err;});return filesReq;}
 function missFile(path){return `<p class="miss">The file is not in the map data. Path: <code>${esc(path)}</code></p>`;}
 function openFile(path){lastFocus=document.activeElement;openPath=path;modal.querySelector('#mTitle').textContent=path.split('/').slice(-2).join('/');modal.querySelector('.pth').textContent=path;
  modal.querySelector('.mb').textContent='';modal.style.display='block';modalT=0;if(qs.get('freeze')||fast){modalT=9;modal.style.opacity=1;}modal.querySelector('.x').focus();
  loadFiles().then((files)=>{if(openPath!==path)return;const txt=Object.prototype.hasOwnProperty.call(files,path)?files[path]:null;modal.querySelector('.mb').innerHTML=typeof txt==='string'?md(txt):missFile(path);},()=>{if(openPath!==path)return;modal.querySelector('.mb').innerHTML=missFile(path);});}
-function closeFile(){modal.style.display='none';modalT=-1;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+function closeFile(){openPath='';modal.style.display='none';modalT=-1;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
 modal.querySelector('.x').onclick=closeFile;modal.querySelector('.scrim').onclick=closeFile;
 addEventListener('keydown',e=>{
  if(e.key==='Escape'){e.preventDefault();
