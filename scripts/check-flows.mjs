@@ -34,6 +34,7 @@ for (const [id, flow] of flows) {
     const skipOn = w.skipOn === 'yes' || w.skipOn === 'no' ? w.skipOn : null;
     const matched = skipOn !== null && w.default === skipOn;
     expect((w.kind === 'opt-in') === matched, `${id}: (kind === 'opt-in') does not match (default === skipOn) for ${w.kind} at ${w.ask}`);
+    if (w.kind === 'opt-in') same(w.skip, [w.ask], `${id}: opt-in skip is not its own step at ${w.ask}`);
   }
   const n = flow.steps.length;
   const picks = ['', 'yes', 'no', ...flow.branches.flatMap((_, i) => [`${i}:yes`, `${i}:no`])];
@@ -96,8 +97,14 @@ if (architect) {
     [2, 'no', null],
     [4, 'no', null],
   ], 'architect branches');
-  const dflt = play(architect, { asks: true, picks: readPicks('') });
+  let note = null;
+  const dflt = play(architect, { asks: true, picks: readPicks('') }, (run, ev) => {
+    if (ev.some((e) => e.kind === 'decided' && e.decision.index === 1)) note = run.note;
+  });
   same([dflt.s.executed, dflt.s.skipped], [[0, 1, 3, 4], [2]], 'architect default: executed and skipped');
+  same(dflt.s.decisions.map((x) => [x.index, x.answer, x.by]), [[0, 'no', 'default'], [1, 'no', 'default'], [2, 'no', 'default'], [3, 'no', 'default']], 'architect default: decisions');
+  const opt = architect.branches[1];
+  same(note, { head: `No: ${opt.q}`, effect: `${opt.no}; skips ${opt.skips.steps.map((k) => `step ${k + 1}`).join(', ')}` }, 'architect default: opt-in note');
 }
 
 const doc = (branches) => ({ skills: { x: { steps: [{ n: 1, caption: 'a', line: 1 }, { n: 2, caption: 'b', line: 2 }], inputs: [], branches } } });
@@ -109,6 +116,20 @@ same(readFlows(doc([bare]), () => true).get('x').branches, [], 'a branch without
 same(readFlows(doc([{ ...good, default: 'later' }]), () => true).get('x').branches, [], 'an illegal default drops the skill branches');
 same(readFlows(doc([good, { ...good, ask: 5 }]), () => true).get('x').branches, [], 'a bad branch drops every branch of the skill');
 same(readFlows(doc([{ ...good, ask: 1, skip: [0] }]), () => true).get('x').branches, [], 'a skip before its question is rejected');
+const sameStep = readFlows(doc([
+  { ask: 0, kind: 'opt-in', q: 'Opt?', line: 3, text: 'Opt in.', yes: 'pause', no: 'go on', skip: [0], skipOn: 'no', default: 'no' },
+  { ask: 0, kind: 'if', q: 'If?', line: 4, text: 'If q, then b.', yes: 'yes path', no: 'no path', skip: [], default: 'no' },
+]), () => true).get('x');
+const sameRun = play(sameStep, { asks: true, picks: readPicks('') });
+same(sameRun.s.decisions.map((d) => [d.index, d.answer, d.by]), [[0, 'no', 'default'], [1, 'no', 'default']], 'a later ask on a skipped step still decides');
+same(sameRun.s.skipped, [0], 'opt-in default skips its own step');
+const laterDead = readFlows(doc([
+  { ask: 0, kind: 'skip', q: 'Skip later?', line: 3, text: 'Skip the next step.', skip: [1], skipOn: 'yes', default: 'yes' },
+  { ask: 1, kind: 'if', q: 'Later?', line: 4, text: 'If later.', yes: 'yes path', no: 'no path', skip: [], default: 'no' },
+]), () => true).get('x');
+const deadRun = play(laterDead, { asks: true, picks: readPicks('') });
+same(deadRun.s.decisions.map((d) => [d.index, d.answer, d.by]), [[0, 'yes', 'default']], 'an earlier skip kills a later ask');
+same(deadRun.s.skipped, [1], 'the later step is skipped');
 same([...readPicks('0:yes,1:no,junk')], [['0', 'yes'], ['1', 'no']], 'readPicks indexed');
 same([...readPicks('no')], [['*', 'no']], 'readPicks all');
 

@@ -156,10 +156,10 @@ try {
   if (!modalText.includes(sentence)) fail('kitchen modal does not contain a body sentence from architect text');
   if (!fileRequests.length) fail('opening the architect file did not request data/files.json');
 
-  async function fileQuery(label, path, needle) {
+  async function fileQuery(label, filePath, needle) {
     const before = fileRequests.length;
     notes.length = 0;
-    const url = `${base}/?theme=kitchen&hint=0&file=${encodeURIComponent(path)}`;
+    const url = `${base}/?theme=kitchen&hint=0&file=${encodeURIComponent(filePath)}`;
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => window.__ready === true);
     await page.waitForFunction(
@@ -324,6 +324,7 @@ try {
   const paceQuery = () => page.evaluate(() => ({
     sameDocument: window.__paceDoc === true,
     fast: new URLSearchParams(location.search).get('fast'),
+    bodyFast: document.body.classList.contains('fast'),
   }));
   await page.click('#pace [data-pace=fast]');
   const pacedFast = await paceQuery();
@@ -332,18 +333,31 @@ try {
   await page.click('#pace [data-pace=fast]');
   await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('#ltExit')]);
   await page.waitForFunction(() => window.__ready === true);
-  const paceExit = new URLSearchParams(await page.evaluate(() => location.search));
-  result.pace = { fast: pacedFast, cozy: pacedCozy, exit: paceExit.toString(), problems: [...notes] };
+  const paceExit = await page.evaluate(() => ({
+    search: location.search,
+    bodyFast: document.body.classList.contains('fast'),
+  }));
+  const paceExitQuery = new URLSearchParams(paceExit.search);
+  result.pace = { fast: pacedFast, cozy: pacedCozy, exit: paceExit.search, exitFast: paceExit.bodyFast, problems: [...notes] };
   if (result.pace.problems.length) fail(`pace: ${result.pace.problems.join('; ')}`);
-  if (!pacedFast.sameDocument || pacedFast.fast !== '1') fail(`Fast did not set fast=1 in the same document (${JSON.stringify(pacedFast)})`);
-  if (!pacedCozy.sameDocument || pacedCozy.fast !== null) fail(`Cozy did not remove fast in the same document (${JSON.stringify(pacedCozy)})`);
-  if (paceExit.get('theme') !== 'kitchen' || paceExit.get('fast') !== '1' || paceExit.has('session')) fail(`pace Exit went to ?${paceExit}`);
+  if (!pacedFast.sameDocument || pacedFast.fast !== '1' || !pacedFast.bodyFast) fail(`Fast did not set fast=1 and class fast in the same document (${JSON.stringify(pacedFast)})`);
+  if (!pacedCozy.sameDocument || pacedCozy.fast !== null || pacedCozy.bodyFast) fail(`Cozy did not remove fast and class fast in the same document (${JSON.stringify(pacedCozy)})`);
+  if (paceExitQuery.get('theme') !== 'kitchen' || paceExitQuery.get('fast') !== '1' || paceExitQuery.has('session') || !paceExit.bodyFast) fail(`pace Exit went to ?${paceExitQuery} bodyFast=${paceExit.bodyFast}`);
 
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   result.reduced = await orderUp(`${base}/?theme=kitchen&hint=0&session=playbook:feature`);
   motionOff(result.reduced, 'reduced motion');
   noAskNoWaiter(result.reduced.done, 'reduced motion');
   if (!result.reduced.done.kicker.includes('ready')) fail('reduced motion ticket did not reach Order up · ready');
+  const reducedQuery = new URLSearchParams(await page.evaluate(() => location.search));
+  if (reducedQuery.has('fast')) fail(`reduced motion wrote fast=${reducedQuery.get('fast')}`);
+  await page.click('#pace [data-pace=cozy]');
+  const reducedCozy = await page.evaluate(() => ({
+    fast: new URLSearchParams(location.search).get('fast'),
+    bodyFast: document.body.classList.contains('fast'),
+  }));
+  result.reducedCozy = reducedCozy;
+  if (reducedCozy.fast !== null || !reducedCozy.bodyFast) fail(`Cozy under reduced motion changed pace (${JSON.stringify(reducedCozy)})`);
 } catch (err) {
   fail(err.message || String(err));
 } finally {

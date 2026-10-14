@@ -18,7 +18,7 @@ In the kitchen, a station opens its card, **Open skill file** shows the source f
 - `exit-theme` leaves the session with Exit and keeps `theme=kitchen`.
 - `pause` pauses and resumes the session with Pause, Resume, and Space.
 - `pace-toggle` turns fast on from Fast, and turns the user choice off from Cozy. Reduced motion stays fast.
-- `pace-url` stores that choice in the URL. Fast sets `fast=1`. Cozy removes `fast`. Exit keeps `theme=kitchen` and `fast=1`.
+- `pace-url` stores that choice in the URL. Fast sets `fast=1` and class `fast` on `body`. Cozy removes `fast` and the class. Exit keeps `theme=kitchen`, `fast=1`, and class `fast`.
 
 ## How to get to it (user POV)
 
@@ -49,8 +49,8 @@ Preconditions:
 - **Ticket click.** The helper loads `/?theme=kitchen&hint=0&fast=1`, sets a marker on `window`, and clicks `#rail .tk[data-id="playbook:feature"]`. `#lt .ttl` says Order up, the marker is still there, and there is no `.qb` and no waiter.
 - **Branch.** The helper loads `/?theme=kitchen&hint=0&freeze=1&session=skill:how&pick=1:no` and calls `window.__step(0.25)` until `.qb .qq` reads `Is the task complex?`. `.qb .qs` reads `SKILL.md:` and a line, and `#ticket li.skip` is empty. It steps on until `window.__srv()[1]` is `carry`, then until `window.__srv()[0]` is `served`. `#ticket li.skip` lists `Explore (complex only)` and `Synthesize (complex only)`, and `#ticket .k` says served.
 - **Empty ticket.** The helper loads `/?theme=kitchen&hint=0&freeze=1&session=playbook:opening-a-pr` and calls `window.__step(0.25)` eight times. `window.__T()` has advanced, and `window.__srv()` is `['served', null]`.
-- **Pace URL.** The helper loads `/?theme=kitchen&hint=0&session=playbook:feature` with no `fast` parameter. It clicks **Fast**. `location.search` has `fast=1` and the document did not reload. It clicks **Cozy**. `fast` is absent and the document did not reload. It clicks **Fast**, then `#ltExit`. The URL has `theme=kitchen` and `fast=1`, and no `session`.
-- **Check reduced motion.** The helper loads the Feature session without `fast=1`, with `prefers-reduced-motion: reduce`. The motion checks from fast mode hold, `#ticket .k` says ready, and there is no `.qb` and no waiter.
+- **Pace URL.** The helper loads `/?theme=kitchen&hint=0&session=playbook:feature` with no `fast` parameter. It clicks **Fast**. `location.search` has `fast=1`, `body` has class `fast`, and the document did not reload. It clicks **Cozy**. `fast` is absent, `body` does not have class `fast`, and the document did not reload. It clicks **Fast**, then `#ltExit`. The URL has `theme=kitchen` and `fast=1`, and no `session`. The new page has class `fast` on `body`.
+- **Check reduced motion.** The helper loads the Feature session without `fast=1`, with `prefers-reduced-motion: reduce`. The URL has no `fast`. The motion checks from fast mode hold, `#ticket .k` says ready, and there is no `.qb` and no waiter. It clicks **Cozy**. The URL still has no `fast`, and `body` stays fast.
 - **Proof.** The opened file screenshot is `/tmp/verify-pstack-map/skill-kitchen.png`. The kitchen overview is `overview-kitchen.png`. The sessions are `session-kitchen.png` and `skill-flow-kitchen.png`. The open question is `branch-kitchen.png`, and the carried plate is `waiter-kitchen.png`.
 
 ## Gotchas
