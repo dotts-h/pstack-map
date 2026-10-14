@@ -30,6 +30,11 @@ for (const [id, flow] of flows) {
   const wire = raw.skills[id].branches ?? [];
   branchCount += flow.branches.length;
   expect(flow.branches.length === wire.length, `${id}: parsed ${flow.branches.length} of ${wire.length} branches`);
+  for (const w of wire) {
+    const skipOn = w.skipOn === 'yes' || w.skipOn === 'no' ? w.skipOn : null;
+    const matched = skipOn !== null && w.default === skipOn;
+    expect((w.kind === 'opt-in') === matched, `${id}: (kind === 'opt-in') does not match (default === skipOn) for ${w.kind} at ${w.ask}`);
+  }
   const n = flow.steps.length;
   const picks = ['', 'yes', 'no', ...flow.branches.flatMap((_, i) => [`${i}:yes`, `${i}:no`])];
   for (const pick of [...picks, null]) {
@@ -40,9 +45,15 @@ for (const [id, flow] of flows) {
     expect(steady, `${label}: progress went backwards or reached 1 before done`);
     expect(s.executed.every((k, i) => !i || k > s.executed[i - 1]), `${label}: executed out of order ${s.executed}`);
     same([...s.executed, ...s.skipped].sort((a, b) => a - b), [...Array(n).keys()], `${label}: executed and skipped do not partition the steps`);
-    if (pick === null) same(s.decisions, [], `${label}: decisions`);
+    if (pick === null) {
+      same(s.decisions, [], `${label}: decisions`);
+      same(s.skipped, [], `${label}: asks off skips nothing`);
+    }
     if (pick === '') {
-      same(s.skipped, [], `${label}: the default skipped steps`);
+      const optIn = wire.filter((w) => w.kind === 'opt-in').flatMap((w) => (Array.isArray(w.skip) ? w.skip : []));
+      const skipped = [...new Set(optIn)].sort((a, b) => a - b);
+      same(s.skipped, skipped, `${label}: the default skipped steps`);
+      same(s.executed, [...Array(n).keys()].filter((k) => !skipped.includes(k)), `${label}: the default executed steps`);
       expect(s.decisions.every((d) => d.by === 'default'), `${label}: a decision was not the default`);
     }
     const forced = pick && /^(\d+):(yes|no)$/.exec(pick);
@@ -77,9 +88,25 @@ if (how) {
   same([clicked.s.skipped, clicked.s.decisions[1]?.by], [[1, 2], 'user'], 'how click: decision');
 }
 
+const architect = pinHow && flows.get('architect');
+if (architect) {
+  same(architect.branches.map((b) => [b.at, b.def, b.skips]), [
+    [0, 'no', { on: 'yes', steps: [0] }],
+    [2, 'no', { on: 'no', steps: [2] }],
+    [2, 'no', null],
+    [4, 'no', null],
+  ], 'architect branches');
+  const dflt = play(architect, { asks: true, picks: readPicks('') });
+  same([dflt.s.executed, dflt.s.skipped], [[0, 1, 3, 4], [2]], 'architect default: executed and skipped');
+}
+
 const doc = (branches) => ({ skills: { x: { steps: [{ n: 1, caption: 'a', line: 1 }, { n: 2, caption: 'b', line: 2 }], inputs: [], branches } } });
-const good = { ask: 0, q: 'Q?', line: 3, text: 'If q, then b.', skip: [1], skipOn: 'no' };
+const good = { ask: 0, q: 'Q?', line: 3, text: 'If q, then b.', skip: [1], skipOn: 'no', default: 'yes' };
+const bare = { ...good };
+delete bare.default;
 same(readFlows(doc([good]), () => true).get('x').branches.map((b) => [b.at, b.def, b.skips]), [[0, 'yes', { on: 'no', steps: [1] }]], 'one good branch');
+same(readFlows(doc([bare]), () => true).get('x').branches, [], 'a branch without default drops the skill branches');
+same(readFlows(doc([{ ...good, default: 'later' }]), () => true).get('x').branches, [], 'an illegal default drops the skill branches');
 same(readFlows(doc([good, { ...good, ask: 5 }]), () => true).get('x').branches, [], 'a bad branch drops every branch of the skill');
 same(readFlows(doc([{ ...good, ask: 1, skip: [0] }]), () => true).get('x').branches, [], 'a skip before its question is rejected');
 same([...readPicks('0:yes,1:no,junk')], [['0', 'yes'], ['1', 'no']], 'readPicks indexed');
