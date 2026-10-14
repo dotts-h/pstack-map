@@ -68,6 +68,10 @@ page.on('console', (msg) => {
 page.on('response', (res) => {
   if (res.status() >= 400) notes.push(`${res.status()} ${res.url()}`);
 });
+const fileRequests = [];
+page.on('request', (req) => {
+  if (req.url().includes('data/files.json')) fileRequests.push(req.url());
+});
 
 async function shot(name) {
   const file = path.join(outDir, name);
@@ -132,8 +136,13 @@ try {
   const kitchen = await openTheme('kitchen', '&open=architect');
   await page.waitForSelector('#card .flink');
   const cardTitle = await page.$eval('#card h3', (el) => el.textContent);
+  if (fileRequests.length) fail('data/files.json was requested before the file was opened');
   await page.click('#card .flink');
-  await page.waitForFunction(() => document.querySelector('#modal')?.style.display === 'block');
+  await page.waitForFunction(
+    (text) => (document.querySelector('#modal .mb')?.innerText || '').includes(text),
+    {},
+    sentence,
+  );
   const modalText = await page.evaluate(() => document.querySelector('#modal .mb')?.innerText || '');
   await shot('skill-kitchen.png');
   result.kitchen = {
@@ -145,6 +154,37 @@ try {
   };
   if (kitchen.problems.length) fail(`kitchen station: ${kitchen.problems.join('; ')}`);
   if (!modalText.includes(sentence)) fail('kitchen modal does not contain a body sentence from architect text');
+  if (!fileRequests.length) fail('opening the architect file did not request data/files.json');
+
+  async function fileQuery(label, path, needle) {
+    const before = fileRequests.length;
+    notes.length = 0;
+    const url = `${base}/?theme=kitchen&hint=0&file=${encodeURIComponent(path)}`;
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => window.__ready === true);
+    await page.waitForFunction(
+      (text) => (document.querySelector('#modal .mb')?.innerText || '').includes(text),
+      {},
+      needle,
+    );
+    const body = await page.evaluate(() => document.querySelector('#modal .mb')?.innerText || '');
+    const row = { url, found: body.includes(needle), requested: fileRequests.length > before, problems: [...notes] };
+    if (row.problems.length) fail(`${label}: ${row.problems.join('; ')}`);
+    if (!row.found) fail(`${label}: the modal body did not include ${JSON.stringify(needle)}`);
+    if (!row.requested) fail(`${label}: did not request data/files.json`);
+    return row;
+  }
+
+  result.principleFile = await fileQuery(
+    'principle-laziness-protocol',
+    'pstack/skills/principle-laziness-protocol/SKILL.md',
+    'Do not repeat the same choice in several places.',
+  );
+  result.routerFile = await fileQuery(
+    'poteto-mode',
+    'pstack/skills/poteto-mode/SKILL.md',
+    'Cite only principles whose leaf SKILL.md you read this session.',
+  );
 
   const sessionView = () => {
     const hint = document.getElementById('hint');
