@@ -206,11 +206,12 @@ function path(a,b){const key=(i,j)=>i*100+j;const s=[GX(a.x),GZ(a.z)],t=[GX(b.x)
  const k3=[k2[0]];for(let i=1;i<k2.length;i++){const d=k2[i].distanceTo(k2[i-1]);const n=Math.floor(d/1.2);for(let m=1;m<=n;m++)k3.push(k2[i-1].clone().lerp(k2[i],m/(n+1)));k3.push(k2[i]);}return k3;}
 
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let userFast=qs.get('fast')==='1';
 let fast=false,CREW=true;
-function applyFast(){fast=userFast||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>{const on=el.dataset.pace===(fast?'fast':'cozy');el.classList.toggle('on',on);el.setAttribute('aria-pressed',String(on));if(reduceMotion&&el.dataset.pace==='cozy')el.setAttribute('aria-disabled','true');});}
+function wantsFast(){return new URLSearchParams(location.search).get('fast')==='1';}
+function applyFast(){fast=wantsFast()||reduceMotion;CREW=!fast;document.body.classList.toggle('fast',fast);document.querySelectorAll('#pace [data-pace]').forEach((el)=>{const on=el.dataset.pace===(fast?'fast':'cozy');el.classList.toggle('on',on);el.setAttribute('aria-pressed',String(on));if(reduceMotion&&el.dataset.pace==='cozy')el.setAttribute('aria-disabled','true');});}
+function choosePace(pace){const u=new URL(location.href);if(pace==='fast')u.searchParams.set('fast','1');else u.searchParams.delete('fast');history.replaceState(null,'',u);applyFast();}
 applyFast();
-document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;userFast=b.dataset.pace==='fast';applyFast();fx.visible=!fast;if(fast){dropCarry();send('fast');}});
+document.getElementById('pace').addEventListener('click',(e)=>{const b=e.target.closest('[data-pace]');if(!b)return;choosePace(b.dataset.pace);fx.visible=!fast;if(fast){dropCarry();send('fast');}});
 document.getElementById('pace').addEventListener('keydown',(e)=>{if(e.key!=='Enter'&&e.key!==' ')return;const b=e.target.closest('[data-pace]');if(!b)return;e.preventDefault();b.click();});
 const ease={io:u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,sin:u=>-(Math.cos(Math.PI*u)-1)/2,out:u=>1-Math.pow(1-u,3)};
 const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));

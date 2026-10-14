@@ -277,6 +277,28 @@ try {
   if (!result.fastDuringCarry.fast) fail('fast during carry: body is missing class fast');
   if (result.fastDuringCarry.srv[0] !== 'served' || result.fastDuringCarry.srv[1] !== null) fail(`fast during carry: ended at ${JSON.stringify(result.fastDuringCarry.srv)}`);
 
+  notes.length = 0;
+  await page.goto(`${base}/?theme=kitchen&hint=0&session=playbook:feature`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true);
+  await page.evaluate(() => { window.__paceDoc = true; });
+  const paceQuery = () => page.evaluate(() => ({
+    sameDocument: window.__paceDoc === true,
+    fast: new URLSearchParams(location.search).get('fast'),
+  }));
+  await page.click('#pace [data-pace=fast]');
+  const pacedFast = await paceQuery();
+  await page.click('#pace [data-pace=cozy]');
+  const pacedCozy = await paceQuery();
+  await page.click('#pace [data-pace=fast]');
+  await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.click('#ltExit')]);
+  await page.waitForFunction(() => window.__ready === true);
+  const paceExit = new URLSearchParams(await page.evaluate(() => location.search));
+  result.pace = { fast: pacedFast, cozy: pacedCozy, exit: paceExit.toString(), problems: [...notes] };
+  if (result.pace.problems.length) fail(`pace: ${result.pace.problems.join('; ')}`);
+  if (!pacedFast.sameDocument || pacedFast.fast !== '1') fail(`Fast did not set fast=1 in the same document (${JSON.stringify(pacedFast)})`);
+  if (!pacedCozy.sameDocument || pacedCozy.fast !== null) fail(`Cozy did not remove fast in the same document (${JSON.stringify(pacedCozy)})`);
+  if (paceExit.get('theme') !== 'kitchen' || paceExit.get('fast') !== '1' || paceExit.has('session')) fail(`pace Exit went to ?${paceExit}`);
+
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   result.reduced = await orderUp(`${base}/?theme=kitchen&hint=0&session=playbook:feature`);
   motionOff(result.reduced, 'reduced motion');

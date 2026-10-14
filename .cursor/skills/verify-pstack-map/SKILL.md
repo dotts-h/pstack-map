@@ -53,6 +53,8 @@ Fast has no question bubble and no waiter. At Order up in each fast row and in t
 
 The branch row loads `/?theme=kitchen&hint=0&freeze=1&session=skill:how&pick=1:no` in Cozy and advances the clock with `window.__step(0.25)`. The bubble `.qb .qq` must read `Is the task complex?`, `.qb .qs` must read `SKILL.md:` and a line number, and no step is skipped yet. After the forced No, `#ticket li.skip` must list `Explore (complex only)` and `Synthesize (complex only)`. The waiter must reach `window.__srv()[1] === 'carry'`, and `#ticket .k` must say served. The empty-ticket row loads `session=playbook:opening-a-pr` with `freeze=1`, which has nothing to cook. After eight steps `window.__T()` must have advanced, `window.__srv()` must be `['served', null]`, and the pass has no Order up label. Another row loads `session=skill:how` in Cozy, steps until the waiter is carrying, clicks Fast, and must end at Served with no waiter.
 
+A pace row loads `/?theme=kitchen&hint=0&session=playbook:feature` with no `fast` parameter. It clicks **Fast** and the same document's URL has `fast=1`. It clicks **Cozy** and `fast` is gone. It clicks **Fast**, then **Exit**. The URL keeps `theme=kitchen` and `fast=1`.
+
 Last, it repeats the Feature session with reduced motion and no `fast` parameter. The body must still have class `fast`, and the ticket must still say ready. `?hint=0` hides the kitchen hint. The helper does not report fps.
 
 ## Evidence
