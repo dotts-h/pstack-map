@@ -367,6 +367,44 @@
    "inputs": [],
    "branches": []
   },
+  "create-formal-verification-skill": {
+   "file": "skills/create-formal-verification-skill/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Choose the target from the code",
+     "line": 11
+    },
+    {
+     "n": 2,
+     "caption": "Let the question choose the tool",
+     "line": 17
+    },
+    {
+     "n": 3,
+     "caption": "What makes it good",
+     "line": 21
+    },
+    {
+     "n": 4,
+     "caption": "Generate the verify skill",
+     "line": 31
+    },
+    {
+     "n": 5,
+     "caption": "Prove it before you hand off",
+     "line": 35
+    },
+    {
+     "n": 6,
+     "caption": "Hand off",
+     "line": 39
+    }
+   ],
+   "inputs": [],
+   "branches": []
+  },
   "create-verification-skill": {
    "file": "skills/create-verification-skill/SKILL.md",
    "stepSource": "Phase/Step headings",
@@ -698,12 +736,62 @@
     {
      "n": 2,
      "caption": "Write the reply",
-     "line": 19
+     "line": 21
     },
     {
      "n": 3,
      "caption": "Visuals",
-     "line": 31
+     "line": 35
+    }
+   ],
+   "inputs": [],
+   "branches": [
+    {
+     "ask": 2,
+     "kind": "when",
+     "q": "Is something easier to grasp as a picture than as sentences?",
+     "yes": "draw it: how a design or system works, a PR stack or dependency chain with each PR's state",
+     "no": "carry on",
+     "skip": [],
+     "line": 39,
+     "text": "When something is easier to grasp as a picture than as sentences, draw it: how a design or system works, a PR stack or dependency chain with each PR's state, a before and after of a fix, or options side by side. Never draw a status list, a list of action items, or boxes with nothing connecting them. Never give a fact twice, in text or across visuals.",
+     "default": "no"
+    }
+   ]
+  },
+  "maintain-formal-verification-skill": {
+   "file": "skills/maintain-formal-verification-skill/SKILL.md",
+   "stepSource": "numbered list under \"## Pass\"",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Find the checks",
+     "line": 28
+    },
+    {
+     "n": 2,
+     "caption": "Run it as it is",
+     "line": 30
+    },
+    {
+     "n": 3,
+     "caption": "Read every change to covered code",
+     "line": 32
+    },
+    {
+     "n": 4,
+     "caption": "Update from the code, not from the result",
+     "line": 38
+    },
+    {
+     "n": 5,
+     "caption": "Rerun and judge each result",
+     "line": 40
+    },
+    {
+     "n": 6,
+     "caption": "Update the verify skill",
+     "line": 44
     }
    ],
    "inputs": [],
@@ -912,32 +1000,32 @@
     {
      "n": 2,
      "caption": "Get set up",
-     "line": 35
+     "line": 36
     },
     {
      "n": 3,
      "caption": "Start a task with /poteto-mode",
-     "line": 47
+     "line": 50
     },
     {
      "n": 4,
      "caption": "Pick a skill",
-     "line": 59
+     "line": 62
     },
     {
      "n": 5,
      "caption": "Playbooks and principles",
-     "line": 113
+     "line": 118
     },
     {
      "n": 6,
      "caption": "Fix a run that went wrong",
-     "line": 130
+     "line": 135
     },
     {
      "n": 7,
      "caption": "Make pstack my own",
-     "line": 145
+     "line": 150
     }
    ],
    "inputs": [
@@ -949,12 +1037,12 @@
     {
      "kind": "file",
      "name": "references/prompting.md",
-     "line": 41
+     "line": 42
     },
     {
      "kind": "file",
      "name": "references/recipes.md",
-     "line": 156
+     "line": 161
     }
    ],
    "branches": [
@@ -965,7 +1053,7 @@
      "yes": "ask whether the user wants to pick a model for each role and a reasoning budget now",
      "no": "carry on",
      "skip": [],
-     "line": 30,
+     "line": 31,
      "text": "When the model rule is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:",
      "default": "no"
     },
@@ -976,7 +1064,7 @@
      "yes": "say where the tokens go and how to spend fewer",
      "no": "carry on",
      "skip": [],
-     "line": 43,
+     "line": 44,
      "text": "If cost is the worry, say where the tokens go and how to spend fewer. pstack spends extra tokens on subagents and review panels. Rerun `/setup-pstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on Auto or a cheaper model. A shorter panel list runs fewer subagents, one for each entry. Save `/poteto-mode` for work that needs rigor.",
      "default": "no"
     },
@@ -987,7 +1075,7 @@
      "yes": "read its frontmatter and route by its description",
      "no": "carry on",
      "skip": [],
-     "line": 96,
+     "line": 101,
      "text": "If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.",
      "default": "no"
     }
@@ -1342,29 +1430,29 @@
     {
      "n": 1,
      "caption": "Frame",
-     "line": 15
+     "line": 13
     },
     {
      "n": 2,
      "caption": "Fan out",
-     "line": 16
+     "line": 14
     },
     {
      "n": 3,
      "caption": "Aggregate",
-     "line": 17
+     "line": 15
     },
     {
      "n": 4,
      "caption": "Report",
-     "line": 18
+     "line": 16
     }
    ],
    "inputs": [
     {
      "kind": "skill",
      "name": "poteto-mode",
-     "line": 25
+     "line": 22
     }
    ],
    "branches": [
@@ -1375,7 +1463,7 @@
      "yes": "pass cloud_base_branch",
      "no": "carry on",
      "skip": [],
-     "line": 32,
+     "line": 29,
      "text": "When a worker must start from a non-default pushed branch, pass `cloud_base_branch`.",
      "default": "no"
     },
@@ -1386,7 +1474,7 @@
      "yes": "proceed with N-1 and note it",
      "no": "carry on",
      "skip": [],
-     "line": 36,
+     "line": 33,
      "text": "If a worker drops out, proceed with N-1 and note it.",
      "default": "no"
     }
