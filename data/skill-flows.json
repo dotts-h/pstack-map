@@ -394,16 +394,28 @@
     {
      "n": 5,
      "caption": "Prove it before you hand off",
-     "line": 35
+     "line": 37
     },
     {
      "n": 6,
      "caption": "Hand off",
-     "line": 39
+     "line": 41
     }
    ],
    "inputs": [],
-   "branches": []
+   "branches": [
+    {
+     "ask": 3,
+     "kind": "if",
+     "q": "Is the check a TLA+ model?",
+     "yes": "tell the next agent to read every result with the pstack [/statechart](../statechart/SKILL",
+     "no": "carry on",
+     "skip": [],
+     "line": 35,
+     "text": "If the check is a TLA+ model, tell the next agent to read every result with the pstack [`/statechart`](../statechart/SKILL.md) skill. It shows each invariant violation the checker finds as its shortest path in plain words, and which of those violations a change fixes. When the check passes, `/statechart` draws a chart of how the system moves between states. Refer to `/statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.",
+     "default": "no"
+    }
+   ]
   },
   "create-verification-skill": {
    "file": "skills/create-verification-skill/SKILL.md",
@@ -759,6 +771,24 @@
     }
    ]
   },
+  "ketchup-video": {
+   "file": "skills/ketchup-video/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Slides",
+     "line": 11
+    },
+    {
+     "n": 2,
+     "caption": "Render",
+     "line": 21
+    }
+   ],
+   "inputs": [],
+   "branches": []
+  },
   "maintain-formal-verification-skill": {
    "file": "skills/maintain-formal-verification-skill/SKILL.md",
    "stepSource": "numbered list under \"## Pass\"",
@@ -1015,17 +1045,17 @@
     {
      "n": 5,
      "caption": "Playbooks and principles",
-     "line": 118
+     "line": 120
     },
     {
      "n": 6,
      "caption": "Fix a run that went wrong",
-     "line": 135
+     "line": 137
     },
     {
      "n": 7,
      "caption": "Make pstack my own",
-     "line": 150
+     "line": 152
     }
    ],
    "inputs": [
@@ -1042,7 +1072,7 @@
     {
      "kind": "file",
      "name": "references/recipes.md",
-     "line": 161
+     "line": 163
     }
    ],
    "branches": [
@@ -1075,7 +1105,7 @@
      "yes": "read its frontmatter and route by its description",
      "no": "carry on",
      "skip": [],
-     "line": 101,
+     "line": 103,
      "text": "If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.",
      "default": "no"
     }
@@ -1291,7 +1321,7 @@
     {
      "n": 6,
      "caption": "Summarize for the user",
-     "line": 60
+     "line": 62
     }
    ],
    "inputs": [
@@ -1339,7 +1369,7 @@
      "yes": "run it on every touched skill before declaring done",
      "no": "carry on",
      "skip": [],
-     "line": 58,
+     "line": 60,
      "text": "If your environment ships a SKILL.md validator, run it on every touched skill before declaring done.",
      "default": "no"
     }
@@ -1354,8 +1384,29 @@
   },
   "sharpen": {
    "file": "skills/sharpen/SKILL.md",
-   "stepSource": "no ordered steps in the file",
-   "steps": [],
+   "stepSource": "top-level numbered list",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Say what a top professional in this field would do here that…",
+     "line": 9
+    },
+    {
+     "n": 2,
+     "caption": "Name the rawest material they would start from instead of…",
+     "line": 10
+    },
+    {
+     "n": 3,
+     "caption": "Name the specific methods and tools they would use",
+     "line": 11
+    },
+    {
+     "n": 4,
+     "caption": "Say what, other than you or me, would show the result is right",
+     "line": 12
+    }
+   ],
    "inputs": [],
    "branches": []
   },
@@ -1422,6 +1473,74 @@
     }
    ],
    "branches": []
+  },
+  "statechart": {
+   "file": "skills/statechart/SKILL.md",
+   "stepSource": "section headings (no explicit ordered list)",
+   "steps": [
+    {
+     "n": 1,
+     "caption": "Pick the direction",
+     "line": 13
+    },
+    {
+     "n": 2,
+     "caption": "Spec to chart",
+     "line": 19
+    },
+    {
+     "n": 3,
+     "caption": "Chart to spec",
+     "line": 28
+    },
+    {
+     "n": 4,
+     "caption": "Hand off",
+     "line": 34
+    }
+   ],
+   "inputs": [
+    {
+     "kind": "file",
+     "name": "scripts/statechart.mjs",
+     "line": 11
+    }
+   ],
+   "branches": [
+    {
+     "ask": 0,
+     "kind": "if",
+     "q": "Has the code already a TLA+ spec?",
+     "yes": "start from a copy of that spec",
+     "no": "carry on",
+     "skip": [],
+     "line": 17,
+     "text": "If the code already has a TLA+ spec, start from a copy of that spec. Add the variables that the labels and rules need, and keep the spec's existing invariants. To audit the code against that spec, make the copy model what the code does, and pass the spec unchanged as `--against`. Check it with the config that its authors say it passes, and pass that config as `--against-config` unless it has the spec's file name. One mapping labels both models, so label states and steps from variables that both have. A label that reads a variable that only the copy has must test `\"name\" in v` first, and label the spec's states another way. When a model describes code, tie every variable and action to code that a reviewer can open, and take its name from that code. Make each action one indivisible step in the code. Put the file and line of the code that checks each condition of an action in a comment on that condition, as in `\\* pay.ts:120`.",
+     "default": "no"
+    },
+    {
+     "ask": 1,
+     "kind": "if",
+     "q": "Is there a proposed fix?",
+     "yes": "model it and pass that model as --fixed",
+     "no": "carry on",
+     "skip": [],
+     "line": 24,
+     "text": "4. If there is a proposed fix, model it and pass that model as `--fixed`.",
+     "default": "no"
+    },
+    {
+     "ask": 1,
+     "kind": "when",
+     "q": "Does the model describe code?",
+     "yes": "replay each bug's story against the real code, as a test or a live repro, one step per mod",
+     "no": "carry on",
+     "skip": [],
+     "line": 26,
+     "text": "6. When the model describes code, replay each bug's story against the real code, as a test or a live repro, one step per model action. Drive only entry points that a user, a client, or another part of the system reaches, and assert only what they can observe. A test that asserts a flag that it sets, or that searches the source text, proves nothing. When a run proves part of the story and reading the code proves the rest, say which part each proves. When the test copies code that it cannot import, give the commit and line range of the copy, and list what the copy leaves out. If a bug does not reproduce, assume the model is wrong until you show otherwise. Fix the model, not the rule. For a design with no code yet, the TLC trace is the evidence, and the hand-off must say so.",
+     "default": "no"
+    }
+   ]
   },
   "swarm": {
    "file": "skills/swarm/SKILL.md",

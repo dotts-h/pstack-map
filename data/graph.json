@@ -4,20 +4,20 @@
     "repo": "cursor/plugins",
     "url": "https://github.com/cursor/plugins",
     "pluginPath": "pstack",
-    "commit": "d457567332aa6989e753ea289f30ea2bfbc80bc0",
-    "commitShort": "d457567",
-    "commitDate": "2026-10-19T05:35:26.000Z",
-    "version": "0.15.28",
-    "sourceUrlTemplate": "https://github.com/cursor/plugins/blob/d457567332aa6989e753ea289f30ea2bfbc80bc0/{path}",
+    "commit": "99b609a72323b70204eab407c622f436e858e112",
+    "commitShort": "99b609a",
+    "commitDate": "2026-10-25T01:49:37.000Z",
+    "version": "0.15.32",
+    "sourceUrlTemplate": "https://github.com/cursor/plugins/blob/99b609a72323b70204eab407c622f436e858e112/{path}",
     "license": "MIT",
-    "licenseUrl": "https://github.com/cursor/plugins/blob/d457567332aa6989e753ea289f30ea2bfbc80bc0/pstack/LICENSE",
+    "licenseUrl": "https://github.com/cursor/plugins/blob/99b609a72323b70204eab407c622f436e858e112/pstack/LICENSE",
     "copyright": "Copyright (c) 2026 Lauren Tan",
     "author": "Lauren Tan"
   },
   "generator": "scripts/extract-graph.mjs",
   "counts": {
-    "nodes": 133,
-    "edges": 432,
+    "nodes": 157,
+    "edges": 492,
     "nodesByKind": {
       "agent": 2,
       "automation": 4,
@@ -25,19 +25,19 @@
       "principle": 24,
       "reference": 41,
       "router": 1,
-      "script": 7,
-      "skill": 31
+      "script": 29,
+      "skill": 33
     },
     "edgesByType": {
       "applies": 87,
-      "imports": 3,
+      "imports": 58,
       "loads": 23,
-      "references": 313,
-      "runs": 6
+      "references": 317,
+      "runs": 7
     },
     "edgesByMode": {
-      "always": 271,
-      "conditional": 69,
+      "always": 330,
+      "conditional": 70,
       "step": 92
     }
   },
@@ -1855,7 +1855,7 @@
       "description": "",
       "path": "pstack/skills/poteto-mode/scripts/check-plan.test.ts",
       "owner": "poteto-mode",
-      "lines": 96,
+      "lines": 110,
       "flags": {},
       "degree": {
         "in": 0,
@@ -1872,7 +1872,7 @@
       "description": "",
       "path": "pstack/skills/poteto-mode/scripts/orch",
       "owner": "poteto-mode",
-      "lines": 3028,
+      "lines": 3066,
       "flags": {},
       "files": [
         "pstack/skills/poteto-mode/scripts/orch/orch.test.ts",
@@ -1894,7 +1894,7 @@
       "description": "",
       "path": "pstack/skills/poteto-mode/scripts/watch-pr",
       "owner": "poteto-mode",
-      "lines": 3680,
+      "lines": 3819,
       "flags": {},
       "files": [
         "pstack/skills/poteto-mode/scripts/watch-pr/cli.test.ts",
@@ -1925,7 +1925,7 @@
       "description": "Read-only worktree prune audit. Classifies every git worktree by size, merge state, uncommitted work, remote/PR state, and the most recent chat that operated in it. Emits a table sorted by size with a suggested bucket. Never deletes anything; deletion stays a human-gated step in the playbook.",
       "path": "pstack/skills/poteto-mode/scripts/worktree-audit.sh",
       "owner": "poteto-mode",
-      "lines": 126,
+      "lines": 134,
       "flags": {},
       "degree": {
         "in": 1,
@@ -1948,6 +1948,383 @@
         "in": 1,
         "out": 1,
         "total": 2
+      }
+    },
+    {
+      "id": "script:statechart/bug-states.mjs",
+      "kind": "script",
+      "name": "bug-states.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/bug-states.mjs",
+      "owner": "statechart",
+      "lines": 81,
+      "flags": {},
+      "degree": {
+        "in": 5,
+        "out": 2,
+        "total": 7
+      }
+    },
+    {
+      "id": "script:statechart/chart-edges.mjs",
+      "kind": "script",
+      "name": "chart-edges.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/chart-edges.mjs",
+      "owner": "statechart",
+      "lines": 68,
+      "flags": {},
+      "degree": {
+        "in": 2,
+        "out": 2,
+        "total": 4
+      }
+    },
+    {
+      "id": "script:statechart/chart-parts.mjs",
+      "kind": "script",
+      "name": "chart-parts.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/chart-parts.mjs",
+      "owner": "statechart",
+      "lines": 21,
+      "flags": {},
+      "degree": {
+        "in": 6,
+        "out": 0,
+        "total": 6
+      }
+    },
+    {
+      "id": "script:statechart/chart-to-tla.mjs",
+      "kind": "script",
+      "name": "chart-to-tla.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/chart-to-tla.mjs",
+      "owner": "statechart",
+      "lines": 205,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 2,
+        "total": 3
+      }
+    },
+    {
+      "id": "script:statechart/compare-charts.mjs",
+      "kind": "script",
+      "name": "compare-charts.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/compare-charts.mjs",
+      "owner": "statechart",
+      "lines": 74,
+      "flags": {},
+      "degree": {
+        "in": 2,
+        "out": 1,
+        "total": 3
+      }
+    },
+    {
+      "id": "script:statechart/lib.mjs",
+      "kind": "script",
+      "name": "lib.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/lib.mjs",
+      "owner": "statechart",
+      "lines": 970,
+      "flags": {},
+      "degree": {
+        "in": 15,
+        "out": 0,
+        "total": 15
+      }
+    },
+    {
+      "id": "script:statechart/map-view.mjs",
+      "kind": "script",
+      "name": "map-view.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/map-view.mjs",
+      "owner": "statechart",
+      "lines": 92,
+      "flags": {},
+      "degree": {
+        "in": 2,
+        "out": 1,
+        "total": 3
+      }
+    },
+    {
+      "id": "script:statechart/property-loop.mjs",
+      "kind": "script",
+      "name": "property-loop.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/property-loop.mjs",
+      "owner": "statechart",
+      "lines": 60,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 2,
+        "total": 3
+      }
+    },
+    {
+      "id": "script:statechart/read-check.mjs",
+      "kind": "script",
+      "name": "read-check.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/read-check.mjs",
+      "owner": "statechart",
+      "lines": 79,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 2,
+        "total": 3
+      }
+    },
+    {
+      "id": "script:statechart/regions-chart.mjs",
+      "kind": "script",
+      "name": "regions-chart.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/regions-chart.mjs",
+      "owner": "statechart",
+      "lines": 307,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 4,
+        "total": 5
+      }
+    },
+    {
+      "id": "script:statechart/render.mjs",
+      "kind": "script",
+      "name": "render.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/render.mjs",
+      "owner": "statechart",
+      "lines": 531,
+      "flags": {},
+      "degree": {
+        "in": 3,
+        "out": 2,
+        "total": 5
+      }
+    },
+    {
+      "id": "script:statechart/rule-book.mjs",
+      "kind": "script",
+      "name": "rule-book.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/rule-book.mjs",
+      "owner": "statechart",
+      "lines": 84,
+      "flags": {},
+      "degree": {
+        "in": 3,
+        "out": 1,
+        "total": 4
+      }
+    },
+    {
+      "id": "script:statechart/second-replay.mjs",
+      "kind": "script",
+      "name": "second-replay.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/second-replay.mjs",
+      "owner": "statechart",
+      "lines": 122,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 3,
+        "total": 4
+      }
+    },
+    {
+      "id": "script:statechart/snapshot.mjs",
+      "kind": "script",
+      "name": "snapshot.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/snapshot.mjs",
+      "owner": "statechart",
+      "lines": 74,
+      "flags": {},
+      "degree": {
+        "in": 2,
+        "out": 0,
+        "total": 2
+      }
+    },
+    {
+      "id": "script:statechart/spec-text.mjs",
+      "kind": "script",
+      "name": "spec-text.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/spec-text.mjs",
+      "owner": "statechart",
+      "lines": 126,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 1,
+        "total": 2
+      }
+    },
+    {
+      "id": "script:statechart/statechart-help.mjs",
+      "kind": "script",
+      "name": "statechart-help.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+      "owner": "statechart",
+      "lines": 350,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 3,
+        "total": 4
+      }
+    },
+    {
+      "id": "script:statechart/statechart.mjs",
+      "kind": "script",
+      "name": "statechart.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/statechart.mjs",
+      "owner": "statechart",
+      "lines": 903,
+      "flags": {},
+      "degree": {
+        "in": 4,
+        "out": 11,
+        "total": 15
+      }
+    },
+    {
+      "id": "script:statechart/test/",
+      "kind": "script",
+      "name": "test/",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/test",
+      "owner": "statechart",
+      "lines": 6854,
+      "flags": {},
+      "files": [
+        "pstack/skills/statechart/scripts/test/statechart.test.mjs"
+      ],
+      "degree": {
+        "in": 0,
+        "out": 5,
+        "total": 5
+      }
+    },
+    {
+      "id": "script:statechart/tlc-to-chart-args.mjs",
+      "kind": "script",
+      "name": "tlc-to-chart-args.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/tlc-to-chart-args.mjs",
+      "owner": "statechart",
+      "lines": 52,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 0,
+        "total": 1
+      }
+    },
+    {
+      "id": "script:statechart/tlc-to-chart.mjs",
+      "kind": "script",
+      "name": "tlc-to-chart.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+      "owner": "statechart",
+      "lines": 802,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 11,
+        "total": 12
+      }
+    },
+    {
+      "id": "script:statechart/tlc-tools.mjs",
+      "kind": "script",
+      "name": "tlc-tools.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/tlc-tools.mjs",
+      "owner": "statechart",
+      "lines": 69,
+      "flags": {},
+      "degree": {
+        "in": 2,
+        "out": 0,
+        "total": 2
+      }
+    },
+    {
+      "id": "script:statechart/ways-in.mjs",
+      "kind": "script",
+      "name": "ways-in.mjs",
+      "title": null,
+      "group": "statechart",
+      "description": "",
+      "path": "pstack/skills/statechart/scripts/ways-in.mjs",
+      "owner": "statechart",
+      "lines": 69,
+      "flags": {},
+      "degree": {
+        "in": 1,
+        "out": 2,
+        "total": 3
       }
     },
     {
@@ -2097,17 +2474,17 @@
       "title": "Create a formal verification skill",
       "group": "skills",
       "description": "Generate a project-local skill that formally verifies the code where a bug costs the most and tests reach the least, in any language, with whichever verification tool fits. Use for /create-formal-verification-skill, \"model-check this race\", \"prove this invariant\", or when concurrency, retries, state machines, parsers, or unsafe code need more than tests.",
-      "text": "---\nname: create-formal-verification-skill\ndescription: \"Generate a project-local skill that formally verifies the code where a bug costs the most and tests reach the least, in any language, with whichever verification tool fits. Use for /create-formal-verification-skill, \\\"model-check this race\\\", \\\"prove this invariant\\\", or when concurrency, retries, state machines, parsers, or unsafe code need more than tests.\"\ndisable-model-invocation: true\n---\n\n# Create a formal verification skill\n\nA test checks the cases that someone thought to write. Formal verification checks every case in a stated scope: every order of steps in a model, every input up to a bound, or every input. This skill finds the part of the repo where that matters most, verifies one property of it, and leaves a project-local skill that lets the next agent check a change against that property. Write that skill for an agent who reads it cold, mid-change, and has never seen your work. The user must be able to trust the result and act on it without learning the verification language.\n\n## Choose the target from the code\n\nAnswer from the codebase, and ask the user only what you cannot observe. If the user named an area or a bug, start there.\n\nA good target is a promise the code makes, where a break harms users and tests rarely reach the case that breaks it. Choose the strongest such target in the repo, not the one that is easiest to verify.\n\n## Let the question choose the tool\n\nPick the tool that answers the question at the lowest cost: a model checker, a proof assistant, an SMT-backed verifier, or another tool. Whether events can happen in a bad order usually suits a model checker over a small model of the design, and TLA+ is the default for that in any language. Whether the code itself behaves for every input, as with memory safety, overflow, or a data-structure invariant, usually suits a verifier that runs on the code. If no verifier runs on this language, say so, and test the real code with generated inputs, not a hand model of the function. A property that must hold at every size, where a bound is not enough, can need a proof. Prefer a tool that the repo's developers can install and run, and tell the user why you chose it.\n\n## What makes it good\n\n- **True to the code.** Every part of the model or proof points to code that a reviewer can open. What the verification treats as one indivisible step is one indivisible step in the code. Names come from this repo.\n- **Able to fail.** A check that you have never seen fail proves nothing. Show each property failing on a broken variant of the code it guards, such as a removed check or a reordered step.\n- **Findings stay findings.** When the current code breaks the property, report it with the counterexample in the code's terms. Do not weaken the property or the model until it passes, and do not change product code unless the user asks.\n- **Honest about scope.** Say what is verified, under which bounds and assumptions, and what is left out. A pass covers the model or the bound, not the whole system.\n- **Readable without the tool.** State the property and the harm in one plain sentence each. Tell a counterexample as a short sequence of steps in the code's words.\n- **Cheap to rerun.** One command, a reproducible tool version, and a run short enough that the next agent will use it on every relevant change.\n- **Kept in step with the code.** Record which files and functions each check covers, and the commit at which you last confirmed that the verification describes them. When the covered code changes after that commit, the next agent can see that the verification needs another look.\n\n## Generate the verify skill\n\nWrite a project-local skill with frontmatter that names the area and says when to use it. Without frontmatter, the skill never registers. From the skill alone, the next agent must be able to tell whether a change touches the verified code, run the check, tell a real bug from a modeling error, and update the verification when a change is intended. Put the coverage record and the sync commit in the skill, and tell the next agent to move the sync commit forward only after it confirms that the verification describes the code at the new commit. Use this repo's real commands, paths, and nouns, and leave no placeholders.\n\n## Prove it before you hand off\n\nFollow the generated skill once, as the next agent would, on a scratch change that breaks the property in the real code. It must catch the break. Then drop the scratch change and confirm that the check is back where it started: passing, or failing only on the findings you will report. A verify skill that was never run is a draft. If the skill misses the break or a step does not run, fix the skill or the verification, not the scratch change.\n\n## Hand off\n\nTell the user what you verified, which tool you used and why, the bounds, what the check found in plain words, how to run it, and what it does not cover. Suggest a second target only if you found a close one. Point the user at `/maintain-formal-verification-skill` for bringing the verification back in line after changes that did not recheck it.\n",
+      "text": "---\nname: create-formal-verification-skill\ndescription: \"Generate a project-local skill that formally verifies the code where a bug costs the most and tests reach the least, in any language, with whichever verification tool fits. Use for /create-formal-verification-skill, \\\"model-check this race\\\", \\\"prove this invariant\\\", or when concurrency, retries, state machines, parsers, or unsafe code need more than tests.\"\ndisable-model-invocation: true\n---\n\n# Create a formal verification skill\n\nA test checks the cases that someone thought to write. Formal verification checks every case in a stated scope: every order of steps in a model, every input up to a bound, or every input. This skill finds the part of the repo where that matters most, verifies one property of it, and leaves a project-local skill that lets the next agent check a change against that property. Write that skill for an agent who reads it cold, mid-change, and has never seen your work. The user must be able to trust the result and act on it without learning the verification language.\n\n## Choose the target from the code\n\nAnswer from the codebase, and ask the user only what you cannot observe. If the user named an area or a bug, start there.\n\nA good target is a promise the code makes, where a break harms users and tests rarely reach the case that breaks it. Choose the strongest such target in the repo, not the one that is easiest to verify.\n\n## Let the question choose the tool\n\nPick the tool that answers the question at the lowest cost: a model checker, a proof assistant, an SMT-backed verifier, or another tool. Whether events can happen in a bad order usually suits a model checker over a small model of the design, and TLA+ is the default for that in any language. Whether the code itself behaves for every input, as with memory safety, overflow, or a data-structure invariant, usually suits a verifier that runs on the code. If no verifier runs on this language, say so, and test the real code with generated inputs, not a hand model of the function. A property that must hold at every size, where a bound is not enough, can need a proof. Prefer a tool that the repo's developers can install and run, and tell the user why you chose it.\n\n## What makes it good\n\n- **True to the code.** Every part of the model or proof points to code that a reviewer can open. What the verification treats as one indivisible step is one indivisible step in the code. Names come from this repo.\n- **Able to fail.** A check that you have never seen fail proves nothing. Show each property failing on a broken variant of the code it guards, such as a removed check or a reordered step.\n- **Findings stay findings.** When the current code breaks the property, report it with the counterexample in the code's terms. Do not weaken the property or the model until it passes, and do not change product code unless the user asks.\n- **Honest about scope.** Say what is verified, under which bounds and assumptions, and what is left out. A pass covers the model or the bound, not the whole system.\n- **Readable without the tool.** State the property and the harm in one plain sentence each. Tell a counterexample as a short sequence of steps in the code's words.\n- **Cheap to rerun.** One command, a reproducible tool version, and a run short enough that the next agent will use it on every relevant change.\n- **Kept in step with the code.** Record which files and functions each check covers, and the commit at which you last confirmed that the verification describes them. When the covered code changes after that commit, the next agent can see that the verification needs another look.\n\n## Generate the verify skill\n\nWrite a project-local skill with frontmatter that names the area and says when to use it. Without frontmatter, the skill never registers. From the skill alone, the next agent must be able to tell whether a change touches the verified code, run the check, tell a real bug from a modeling error, and update the verification when a change is intended. Put the coverage record and the sync commit in the skill, and tell the next agent to move the sync commit forward only after it confirms that the verification describes the code at the new commit. Use this repo's real commands, paths, and nouns, and leave no placeholders.\n\nIf the check is a TLA+ model, tell the next agent to read every result with the pstack [`/statechart`](../statechart/SKILL.md) skill. It shows each invariant violation the checker finds as its shortest path in plain words, and which of those violations a change fixes. When the check passes, `/statechart` draws a chart of how the system moves between states. Refer to `/statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.\n\n## Prove it before you hand off\n\nFollow the generated skill once, as the next agent would, on a scratch change that breaks the property in the real code. It must catch the break. Then drop the scratch change and confirm that the check is back where it started: passing, or failing only on the findings you will report. A verify skill that was never run is a draft. If the skill misses the break or a step does not run, fix the skill or the verification, not the scratch change.\n\n## Hand off\n\nTell the user what you verified, which tool you used and why, the bounds, what the check found in plain words, how to run it, and what it does not cover. Suggest a second target only if you found a close one. Point the user at `/maintain-formal-verification-skill` for bringing the verification back in line after changes that did not recheck it.\n",
       "path": "pstack/skills/create-formal-verification-skill/SKILL.md",
       "owner": null,
-      "lines": 41,
+      "lines": 43,
       "flags": {
         "disable-model-invocation": true
       },
       "degree": {
         "in": 4,
-        "out": 1,
-        "total": 5
+        "out": 2,
+        "total": 6
       }
     },
     {
@@ -2225,9 +2602,29 @@
         "disable-model-invocation": true
       },
       "degree": {
-        "in": 4,
+        "in": 5,
         "out": 1,
-        "total": 5
+        "total": 6
+      }
+    },
+    {
+      "id": "ketchup-video",
+      "kind": "skill",
+      "name": "ketchup-video",
+      "title": "Ketchup video",
+      "group": "skills",
+      "description": "Catch the user up like /ketchup, with a short silent video of slides for what happened and the waiting calls as text under it. Use for /ketchup-video.",
+      "text": "---\nname: ketchup-video\ndescription: \"Catch the user up like /ketchup, with a short silent video of slides for what happened and the waiting calls as text under it. Use for /ketchup-video.\"\ndisable-model-invocation: true\n---\n\n# Ketchup video\n\nFollow [`/ketchup`](../ketchup/SKILL.md), but show what happened in a short silent video instead of its summary and visuals. Its window starts at the last message the user wrote before `/ketchup-video`, not before any earlier `/ketchup`. Writing and rendering the video, outside the repo, is the one exception to its read-only rule. The reply is ketchup's opening sentence, the embedded video, one line naming any work left that you can do yourself, and the action items. When the video shows a call's options, call each option by the name the video gives it. If the render fails, say so in one line and give only the calls.\n\n## Slides\n\nUse the screenshots, recordings, diffs, and data the work produced, not the chat's prose about them. Before you draw, write the one sentence the user should leave with and one line per slide. Drop each slide that does not change what the user knows. Use at most 10 slides, and fewer is better. Neither note goes in the reply.\n\nEach slide makes one point. Build the slides on one picture and change it from slide to slide, rather than cut to an unrelated one. A color or shape means the same thing on every slide. Show the work in pictures, such as how a system works, a PR stack with each PR's state, a before and after of a fix, or options side by side. Point at what changed with arrows, highlights, and motion. A slide is never a bullet list, a status list, a table, or boxes with nothing connecting them.\n\nKeep text to the minimum. Put each label on the thing it names, in plain words a person would say, not tags like \"Tests: pass\". Never caption what a picture shows, and never give a fact twice, across slides or in the text under them.\n\nShow what came of each thing the user asked for, and whether it is done, still running, failed, or not checked. Never show something done that still waits on the user. Show any bug found and fixed on the way. If a visible change has no screenshot, say so on its slide and name what changed on screen. Draw only from facts you have. Never invent a number, and never draw a screen you did not capture.\n\n## Render\n\nRender one silent landscape video, such as an mp4, with motion between slides. Every frame is the slide itself, edge to edge. Make the frames from the slides, never by recording a screen. Hold each slide long enough to read its words, at least one second for each three words it adds. Words inside a screenshot do not count. Before you embed the video, look at one frame from each slide in the rendered file, and count the words it adds against its hold in that file. Fix any slide you cannot read in that time, render again, and check again.\n",
+      "path": "pstack/skills/ketchup-video/SKILL.md",
+      "owner": null,
+      "lines": 23,
+      "flags": {
+        "disable-model-invocation": true
+      },
+      "degree": {
+        "in": 1,
+        "out": 1,
+        "total": 2
       }
     },
     {
@@ -2317,17 +2714,17 @@
       "title": "Poteto help",
       "group": "skills",
       "description": "Guides users through pstack setup, /poteto-mode, and picking the skill, playbook, or principle for a task. Type /poteto-help with a question.",
-      "text": "---\nname: poteto-help\ndescription: Guides users through pstack setup, /poteto-mode, and picking the skill, playbook, or principle for a task. Type /poteto-help with a question.\ndisable-model-invocation: true\n---\n\n# Poteto help\n\nAnswer the user's question about pstack, hand them a prompt they can send, and link the file the answer came from. For a help question, don't start the work. The user asked how, and a pstack run spends real tokens, so let them send the prompt.\n\nA message that asks for work, such as \"use pstack to fix this bug\", is not a help question. Read [`poteto-mode`](../poteto-mode/SKILL.md), do the work under it, and mention once that a Custom Mode keeps it on.\n\nThis file maps questions to the skills and guide pages that hold the answers. Those files own the details. Read the file you route to before you quote it, and trust it when it disagrees with this map. The links here point into the installed plugin, which the user may not be able to open, so give the user the file's public copy: `https://github.com/cursor/plugins/blob/main/pstack/` followed by its path.\n\n## Find out what they need\n\nInfer the need from the message and the conversation. A named situation, such as \"which skill reviews a PR?\", goes straight to its section. If the need is still unclear, ask one multiple-choice question with these options, then answer only the section they pick:\n\n- Get set up\n- Start a task with `/poteto-mode`\n- Pick a skill for a situation\n- Fix a run that went wrong\n- Make pstack my own\n\nCheck the state that changes the answer, and mention it only when it does:\n\n- No `~/.cursor/rules/pstack-models.mdc` means `/setup-pstack` hasn't run for this user, so every role uses its default model.\n- No `verify-*` skill or other app harness in the project means agents have no scripted way to drive the app. Mention `/create-verification-skill` when the question is about proving a change works.\n- No formal verification skill in the project means no property is checked past what tests reach. Mention `/create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. When one exists and the code it covers changed after the commit it records as last in sync, mention `/maintain-formal-verification-skill` if the question touches that code.\n\nWhen the model rule is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:\n\n- Now: give them `/setup-pstack` to type, and answer their question too.\n- Later: answer their question, and add one line saying every role keeps its default model until they run `/setup-pstack`.\n\n## Get set up\n\n1. Install with `/add-plugin pstack` in chat, or from Customize in the sidebar.\n2. Run [`/setup-pstack`](../setup-pstack/SKILL.md). It asks for a reasoning budget, maps a model to each role, and writes a rule. The rule applies to new chats. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.\n3. Start a real task with `/poteto-mode`, a goal, and a check that can pass or fail.\n\nInstalling changes nothing until the user invokes a skill. Only `/setup-pstack` loads from the user's words. The [README](../../README.md) and [guide page 1](../../docs/guide/01-setup.md) have the details. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).\n\nIf cost is the worry, say where the tokens go and how to spend fewer. pstack spends extra tokens on subagents and review panels. Rerun `/setup-pstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on Auto or a cheaper model. A shorter panel list runs fewer subagents, one for each entry. Save `/poteto-mode` for work that needs rigor.\n\npstack is built for Cursor, and it also installs in Claude Code with `/plugin marketplace add cursor/plugins`, then `/plugin install pstack@cursor-plugins`. There, each command takes a `pstack:` prefix, such as `/pstack:poteto-mode`. The [Claude Code adapter](../../docs/harness/claude-code.md) maps the Cursor names, and a step that needs a Cursor-only feature, such as Bugbot or Automations, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn Cursor subagents with per-role models, and Custom Modes and `/loop` are Cursor features, so those parts may not work there.\n\n## Start a task with `/poteto-mode`\n\n`/poteto-mode` matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.\n\nWhether `/poteto-mode` stays on depends on how the user starts it:\n\n- Enter on `/poteto-mode` attaches the skill to one message. It fades as the chat moves on.\n- Option+Enter on Mac or Alt+Enter on Windows, or Use as Mode from the skill entry, makes it a Custom Mode. It stays in context every turn until the user exits the mode, and it stays out of casual turns.\n- Cursor's docs list Custom Modes in the Agents Window and the CLI. Elsewhere, start each new task with `/poteto-mode`.\n\nLink [Cursor's skills docs](https://cursor.com/docs/skills) when this comes up. Mid-chat, \"new task\" makes the mode match a fresh playbook. `/poteto-mode` already uses `poteto-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: \"poteto-agent\"`.\n\n## Pick a skill\n\nThe default answer is `/poteto-mode`, which runs most of the others when its steps need them. Name a skill directly when the user wants more or less of something than the playbook gives. Read the skill before you recommend it, and give one example prompt.\n\n| The user wants to | Skill |\n|---|---|\n| Do any non-trivial task with rigor | [`/poteto-mode`](../poteto-mode/SKILL.md) |\n| Check that the agent understood their goal and the problem before it starts | [`/in-your-own-words`](../in-your-own-words/SKILL.md) |\n| Aim a task higher before starting: more expert, more outcome-focused, not overspecified | [`/sharpen`](../sharpen/SKILL.md) |\n| Know how code works now, or where new code should live | [`/how`](../how/SKILL.md) |\n| Know why code is shaped this way, or where a number came from | [`/why`](../why/SKILL.md) |\n| Understand a change or subsystem, explained plainly | [`/teach`](../teach/SKILL.md) |\n| Catch up on their own recent work on a topic | [`/recall`](../recall/SKILL.md) |\n| Catch up on what changed in this chat since their last message, in plain words and small visuals, with every item waiting on them listed and decidable from the reply alone | [`/ketchup`](../ketchup/SKILL.md) |\n| Know what a small diff could break outside itself | [`/blast-radius`](../blast-radius/SKILL.md) |\n| Settle types and module shape before code that crosses a function boundary | [`/architect`](../architect/SKILL.md) |\n| Get several attempts at one brief, merged into the best one | [`/arena`](../arena/SKILL.md) |\n| Run parallel checks over slices, or race workers, as cloud agents | [`/swarm`](../swarm/SKILL.md) |\n| Have different models review a diff and try to break it | [`/interrogate`](../interrogate/SKILL.md) |\n| Fix a bug test-first when a cheap local test exists | [`/tdd`](../tdd/SKILL.md) |\n| Apply TypeScript rules to `.ts` or `.tsx` work | [`/typescript-best-practices`](../typescript-best-practices/SKILL.md) |\n| Strip comments before review, using a reviewer that didn't write them | [`/no-comments`](../no-comments/SKILL.md) |\n| Clean AI tells out of prose | [`/unslop`](../unslop/SKILL.md) |\n| Write docs, an RFC, a README, a PR description, or a commit message to a standard | [`/technical-writing`](../technical-writing/SKILL.md) |\n| Hear the last reply again in plain words | [`/bro`](../bro/SKILL.md) |\n| Give agents a scripted way to drive the app and prove behavior | [`/create-verification-skill`](../create-verification-skill/SKILL.md) |\n| Bring a verification skill and its feature map back in line with the app | [`/maintain-verification-skill`](../maintain-verification-skill/SKILL.md) |\n| Formally verify a race, invariant, or other property that tests rarely reach | [`/create-formal-verification-skill`](../create-formal-verification-skill/SKILL.md) |\n| Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | [`/maintain-formal-verification-skill`](../maintain-formal-verification-skill/SKILL.md) |\n| Vet a performance number before reporting or acting on it | [`/benchmark-checklist`](../benchmark-checklist/SKILL.md) |\n| Run a large or cross-cutting change, or one to review after stepping away | [`/figure-it-out`](../figure-it-out/SKILL.md) |\n| Keep a decision log during a run, and review it afterward | [`/show-me-your-work`](../show-me-your-work/SKILL.md) |\n| Pick a model for each role and a reasoning budget | [`/setup-pstack`](../setup-pstack/SKILL.md) |\n| Turn their own working habits into a personal mode skill | [`/automate-me`](../automate-me/SKILL.md) |\n| Turn what a finished task taught into skill edits | [`/reflect`](../reflect/SKILL.md) |\n| Stop agents from repeating the same mistakes in this repo | [`/correct`](../correct/SKILL.md) |\n| Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |\n| Find their way around pstack | `/poteto-help` |\n\nIf a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.\n\nClose calls:\n\n- `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.\n- `/arena` gives every worker the same brief and merges the best parts. `/swarm` splits work into slices or a race and returns one report.\n- `/architect` implements right after it settles the design. Add \"with checkpoint\" to review the design before it writes code.\n- `/interrogate` reviews the diff. `/blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.\n- `/recall` rebuilds context across recent chats. `/ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.\n- `/figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.\n\nNot in pstack:\n\n- `/deslop`, `control-cli`, and `control-ui` ship in the `cursor-team-kit` plugin.\n- `/loop` and `/create-skill` are Cursor built-ins.\n- pstack has no `/orchestrate` skill. Orchestrate is a `/poteto-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.\n\n## Playbooks and principles\n\nPlaybooks are step lists inside `/poteto-mode`, not skills, so they have no slash command. Inside `/poteto-mode`, describing the task picks one, and these phrases name one directly:\n\n- \"babysit this pr\" or \"check on pr 123\" runs Babysit. It drives the PR to merge-ready and stops there. It doesn't merge unless the user asks to merge, land, or ship.\n- \"land the stack\" runs Shipping.\n- \"take over this branch\" runs Session pickup.\n- \"pause safely\" runs Pause safely.\n- \"full autopilot on this queue\" runs Autopilot-full. \"stack them, don't ship\" runs Autopilot-stack.\n- \"run the eval playbook\" runs Eval.\n\nWithout `/poteto-mode`, a phrase such as \"babysit this pr\" can start Cursor's own skill for the same job instead. The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.\n\npstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking `/poteto-mode` for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/architect` settles it in code first.\n\nPrinciples are one-rule skills that `/poteto-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in \"apply prove it works. show me the real output.\" Typing `/principle-<name>` still loads one on demand. [Guide page 8](../../docs/guide/08-principles.md) lists them.\n\n## Fix a run that went wrong\n\n| Symptom | Fix |\n|---|---|\n| The mode stopped applying after a few turns | It was started with Enter. Start it as a Custom Mode, or start each task with `/poteto-mode`. |\n| A question got treated as the next step of the last task | Say \"new task\", or say the turn doesn't need the mode. |\n| A new model choice had no effect | The rule from `/setup-pstack` applies to new chats. Start one. |\n| Runs cost more than expected | See the cost paragraph under Get set up. |\n| A skill didn't load on its own | Only `/setup-pstack` loads from the user's words. The others load when the user types them or when `/poteto-mode` runs them, and it doesn't run every skill. |\n| Parallel agents overwrote each other | Give each agent its own worktree, or run them as cloud agents, which each get their own machine. |\n| An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. See [guide page 7](../../docs/guide/07-overnight.md). |\n| The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |\n\nFor a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [Guide page 10](../../docs/guide/10-recipes-and-pitfalls.md) has more pitfalls and the recipes worth copying.\n\n## Make pstack my own\n\n- [`/automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/poteto-mode`.\n- [`/reflect`](../reflect/SKILL.md) after a session turns its lessons into skill edits the user approves.\n- `/poteto-mode write a skill for <workflow>` runs the authoring playbook. The eval playbook tests a skill change blind.\n- Fix a misbehaving skill in its own PR, not inside the feature work where it went wrong.\n\n[Guide page 9](../../docs/guide/09-make-it-yours.md) covers each of these.\n\n## Reply\n\nLead with the answer. Give at most one example prompt in a code block, adapted from [`references/recipes.md`](references/recipes.md) when one fits, then the link to that file. Keep it short unless the user asked for the whole map.\n",
+      "text": "---\nname: poteto-help\ndescription: Guides users through pstack setup, /poteto-mode, and picking the skill, playbook, or principle for a task. Type /poteto-help with a question.\ndisable-model-invocation: true\n---\n\n# Poteto help\n\nAnswer the user's question about pstack, hand them a prompt they can send, and link the file the answer came from. For a help question, don't start the work. The user asked how, and a pstack run spends real tokens, so let them send the prompt.\n\nA message that asks for work, such as \"use pstack to fix this bug\", is not a help question. Read [`poteto-mode`](../poteto-mode/SKILL.md), do the work under it, and mention once that a Custom Mode keeps it on.\n\nThis file maps questions to the skills and guide pages that hold the answers. Those files own the details. Read the file you route to before you quote it, and trust it when it disagrees with this map. The links here point into the installed plugin, which the user may not be able to open, so give the user the file's public copy: `https://github.com/cursor/plugins/blob/main/pstack/` followed by its path.\n\n## Find out what they need\n\nInfer the need from the message and the conversation. A named situation, such as \"which skill reviews a PR?\", goes straight to its section. If the need is still unclear, ask one multiple-choice question with these options, then answer only the section they pick:\n\n- Get set up\n- Start a task with `/poteto-mode`\n- Pick a skill for a situation\n- Fix a run that went wrong\n- Make pstack my own\n\nCheck the state that changes the answer, and mention it only when it does:\n\n- No `~/.cursor/rules/pstack-models.mdc` means `/setup-pstack` hasn't run for this user, so every role uses its default model.\n- No `verify-*` skill or other app harness in the project means agents have no scripted way to drive the app. Mention `/create-verification-skill` when the question is about proving a change works.\n- No formal verification skill in the project means no property is checked past what tests reach. Mention `/create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. When one exists and the code it covers changed after the commit it records as last in sync, mention `/maintain-formal-verification-skill` if the question touches that code.\n\nWhen the model rule is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:\n\n- Now: give them `/setup-pstack` to type, and answer their question too.\n- Later: answer their question, and add one line saying every role keeps its default model until they run `/setup-pstack`.\n\n## Get set up\n\n1. Install with `/add-plugin pstack` in chat, or from Customize in the sidebar.\n2. Run [`/setup-pstack`](../setup-pstack/SKILL.md). It asks for a reasoning budget, maps a model to each role, and writes a rule. The rule applies to new chats. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.\n3. Start a real task with `/poteto-mode`, a goal, and a check that can pass or fail.\n\nInstalling changes nothing until the user invokes a skill. Only `/setup-pstack` loads from the user's words. The [README](../../README.md) and [guide page 1](../../docs/guide/01-setup.md) have the details. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).\n\nIf cost is the worry, say where the tokens go and how to spend fewer. pstack spends extra tokens on subagents and review panels. Rerun `/setup-pstack` and pick a smaller budget or cheaper models. A role set to `auto` or `inherit-parent` runs on the chat's model, which saves tokens when the chat runs on Auto or a cheaper model. A shorter panel list runs fewer subagents, one for each entry. Save `/poteto-mode` for work that needs rigor.\n\npstack is built for Cursor, and it also installs in Claude Code with `/plugin marketplace add cursor/plugins`, then `/plugin install pstack@cursor-plugins`. There, each command takes a `pstack:` prefix, such as `/pstack:poteto-mode`. The [Claude Code adapter](../../docs/harness/claude-code.md) maps the Cursor names, and a step that needs a Cursor-only feature, such as Bugbot or Automations, is skipped with a one-line note.\n\nOther tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn Cursor subagents with per-role models, and Custom Modes and `/loop` are Cursor features, so those parts may not work there.\n\n## Start a task with `/poteto-mode`\n\n`/poteto-mode` matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.\n\nWhether `/poteto-mode` stays on depends on how the user starts it:\n\n- Enter on `/poteto-mode` attaches the skill to one message. It fades as the chat moves on.\n- Option+Enter on Mac or Alt+Enter on Windows, or Use as Mode from the skill entry, makes it a Custom Mode. It stays in context every turn until the user exits the mode, and it stays out of casual turns.\n- Cursor's docs list Custom Modes in the Agents Window and the CLI. Elsewhere, start each new task with `/poteto-mode`.\n\nLink [Cursor's skills docs](https://cursor.com/docs/skills) when this comes up. Mid-chat, \"new task\" makes the mode match a fresh playbook. `/poteto-mode` already uses `poteto-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: \"poteto-agent\"`.\n\n## Pick a skill\n\nThe default answer is `/poteto-mode`, which runs most of the others when its steps need them. Name a skill directly when the user wants more or less of something than the playbook gives. Read the skill before you recommend it, and give one example prompt.\n\n| The user wants to | Skill |\n|---|---|\n| Do any non-trivial task with rigor | [`/poteto-mode`](../poteto-mode/SKILL.md) |\n| Check that the agent understood their goal and the problem before it starts | [`/in-your-own-words`](../in-your-own-words/SKILL.md) |\n| Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | [`/sharpen`](../sharpen/SKILL.md) |\n| Know how code works now, or where new code should live | [`/how`](../how/SKILL.md) |\n| Know why code is shaped this way, or where a number came from | [`/why`](../why/SKILL.md) |\n| Understand a change or subsystem, explained plainly | [`/teach`](../teach/SKILL.md) |\n| Catch up on their own recent work on a topic | [`/recall`](../recall/SKILL.md) |\n| Catch up on what changed in this chat since their last message, in plain words and small visuals, with every item waiting on them listed and decidable from the reply alone | [`/ketchup`](../ketchup/SKILL.md) |\n| Catch up like `/ketchup`, in a short silent video of slides, with the waiting calls as text under it | [`/ketchup-video`](../ketchup-video/SKILL.md) |\n| Know what a small diff could break outside itself | [`/blast-radius`](../blast-radius/SKILL.md) |\n| Settle types and module shape before code that crosses a function boundary | [`/architect`](../architect/SKILL.md) |\n| Get several attempts at one brief, merged into the best one | [`/arena`](../arena/SKILL.md) |\n| Run parallel checks over slices, or race workers, as cloud agents | [`/swarm`](../swarm/SKILL.md) |\n| Have different models review a diff and try to break it | [`/interrogate`](../interrogate/SKILL.md) |\n| Fix a bug test-first when a cheap local test exists | [`/tdd`](../tdd/SKILL.md) |\n| Apply TypeScript rules to `.ts` or `.tsx` work | [`/typescript-best-practices`](../typescript-best-practices/SKILL.md) |\n| Strip comments before review, using a reviewer that didn't write them | [`/no-comments`](../no-comments/SKILL.md) |\n| Clean AI tells out of prose | [`/unslop`](../unslop/SKILL.md) |\n| Write docs, an RFC, a README, a PR description, or a commit message to a standard | [`/technical-writing`](../technical-writing/SKILL.md) |\n| Hear the last reply again in plain words | [`/bro`](../bro/SKILL.md) |\n| Give agents a scripted way to drive the app and prove behavior | [`/create-verification-skill`](../create-verification-skill/SKILL.md) |\n| Bring a verification skill and its feature map back in line with the app | [`/maintain-verification-skill`](../maintain-verification-skill/SKILL.md) |\n| Formally verify a race, invariant, or other property that tests rarely reach | [`/create-formal-verification-skill`](../create-formal-verification-skill/SKILL.md) |\n| Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | [`/maintain-formal-verification-skill`](../maintain-formal-verification-skill/SKILL.md) |\n| Show a PM or designer what the user sees as a chart checked by a model, with each bug drawn as a numbered path, turn an agreed chart into a TLA+ skeleton, or audit the code against its TLA+ spec | [`/statechart`](../statechart/SKILL.md) |\n| Vet a performance number before reporting or acting on it | [`/benchmark-checklist`](../benchmark-checklist/SKILL.md) |\n| Run a large or cross-cutting change, or one to review after stepping away | [`/figure-it-out`](../figure-it-out/SKILL.md) |\n| Keep a decision log during a run, and review it afterward | [`/show-me-your-work`](../show-me-your-work/SKILL.md) |\n| Pick a model for each role and a reasoning budget | [`/setup-pstack`](../setup-pstack/SKILL.md) |\n| Turn their own working habits into a personal mode skill | [`/automate-me`](../automate-me/SKILL.md) |\n| Turn what a finished task taught into skill edits | [`/reflect`](../reflect/SKILL.md) |\n| Stop agents from repeating the same mistakes in this repo | [`/correct`](../correct/SKILL.md) |\n| Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |\n| Find their way around pstack | `/poteto-help` |\n\nIf a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.\n\nClose calls:\n\n- `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.\n- `/arena` gives every worker the same brief and merges the best parts. `/swarm` splits work into slices or a race and returns one report.\n- `/architect` implements right after it settles the design. Add \"with checkpoint\" to review the design before it writes code.\n- `/interrogate` reviews the diff. `/blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.\n- `/recall` rebuilds context across recent chats. `/ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.\n- `/figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.\n\nNot in pstack:\n\n- `/deslop`, `control-cli`, and `control-ui` ship in the `cursor-team-kit` plugin.\n- `/loop` and `/create-skill` are Cursor built-ins.\n- pstack has no `/orchestrate` skill. Orchestrate is a `/poteto-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.\n\n## Playbooks and principles\n\nPlaybooks are step lists inside `/poteto-mode`, not skills, so they have no slash command. Inside `/poteto-mode`, describing the task picks one, and these phrases name one directly:\n\n- \"babysit this pr\" or \"check on pr 123\" runs Babysit. It drives the PR to merge-ready and stops there. It doesn't merge unless the user asks to merge, land, or ship.\n- \"land the stack\" runs Shipping.\n- \"take over this branch\" runs Session pickup.\n- \"pause safely\" runs Pause safely.\n- \"full autopilot on this queue\" runs Autopilot-full. \"stack them, don't ship\" runs Autopilot-stack.\n- \"run the eval playbook\" runs Eval.\n\nWithout `/poteto-mode`, a phrase such as \"babysit this pr\" can start Cursor's own skill for the same job instead. The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.\n\npstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking `/poteto-mode` for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/architect` settles it in code first.\n\nPrinciples are one-rule skills that `/poteto-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in \"apply prove it works. show me the real output.\" Typing `/principle-<name>` still loads one on demand. [Guide page 8](../../docs/guide/08-principles.md) lists them.\n\n## Fix a run that went wrong\n\n| Symptom | Fix |\n|---|---|\n| The mode stopped applying after a few turns | It was started with Enter. Start it as a Custom Mode, or start each task with `/poteto-mode`. |\n| A question got treated as the next step of the last task | Say \"new task\", or say the turn doesn't need the mode. |\n| A new model choice had no effect | The rule from `/setup-pstack` applies to new chats. Start one. |\n| Runs cost more than expected | See the cost paragraph under Get set up. |\n| A skill didn't load on its own | Only `/setup-pstack` loads from the user's words. The others load when the user types them or when `/poteto-mode` runs them, and it doesn't run every skill. |\n| Parallel agents overwrote each other | Give each agent its own worktree, or run them as cloud agents, which each get their own machine. |\n| An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. See [guide page 7](../../docs/guide/07-overnight.md). |\n| The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |\n\nFor a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [Guide page 10](../../docs/guide/10-recipes-and-pitfalls.md) has more pitfalls and the recipes worth copying.\n\n## Make pstack my own\n\n- [`/automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/poteto-mode`.\n- [`/reflect`](../reflect/SKILL.md) after a session turns its lessons into skill edits the user approves.\n- `/poteto-mode write a skill for <workflow>` runs the authoring playbook. The eval playbook tests a skill change blind.\n- Fix a misbehaving skill in its own PR, not inside the feature work where it went wrong.\n\n[Guide page 9](../../docs/guide/09-make-it-yours.md) covers each of these.\n\n## Reply\n\nLead with the answer. Give at most one example prompt in a code block, adapted from [`references/recipes.md`](references/recipes.md) when one fits, then the link to that file. Keep it short unless the user asked for the whole map.\n",
       "path": "pstack/skills/poteto-help/SKILL.md",
       "owner": null,
-      "lines": 161,
+      "lines": 163,
       "flags": {
         "disable-model-invocation": true
       },
       "degree": {
         "in": 0,
-        "out": 39,
-        "total": 39
+        "out": 41,
+        "total": 41
       }
     },
     {
@@ -2357,10 +2754,10 @@
       "title": "Reflect",
       "group": "skills",
       "description": "Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect.",
-      "text": "---\nname: reflect\ndescription: Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect.\ndisable-model-invocation: true\n---\n\n# Reflect\n\nMine the current conversation for durable learnings, then route them into skill edits.\n\nInvoke when the user says \"reflect\" or \"/reflect\". Skip when the conversation is trivial, off-topic, or already covered by an existing skill the parent followed correctly. One-offs are not learnings.\n\n## 1. Locate the active transcript\n\nBefore fanning out, find this conversation's transcript in the `agent-transcripts/` directory the system prompt names. Do not glob across `~/.cursor/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.\n\n```bash\nls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10\n```\n\nThat covers the legacy flat (`<id>.jsonl`), current nested (`<id>/<id>.jsonl`), and subagent (`<parent>/subagents/<child>.jsonl`) layouts. For each candidate, read the first JSONL line. Take the file whose `message.content[0].text` contains the conversation's opening user prompt. If none matches, pass a tight digest of the session instead.\n\n## 2. Spawn three reviewers in parallel\n\nOne message, three `Task` calls, `subagent_type: generalPurpose`, agent mode (`readonly: false`). Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and readonly strips MCPs.\n\nEach reviewer and the synthesizer name a role line in the `pstack-models.mdc` rule and a default. Set `model` to that line's value, or to the default if the rule or the line is missing. Leave `model` unset when the value is `auto` or `inherit-parent`. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.\n\n| Lens | Role line | Default `model` | Prompt template |\n|---|---|---|---|\n| Judgment | `reflect judgment, divergent, synthesizer` | `claude-opus-5-5-xhigh` | `references/judgment-reviewer.md` |\n| Tooling | `reflect tooling` | `grok-4.7-xhigh-fast` | `references/tooling-reviewer.md` |\n| Divergent | `reflect judgment, divergent, synthesizer` | `claude-opus-5-5-xhigh` | `references/divergent-reviewer.md` |\n\nPass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Task` response body.\n\n## 3. Synthesize\n\nOne `Task` call, `subagent_type: generalPurpose`, `model` from the `reflect judgment, divergent, synthesizer` line (default `claude-opus-5-5-xhigh`), agent mode (`readonly: false`). It spot-verifies citations through MCP, and readonly strips MCPs. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.\n\n## 4. Structural enforcement check\n\nMove any Accepted item that a lint rule, script, metadata flag, or runtime check would enforce more reliably to Backlog. See the **encode-lessons-in-structure** principle skill.\n\n## 5. Apply\n\nPresent the synthesizer's full Accepted / Rejected / Backlog output and wait for explicit approval before applying any Accepted edit. The user picks the subset and may redirect routings. Skill changes affect every future agent in the org. Do not auto-apply.\n\nFile each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.\n\nFollow each approved row's Routing exactly:\n\n- Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.\n- Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to Cursor's built-in `create-skill` skill and run its draft / test / iterate loop.\n- `tune description: <skill path>` (the skill exists but didn't trigger when it should have): hand to `create-skill` and run its description-optimization loop.\n- `new skill via create-skill: <kebab-name>`: hand creation to `create-skill`. Do not invent the shape ad hoc.\n\nIf your environment ships a SKILL.md validator, run it on every touched skill before declaring done.\n\n## 6. Summarize for the user\n\nShort list, no preamble:\n\n- Edits applied: `<skill path>`. What changed, one line each.\n- New skills created: `<skill path>`. One line each (rare).\n- Backlog filed to the devex tracker: `<issue title>` (`<tags>`). One line each.\n- Dropped: one line per rejected finding + reason from the synthesizer.\n",
+      "text": "---\nname: reflect\ndescription: Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect.\ndisable-model-invocation: true\n---\n\n# Reflect\n\nMine the current conversation for durable learnings, then route them into skill edits.\n\nInvoke when the user says \"reflect\" or \"/reflect\". Skip when the conversation is trivial, off-topic, or already covered by an existing skill the parent followed correctly. One-offs are not learnings.\n\n## 1. Locate the active transcript\n\nBefore fanning out, find this conversation's transcript in the `agent-transcripts/` directory the system prompt names. Do not glob across `~/.cursor/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.\n\n```bash\nls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10\n```\n\nThat covers the legacy flat (`<id>.jsonl`), current nested (`<id>/<id>.jsonl`), and subagent (`<parent>/subagents/<child>.jsonl`) layouts. For each candidate, read the first JSONL line. Take the file whose `message.content[0].text` contains the conversation's opening user prompt. If none matches, pass a tight digest of the session instead.\n\n## 2. Spawn three reviewers in parallel\n\nOne message, three `Task` calls, `subagent_type: generalPurpose`, agent mode (`readonly: false`). Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and readonly strips MCPs.\n\nEach reviewer and the synthesizer name a role line in the `pstack-models.mdc` rule and a default. Set `model` to that line's value, or to the default if the rule or the line is missing. Leave `model` unset when the value is `auto` or `inherit-parent`. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.\n\n| Lens | Role line | Default `model` | Prompt template |\n|---|---|---|---|\n| Judgment | `reflect judgment, divergent, synthesizer` | `claude-opus-5-5-xhigh` | `references/judgment-reviewer.md` |\n| Tooling | `reflect tooling` | `grok-4.7-xhigh-fast` | `references/tooling-reviewer.md` |\n| Divergent | `reflect judgment, divergent, synthesizer` | `claude-opus-5-5-xhigh` | `references/divergent-reviewer.md` |\n\nPass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Task` response body.\n\n## 3. Synthesize\n\nOne `Task` call, `subagent_type: generalPurpose`, `model` from the `reflect judgment, divergent, synthesizer` line (default `claude-opus-5-5-xhigh`), agent mode (`readonly: false`). It spot-verifies citations through MCP, and readonly strips MCPs. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.\n\n## 4. Structural enforcement check\n\nMove any Accepted item that a lint rule, script, metadata flag, or runtime check would enforce more reliably to Backlog. See the **encode-lessons-in-structure** principle skill.\n\n## 5. Apply\n\nPresent the synthesizer's full Accepted / Rejected / Backlog output and wait for explicit approval before applying any Accepted edit. The user picks the subset and may redirect routings. Skill changes affect every future agent in the org. Do not auto-apply.\n\nFile each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.\n\nNever edit a skill under `plugins/cache/`. Before approval, show its destination, `.cursor/skills/<skill>/` or `~/.cursor/skills/<skill>/`. After approval, copy the skill folder there and edit the copy. Never open a PR or push.\n\nFollow each approved row's Routing exactly:\n\n- Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.\n- Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to Cursor's built-in `create-skill` skill and run its draft / test / iterate loop.\n- `tune description: <skill path>` (the skill exists but didn't trigger when it should have): hand to `create-skill` and run its description-optimization loop.\n- `new skill via create-skill: <kebab-name>`: hand creation to `create-skill`. Do not invent the shape ad hoc.\n\nIf your environment ships a SKILL.md validator, run it on every touched skill before declaring done.\n\n## 6. Summarize for the user\n\nShort list, no preamble:\n\n- Edits applied: `<skill path>`. What changed, one line each.\n- New skills created: `<skill path>`. One line each (rare).\n- Backlog filed to the devex tracker: `<issue title>` (`<tags>`). One line each.\n- Dropped: one line per rejected finding + reason from the synthesizer.\n",
       "path": "pstack/skills/reflect/SKILL.md",
       "owner": null,
-      "lines": 67,
+      "lines": 69,
       "flags": {
         "disable-model-invocation": true
       },
@@ -2394,11 +2791,11 @@
       "name": "sharpen",
       "title": null,
       "group": "skills",
-      "description": "Sharpen a task before starting: the expert approach, what the user is really after, and the right level of specification. Use for /sharpen.",
-      "text": "---\nname: sharpen\ndescription: \"Sharpen a task before starting: the expert approach, what the user is really after, and the right level of specification. Use for /sharpen.\"\ndisable-model-invocation: true\n---\n\nBefore starting, ask how a top expert would approach this task (their raw sources, their real methods, an outside check that the result is right), what the user is really after, and whether the task is over- or underspecified. Loosen constraints that don't serve the goal as readily as you add ones that do, and leave choices that are the user's to make open instead of deciding them. Fold in only what makes the work better, not bigger, but always keep one outside check that the result is right, without narrating the framing, then do the work.\n",
+      "description": "Make a task deeper, not bigger, then rewrite the prompt. Use for /sharpen.",
+      "text": "---\nname: sharpen\ndescription: \"Make a task deeper, not bigger, then rewrite the prompt. Use for /sharpen.\"\ndisable-model-invocation: true\n---\n\nI want a deeper version of this task, not a bigger one. Before rewriting it, do four things:\n\n1. Say what a top professional in this field would do here that I'm not asking for.\n2. Name the rawest material they would start from instead of what has already been digested for me.\n3. Name the specific methods and tools they would use.\n4. Say what, other than you or me, would show the result is right.\n\nThen rewrite my prompt to ask for exactly that.\n\nLeave choices that are mine to make open instead of deciding them.\n",
       "path": "pstack/skills/sharpen/SKILL.md",
       "owner": null,
-      "lines": 7,
+      "lines": 16,
       "flags": {
         "disable-model-invocation": true
       },
@@ -2429,13 +2826,33 @@
       }
     },
     {
+      "id": "statechart",
+      "kind": "skill",
+      "name": "statechart",
+      "title": "Statechart",
+      "group": "skills",
+      "description": "Draw how any system moves between states, such as a product flow, a protocol, or a service, as a Mermaid statechart from a TLA+ model. Each bug is a numbered path with blue borders to a state that breaks a rule. Use for /statechart, to show a bug as a path through states, or to turn an agreed chart into a TLA+ skeleton.",
+      "text": "---\nname: statechart\ndescription: \"Draw how any system moves between states, such as a product flow, a protocol, or a service, as a Mermaid statechart from a TLA+ model. Each bug is a numbered path with blue borders to a state that breaks a rule. Use for /statechart, to show a bug as a path through states, or to turn an agreed chart into a TLA+ skeleton.\"\ndisable-model-invocation: true\n---\n\n# Statechart\n\nThe chart shows how a system moves between states, in the words of the person who reads it. The scripts call that person the reader, as in `readerActions` and reader steps. The reader decides whether the behavior is right. The reader can be a PM who reads a product flow, an engineer who reads a protocol or a service, or a reviewer who reads a design. Label each state with what the reader can observe or cares about, such as \"Paying\" in an app or \"Lease held, write pending\" in a lock service. Label each step with the event that moves the system, such as \"tap Pay\" in an app, \"the request reads the count\" in a service, or \"the lease expires\" in a lock service. Keep variable and action names out of labels.\n\nRun `node <skill dir>/scripts/statechart.mjs --help` for the commands and for how to read a chart. Work in a scratch folder outside the repo. The command writes its files next to its input. The first run installs TLC and Java with mise, which downloads about 305 MB and needs the network. The help's TLC section tells how to use a TLC and Java that you have.\n\n## Pick the direction\n\nUse `from-spec` when a TLA+ model exists, or when the code or design is concrete enough to model. Use `from-chart` when there is no model, and the people who own the behavior should agree on it before anyone builds or changes it.\n\nIf the code already has a TLA+ spec, start from a copy of that spec. Add the variables that the labels and rules need, and keep the spec's existing invariants. To audit the code against that spec, make the copy model what the code does, and pass the spec unchanged as `--against`. Check it with the config that its authors say it passes, and pass that config as `--against-config` unless it has the spec's file name. One mapping labels both models, so label states and steps from variables that both have. A label that reads a variable that only the copy has must test `\"name\" in v` first, and label the spec's states another way. When a model describes code, tie every variable and action to code that a reviewer can open, and take its name from that code. Make each action one indivisible step in the code. Put the file and line of the code that checks each condition of an action in a comment on that condition, as in `\\* pay.ts:120`.\n\n## Spec to chart\n\n1. Choose the chart's states. When the reader cares about something that a label would hide, put it in the label, such as \"Paying, charged twice\" when the screen still says \"Paying\" after a second charge. Start with few states. Split a state when the split separates two bugs, or when the reader must see a step that leaves the label the same, such as a request that reads a count, because the chart does not draw such a step.\n2. Write each rule that the reader agrees to as one invariant, with the reader's sentence as its comment. A rule can be about any state in the model: what a screen shows, what a request returns, a stored value, or a message between parts. When the model describes code, the rule also names the code that can change that state. If the model has no variable for what a rule is about, add the variable. Do not drop the rule. For a rule that applies once everything settles, define `Settled == ~ENABLED System`, where `System` is the disjunction of the actions that happen without the reader. For a rule that applies at a narrower point, such as after each request finishes, write a predicate for that point and make the rule hold where it is true. For a goal that the system must be able to reach, write a rule that says the goal never happens, and pass that rule with `--expect-broken`. The path that breaks it is then a way to the goal. The chart still draws the goal as a state that breaks a rule, and `stories.md` tells it as a bug, so name each goal rule in the hand-off. Report each other broken rule as a bug. Never weaken a rule to make the chart pass.\n3. Run `from-spec`, then fill in the mapping file it writes. Put the labels in `state` and `step`. When the chart must separate what the reader does from what happens around the reader, list the reader's actions in `readerActions` by action name. Leave the list empty when every action counts the same. When the overview is too large to read, add `--cover`. The overview then keeps only the shortest path to each settled state, plus every bug path, and the command lists what it leaves out. When two bugs end in the same state for different reasons, add `cause` and make it name each reason. To color the states by what the reader cares about, such as \"Order shipped\", return that group from `group`. The legend names the groups, and in the PNG a state that breaks a rule is red in place of its group color.\n4. If there is a proposed fix, model it and pass that model as `--fixed`.\n5. Render each chart with `--png` and look at every PNG. Check that each numbered path reads in order. If a label reads like code, fix `state` or `step` and run the command again.\n6. When the model describes code, replay each bug's story against the real code, as a test or a live repro, one step per model action. Drive only entry points that a user, a client, or another part of the system reaches, and assert only what they can observe. A test that asserts a flag that it sets, or that searches the source text, proves nothing. When a run proves part of the story and reading the code proves the rest, say which part each proves. When the test copies code that it cannot import, give the commit and line range of the copy, and list what the copy leaves out. If a bug does not reproduce, assume the model is wrong until you show otherwise. Fix the model, not the rule. For a design with no code yet, the TLC trace is the evidence, and the hand-off must say so.\n\n## Chart to spec\n\n1. Draw the chart that the reader agrees to. Use one region for each part that changes independently, such as a device's connection and the job that the device runs. Add one `%% never` line per rule, with the reader's sentence. Draw an event that stops or restarts a part, such as \"the app closes\" or \"the process restarts\", as an edge to the state that comes next. Run `render CHART.mmd` to get a PNG of the chart for the reader.\n2. Run `from-chart`. If a rule breaks, the agreed chart has a design bug. Take the bug to the people who agreed to the chart.\n3. Add the real code's guards and variables to the spec that `from-chart` wrote, and run `from-chart` again. For each difference it prints, ask the reader whether the code is wrong or the chart needs a correction.\n\n## Hand off\n\nGive the PNG and the Mermaid source of each chart to the person who must decide. Add one line per bug with the rule it breaks, its steps as the chart numbers them, whether it reproduced, and whether the proposed fix fixes it. A broken PROPERTY has no path on the chart, so give the TLC counterexample that `stories.md` names for it. With `--against`, also say whether the spec already lists it: in the configs that `stories.md` names, in the spec's notes on what the model leaves out, or not at all. When the model describes code, do not report that a rule holds while the command lists conditions with no file and line. Take every count you quote from `summary.json`. Attach `stories.md` and the command that regenerates everything. Say what the model leaves out.\n",
+      "path": "pstack/skills/statechart/SKILL.md",
+      "owner": null,
+      "lines": 36,
+      "flags": {
+        "disable-model-invocation": true
+      },
+      "degree": {
+        "in": 2,
+        "out": 1,
+        "total": 3
+      }
+    },
+    {
       "id": "swarm",
       "kind": "skill",
       "name": "swarm",
       "title": "Swarm",
       "group": "skills",
       "description": "Fan out N parallel workers, drain them, and return one report. Use for /swarm, 'swarm this', or parallel coverage, races, gauntlets, and exploration.",
-      "text": "---\nname: swarm\ndescription: \"Fan out N parallel workers, drain them, and return one report. Use for /swarm, 'swarm this', or parallel coverage, races, gauntlets, and exploration.\"\ndisable-model-invocation: true\n---\n\n# Swarm\n\n## Start\n\nOpen a todolist with one entry per phase before launching anything.\n\n1. Frame\n2. Fan out\n3. Aggregate\n4. Report\n\n## Phase A: Frame\n\n1. State the done predicate and the artifact or report the swarm must return.\n2. Choose the shape. Partition into slices, race N workers on identical briefs, or mix both. For a race or mixed shape, declare `first pass`, `rank all`, or `best-of` before spawning.\n4. Pick the worker model from the `swarm workers` line in `~/.cursor/rules/pstack-models.mdc`. If the rule or that line is missing, use `grok-4.7-xhigh-fast`. For `auto` or `inherit-parent`, omit `model` so the workers run on the parent model. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message. For a model race, name each arm's model up front. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.\n5. Give each worker its own writable output when it writes. When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.\n\n## Phase B: Fan out\n\nSpawn all N workers in one message with `subagent_type: generalPurpose`, `environment: \"cloud\"`, `run_in_background: true`, and the step 4 model, left unset for `auto` or `inherit-parent`. Use `environment: \"local\"` only when the worker needs access to something on the user's computer.\n\nWhen a worker must start from a non-default pushed branch, pass `cloud_base_branch`.\n\nEvery brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence. A worker that can prove a defect reports `ISSUES` and lists every issue it can prove, not only the first.\n\nIf a worker drops out, proceed with N-1 and note it.\n\n## Phase C: Aggregate\n\nRead the terminal results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.\n\n## Phase D: Report\n\nReturn one consolidated in-chat report with the table, issue one-liners, gaps or dropouts, and the race rule when used.\n",
+      "text": "---\nname: swarm\ndescription: \"Fan out N parallel workers, drain them, and return one report. Use for /swarm, 'swarm this', or parallel coverage, races, gauntlets, and exploration.\"\ndisable-model-invocation: true\n---\n\n# Swarm\n\n## Start\n\nOpen a todolist with one entry per phase before launching anything.\n\n1. Frame\n2. Fan out\n3. Aggregate\n4. Report\n\n## Phase A: Frame\n\n1. State the done predicate and the artifact or report the swarm must return.\n2. Choose the shape. Partition into slices, race N workers on identical briefs, or mix both. For a race or mixed shape, declare `first pass`, `rank all`, or `best-of` before spawning.\n3. Pick the worker model from the `swarm workers` line in `~/.cursor/rules/pstack-models.mdc`. If the rule or that line is missing, use `grok-4.7-xhigh-fast`. For `auto` or `inherit-parent`, omit `model` so the workers run on the parent model. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message. For a model race, name each arm's model up front. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.\n4. Give each worker its own writable output when it writes. When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.\n\n## Phase B: Fan out\n\nSpawn all N workers in one message with `subagent_type: generalPurpose`, `environment: \"cloud\"`, `run_in_background: true`, and the step 3 model, left unset for `auto` or `inherit-parent`. Use `environment: \"local\"` only when the worker needs access to something on the user's computer.\n\nWhen a worker must start from a non-default pushed branch, pass `cloud_base_branch`.\n\nEvery brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence. A worker that can prove a defect reports `ISSUES` and lists every issue it can prove, not only the first.\n\nIf a worker drops out, proceed with N-1 and note it.\n\n## Phase C: Aggregate\n\nRead the terminal results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.\n\n## Phase D: Report\n\nReturn one consolidated in-chat report with a result table, issue one-liners, gaps or dropouts, and the race rule when used.\n",
       "path": "pstack/skills/swarm/SKILL.md",
       "owner": null,
       "lines": 41,
@@ -3178,10 +3595,28 @@
       "evidence": [
         {
           "path": "pstack/skills/create-formal-verification-skill/SKILL.md",
-          "line": 41,
+          "line": 43,
           "text": "Tell the user what you verified, which tool you used and why, the bounds, what the check found in plain words, how to run it, and what it does not cover. Suggest a second target only if you found a close one. Point the user at `/maintain...",
           "match": "slash-command",
           "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "create-formal-verification-skill",
+      "target": "statechart",
+      "type": "references",
+      "mode": "conditional",
+      "when": "If the check is a TLA+ model",
+      "evidence": [
+        {
+          "path": "pstack/skills/create-formal-verification-skill/SKILL.md",
+          "line": 35,
+          "text": "If the check is a TLA+ model, tell the next agent to read every result with the pstack [`/statechart`](../statechart/SKILL.md) skill. It shows each invariant violation the checker finds as its shortest path in plain words, and which of t...",
+          "match": "slash-command",
+          "mode": "conditional",
+          "when": "If the check is a TLA+ model"
         }
       ],
       "weight": 1
@@ -3563,6 +3998,30 @@
         }
       ],
       "weight": 1
+    },
+    {
+      "source": "ketchup-video",
+      "target": "ketchup",
+      "type": "references",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/ketchup-video/SKILL.md",
+          "line": 3,
+          "text": "description: \"Catch the user up like /ketchup, with a short silent video of slides for what happened and the waiting calls as text under it. Use for /ketchup-video.\"",
+          "match": "slash-command",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/ketchup-video/SKILL.md",
+          "line": 9,
+          "text": "Follow [`/ketchup`](../ketchup/SKILL.md), but show what happened in a short silent video instead of its summary and visuals. Its window starts at the last message the user wrote before `/ketchup-video`, not before any earlier `/ketchup`....",
+          "match": "slash-command",
+          "mode": "always"
+        }
+      ],
+      "weight": 2
     },
     {
       "source": "maintain-formal-verification-skill",
@@ -6259,21 +6718,21 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 77,
+          "line": 78,
           "text": "| Settle types and module shape before code that crosses a function boundary | [`/architect`](../architect/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 107,
+          "line": 109,
           "text": "- `/architect` implements right after it settles the design. Add \"with checkpoint\" to review the design before it writes code.",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 131,
+          "line": 133,
           "text": "pstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking `/poteto-mode` for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which wr...",
           "match": "slash-command",
           "mode": "always"
@@ -6290,14 +6749,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 78,
+          "line": 79,
           "text": "| Get several attempts at one brief, merged into the best one | [`/arena`](../arena/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 106,
+          "line": 108,
           "text": "- `/arena` gives every worker the same brief and merges the best parts. `/swarm` splits work into slices or a race and returns one report.",
           "match": "slash-command",
           "mode": "always"
@@ -6314,14 +6773,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 95,
+          "line": 97,
           "text": "| Turn their own working habits into a personal mode skill | [`/automate-me`](../automate-me/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 152,
+          "line": 154,
           "text": "- [`/automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/poteto-mode`.",
           "match": "slash-command",
           "mode": "always"
@@ -6338,7 +6797,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 91,
+          "line": 93,
           "text": "| Vet a performance number before reporting or acting on it | [`/benchmark-checklist`](../benchmark-checklist/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6355,14 +6814,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 76,
+          "line": 77,
           "text": "| Know what a small diff could break outside itself | [`/blast-radius`](../blast-radius/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 108,
+          "line": 110,
           "text": "- `/interrogate` reviews the diff. `/blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.",
           "match": "slash-command",
           "mode": "always"
@@ -6379,7 +6838,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 86,
+          "line": 87,
           "text": "| Hear the last reply again in plain words | [`/bro`](../bro/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6396,7 +6855,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 97,
+          "line": 99,
           "text": "| Stop agents from repeating the same mistakes in this repo | [`/correct`](../correct/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6420,7 +6879,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 89,
+          "line": 90,
           "text": "| Formally verify a race, invariant, or other property that tests rarely reach | [`/create-formal-verification-skill`](../create-formal-verification-skill/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6444,7 +6903,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 87,
+          "line": 88,
           "text": "| Give agents a scripted way to drive the app and prove behavior | [`/create-verification-skill`](../create-verification-skill/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6461,14 +6920,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 92,
+          "line": 94,
           "text": "| Run a large or cross-cutting change, or one to review after stepping away | [`/figure-it-out`](../figure-it-out/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 110,
+          "line": 112,
           "text": "- `/figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.",
           "match": "slash-command",
           "mode": "always"
@@ -6499,7 +6958,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 105,
+          "line": 107,
           "text": "- `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.",
           "match": "slash-command",
           "mode": "always"
@@ -6533,14 +6992,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 80,
+          "line": 81,
           "text": "| Have different models review a diff and try to break it | [`/interrogate`](../interrogate/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 108,
+          "line": 110,
           "text": "- `/interrogate` reviews the diff. `/blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.",
           "match": "slash-command",
           "mode": "always"
@@ -6564,13 +7023,37 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 109,
+          "line": 76,
+          "text": "| Catch up like `/ketchup`, in a short silent video of slides, with the waiting calls as text under it | [`/ketchup-video`](../ketchup-video/SKILL.md) |",
+          "match": "slash-command",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/poteto-help/SKILL.md",
+          "line": 111,
           "text": "- `/recall` rebuilds context across recent chats. `/ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.",
           "match": "slash-command",
           "mode": "always"
         }
       ],
-      "weight": 2
+      "weight": 3
+    },
+    {
+      "source": "poteto-help",
+      "target": "ketchup-video",
+      "type": "references",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/poteto-help/SKILL.md",
+          "line": 76,
+          "text": "| Catch up like `/ketchup`, in a short silent video of slides, with the waiting calls as text under it | [`/ketchup-video`](../ketchup-video/SKILL.md) |",
+          "match": "slash-command",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
     },
     {
       "source": "poteto-help",
@@ -6589,7 +7072,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 90,
+          "line": 91,
           "text": "| Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | [`/maintain-formal-verification-skill`](../maintain-formal-verification-skill/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6606,7 +7089,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 88,
+          "line": 89,
           "text": "| Bring a verification skill and its feature map back in line with the app | [`/maintain-verification-skill`](../maintain-verification-skill/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6623,7 +7106,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 98,
+          "line": 100,
           "text": "| Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6640,7 +7123,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 83,
+          "line": 84,
           "text": "| Strip comments before review, using a reviewer that didn't write them | [`/no-comments`](../no-comments/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -6657,7 +7140,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 110,
+          "line": 112,
           "text": "- `/figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.",
           "match": "playbook title + 'playbook'",
           "mode": "always"
@@ -6674,7 +7157,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 131,
+          "line": 133,
           "text": "pstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking `/poteto-mode` for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which wr...",
           "match": "path",
           "mode": "always"
@@ -6691,7 +7174,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 110,
+          "line": 112,
           "text": "- `/figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.",
           "match": "playbook title + 'playbook'",
           "mode": "always"
@@ -6708,7 +7191,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 131,
+          "line": 133,
           "text": "pstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking `/poteto-mode` for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which wr...",
           "match": "playbook title + 'playbook'",
           "mode": "always"
@@ -6725,7 +7208,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 109,
+          "line": 111,
           "text": "- `/recall` rebuilds context across recent chats. `/ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.",
           "match": "playbook title + 'playbook'",
           "mode": "always"
@@ -6847,63 +7330,63 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 116,
+          "line": 118,
           "text": "- pstack has no `/orchestrate` skill. Orchestrate is a `/poteto-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 120,
+          "line": 122,
           "text": "Playbooks are step lists inside `/poteto-mode`, not skills, so they have no slash command. Inside `/poteto-mode`, describing the task picks one, and these phrases name one directly:",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 129,
+          "line": 131,
           "text": "Without `/poteto-mode`, a phrase such as \"babysit this pr\" can start Cursor's own skill for the same job instead. The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](...",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 131,
+          "line": 133,
           "text": "pstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking `/poteto-mode` for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which wr...",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 133,
+          "line": 135,
           "text": "Principles are one-rule skills that `/poteto-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in \"apply prove it works. show me the real output.\" Typing `/principle-<name>` still lo...",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 139,
+          "line": 141,
           "text": "| The mode stopped applying after a few turns | It was started with Enter. Start it as a Custom Mode, or start each task with `/poteto-mode`. |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 143,
+          "line": 145,
           "text": "| A skill didn't load on its own | Only `/setup-pstack` loads from the user's words. The others load when the user types them or when `/poteto-mode` runs them, and it doesn't run every skill. |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 152,
+          "line": 154,
           "text": "- [`/automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/poteto-mode`.",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 154,
+          "line": 156,
           "text": "- `/poteto-mode write a skill for <workflow>` runs the authoring playbook. The eval playbook tests a skill change blind.",
           "match": "slash-command",
           "mode": "always"
@@ -6927,7 +7410,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 109,
+          "line": 111,
           "text": "- `/recall` rebuilds context across recent chats. `/ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.",
           "match": "slash-command",
           "mode": "always"
@@ -6958,7 +7441,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 148,
+          "line": 150,
           "text": "For a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [Guide page 10](../../docs/guide/10-recipes-and-pitfalls.md) has more pitfalls and the recipes worth copying.",
           "match": "path",
           "mode": "always"
@@ -6975,7 +7458,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 161,
+          "line": 163,
           "text": "Lead with the answer. Give at most one example prompt in a code block, adapted from [`references/recipes.md`](references/recipes.md) when one fits, then the link to that file. Keep it short unless the user asked for the whole map.",
           "match": "path",
           "mode": "always"
@@ -6992,14 +7475,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 96,
+          "line": 98,
           "text": "| Turn what a finished task taught into skill edits | [`/reflect`](../reflect/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 153,
+          "line": 155,
           "text": "- [`/reflect`](../reflect/SKILL.md) after a session turns its lessons into skill edits the user approves.",
           "match": "slash-command",
           "mode": "always"
@@ -7058,21 +7541,21 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 94,
+          "line": 96,
           "text": "| Pick a model for each role and a reasoning budget | [`/setup-pstack`](../setup-pstack/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 141,
+          "line": 143,
           "text": "| A new model choice had no effect | The rule from `/setup-pstack` applies to new chats. Start one. |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 143,
+          "line": 145,
           "text": "| A skill didn't load on its own | Only `/setup-pstack` loads from the user's words. The others load when the user types them or when `/poteto-mode` runs them, and it doesn't run every skill. |",
           "match": "slash-command",
           "mode": "always"
@@ -7090,7 +7573,7 @@
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
           "line": 70,
-          "text": "| Aim a task higher before starting: more expert, more outcome-focused, not overspecified | [`/sharpen`](../sharpen/SKILL.md) |",
+          "text": "| Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | [`/sharpen`](../sharpen/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         }
@@ -7106,8 +7589,25 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 93,
+          "line": 95,
           "text": "| Keep a decision log during a run, and review it afterward | [`/show-me-your-work`](../show-me-your-work/SKILL.md) |",
+          "match": "slash-command",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "poteto-help",
+      "target": "statechart",
+      "type": "references",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/poteto-help/SKILL.md",
+          "line": 92,
+          "text": "| Show a PM or designer what the user sees as a chart checked by a model, with each bug drawn as a numbered path, turn an agreed chart into a TLA+ skeleton, or audit the code against its TLA+ spec | [`/statechart`](../statechart/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         }
@@ -7123,14 +7623,14 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 79,
+          "line": 80,
           "text": "| Run parallel checks over slices, or race workers, as cloud agents | [`/swarm`](../swarm/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 106,
+          "line": 108,
           "text": "- `/arena` gives every worker the same brief and merges the best parts. `/swarm` splits work into slices or a race and returns one report.",
           "match": "slash-command",
           "mode": "always"
@@ -7147,7 +7647,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 81,
+          "line": 82,
           "text": "| Fix a bug test-first when a cheap local test exists | [`/tdd`](../tdd/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -7178,7 +7678,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 105,
+          "line": 107,
           "text": "- `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.",
           "match": "slash-command",
           "mode": "always"
@@ -7195,7 +7695,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 85,
+          "line": 86,
           "text": "| Write docs, an RFC, a README, a PR description, or a commit message to a standard | [`/technical-writing`](../technical-writing/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -7212,7 +7712,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 82,
+          "line": 83,
           "text": "| Apply TypeScript rules to `.ts` or `.tsx` work | [`/typescript-best-practices`](../typescript-best-practices/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -7229,7 +7729,7 @@
       "evidence": [
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 84,
+          "line": 85,
           "text": "| Clean AI tells out of prose | [`/unslop`](../unslop/SKILL.md) |",
           "match": "slash-command",
           "mode": "always"
@@ -7260,7 +7760,7 @@
         },
         {
           "path": "pstack/skills/poteto-help/SKILL.md",
-          "line": 105,
+          "line": 107,
           "text": "- `/how` explains what the code does. `/why` explains the reasons. `/teach` runs one or both and explains the result plainly.",
           "match": "slash-command",
           "mode": "always"
@@ -9694,7 +10194,7 @@
         {
           "path": "pstack/skills/poteto-help/references/recipes.md",
           "line": 9,
-          "text": "- `/sharpen <your task>`",
+          "text": "- `/sharpen <the prompt you're about to send>`",
           "match": "slash-command",
           "mode": "always"
         }
@@ -10395,6 +10895,983 @@
       "weight": 1
     },
     {
+      "source": "script:statechart/bug-states.mjs",
+      "target": "script:statechart/chart-parts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/bug-states.mjs",
+          "line": 3,
+          "text": "import { SEP } from \"./chart-parts.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/bug-states.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/bug-states.mjs",
+          "line": 2,
+          "text": "import { BROKEN_MARK, parseValue, stateKey } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/chart-edges.mjs",
+      "target": "script:statechart/bug-states.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/chart-edges.mjs",
+          "line": 2,
+          "text": "import { diverges } from \"./bug-states.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/chart-edges.mjs",
+      "target": "script:statechart/chart-parts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/chart-edges.mjs",
+          "line": 1,
+          "text": "import { edgeId } from \"./chart-parts.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/chart-to-tla.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/chart-to-tla.mjs",
+          "line": 5,
+          "text": "import { parseMermaid } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/chart-to-tla.mjs",
+      "target": "script:statechart/statechart.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/chart-to-tla.mjs",
+          "line": 93,
+          "text": "`\\\\* statechart.mjs from-chart ${path.basename(args.chart)} keeps it, checks it, and compares it with the chart.`,",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/compare-charts.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/compare-charts.mjs",
+          "line": 4,
+          "text": "import { FULL_LABELS, LEGEND_ID, NO_LOOPS, compareCharts, parseMermaid } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/map-view.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/map-view.mjs",
+          "line": 1,
+          "text": "import { isRecord, isTuple } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/property-loop.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/property-loop.mjs",
+          "line": 2,
+          "text": "import { joinAnd, parseDot, parseState, stateKey } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/property-loop.mjs",
+      "target": "script:statechart/map-view.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/property-loop.mjs",
+          "line": 3,
+          "text": "import { mapView } from \"./map-view.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/read-check.mjs",
+      "target": "script:statechart/chart-parts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/read-check.mjs",
+          "line": 2,
+          "text": "import { SEP } from \"./chart-parts.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/read-check.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/read-check.mjs",
+          "line": 1,
+          "text": "import { isRecord } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/regions-chart.mjs",
+      "target": "script:statechart/bug-states.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/regions-chart.mjs",
+          "line": 11,
+          "text": "import { RANK, diverges, worst } from \"./bug-states.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/regions-chart.mjs",
+      "target": "script:statechart/chart-edges.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/regions-chart.mjs",
+          "line": 12,
+          "text": "import { edgesAlong } from \"./chart-edges.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/regions-chart.mjs",
+      "target": "script:statechart/chart-parts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/regions-chart.mjs",
+          "line": 10,
+          "text": "import { SEP, addGuard, frontMatter, guarded } from \"./chart-parts.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/regions-chart.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/regions-chart.mjs",
+          "line": 9,
+          "text": "} from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/render.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/render.mjs",
+          "line": 7,
+          "text": "import { GROUP_PALETTE, PLAIN_FILL } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/render.mjs",
+      "target": "script:statechart/statechart.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/render.mjs",
+          "line": 528,
+          "text": "`${e.message} The chart is too big for one PNG, and the .mmd file still has all of it. A chart with fewer states fits. Run node statechart.mjs from-spec SPEC.tla --cover --png to draw a smaller overview of the spec.`,",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/rule-book.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/rule-book.mjs",
+          "line": 9,
+          "text": "} from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/second-replay.mjs",
+      "target": "script:statechart/bug-states.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/second-replay.mjs",
+          "line": 3,
+          "text": "import { badOf } from \"./bug-states.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/second-replay.mjs",
+      "target": "script:statechart/chart-parts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/second-replay.mjs",
+          "line": 2,
+          "text": "import { SEP, edgeId } from \"./chart-parts.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/second-replay.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/second-replay.mjs",
+          "line": 1,
+          "text": "import { isRecord, stateKey } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/spec-text.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/spec-text.mjs",
+          "line": 3,
+          "text": "import { BROKEN_MARK, PRIMES_OR_UNCHANGED, tlaVariables } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart-help.mjs",
+      "target": "script:statechart/compare-charts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 199,
+          "text": "compare-charts.mjs tlc/regions-all.mmd tlc/regions-proof.mmd repeats the",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart-help.mjs",
+      "target": "script:statechart/render.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 1,
+          "text": "import { CACHE_NAME, PACKAGES } from \"./render.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart-help.mjs",
+      "target": "script:statechart/statechart.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 5,
+          "text": "\"node statechart.mjs from-spec SPEC.tla [--config FILE] [--fixed FIXED.tla [--fixed-config FILE] | --against AGREED.tla [--against-config FILE]] [--label TEXT] [--map FILE] [--expect-broken RULE]... [--title TEXT] [--out DIR] [--cover] [...",
+          "match": "path",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 7,
+          "text": "\"node statechart.mjs from-chart CHART.mmd [--module NAME] [--expect-broken RULE]... [--title TEXT] [--out DIR] [--png [--theme NAME]]\",",
+          "match": "path",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 8,
+          "text": "render: \"node statechart.mjs render CHART.mmd [--theme NAME] [--out FILE]\",",
+          "match": "path",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 284,
+          "text": "node statechart.mjs from-spec Code.tla --against Agreed.tla --expect-broken NoLostUpload --png",
+          "match": "path",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 328,
+          "text": "\"\": `${usage([...Object.values(USAGE), \"node statechart.mjs [from-spec|from-chart|render] --help\"])}",
+          "match": "path",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/statechart/scripts/statechart-help.mjs",
+          "line": 350,
+          "text": "`Run node statechart.mjs ${cmd ? `${cmd} ` : \"\"}--help for the flags, the output, and the exit codes.`;",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 6
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/chart-to-tla.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 860,
+          "text": "script(\"chart-to-tla.mjs\", [input, \"--module\", name], input);",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/compare-charts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 871,
+          "text": "\"compare-charts.mjs\",",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 17,
+          "text": "} from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/property-loop.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 18,
+          "text": "import { loopSentence, readerStateNamer, repeatsIn } from \"./property-loop.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/render.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 19,
+          "text": "import { loadRenderer, renderPng, THEMES } from \"./render.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/rule-book.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 20,
+          "text": "import { ruleBook } from \"./rule-book.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/snapshot.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 21,
+          "text": "import { Inputs } from \"./snapshot.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/spec-text.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 22,
+          "text": "import { RULES_INVARIANT, SCAFFOLD, withoutComments, writeRulesModule } from \"./spec-text.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/statechart-help.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 9,
+          "text": "import { HELP, more, USAGE, usage } from \"./statechart-help.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/tlc-to-chart.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 401,
+          "text": "\"tlc-to-chart.mjs\",",
+          "match": "path",
+          "mode": "always"
+        },
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 466,
+          "text": "\"tlc-to-chart.mjs\",",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 2
+    },
+    {
+      "source": "script:statechart/statechart.mjs",
+      "target": "script:statechart/tlc-tools.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/statechart.mjs",
+          "line": 23,
+          "text": "import { cannotRunTlc, findTlc } from \"./tlc-tools.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/test/",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
+          "line": 36,
+          "text": "} from \"../lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/test/",
+      "target": "script:statechart/render.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
+          "line": 45,
+          "text": "} from \"../render.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/test/",
+      "target": "script:statechart/rule-book.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
+          "line": 46,
+          "text": "import { ruleBook } from \"../rule-book.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/test/",
+      "target": "script:statechart/snapshot.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
+          "line": 47,
+          "text": "import { copyPath } from \"../snapshot.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/test/",
+      "target": "script:statechart/tlc-tools.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
+          "line": 48,
+          "text": "import { findTlc, JAVA_TOOL, TLC_TOOL } from \"../tlc-tools.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/bug-states.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 35,
+          "text": "} from \"./bug-states.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/chart-edges.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 36,
+          "text": "import { chartEdges } from \"./chart-edges.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/chart-parts.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 26,
+          "text": "import { SEP, addGuard, edgeId, frontMatter, guarded } from \"./chart-parts.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 23,
+          "text": "} from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/map-view.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 38,
+          "text": "import { mapView } from \"./map-view.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/read-check.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 41,
+          "text": "import { readCheck } from \"./read-check.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/regions-chart.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 37,
+          "text": "import { regionsChart } from \"./regions-chart.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/rule-book.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 25,
+          "text": "import { ruleBook } from \"./rule-book.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/second-replay.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 40,
+          "text": "import { divergence, replaySecond } from \"./second-replay.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/tlc-to-chart-args.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 24,
+          "text": "import { args } from \"./tlc-to-chart-args.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/tlc-to-chart.mjs",
+      "target": "script:statechart/ways-in.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+          "line": 39,
+          "text": "import { stepsIntoBugs, waysLine } from \"./ways-in.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/ways-in.mjs",
+      "target": "script:statechart/bug-states.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/ways-in.mjs",
+          "line": 2,
+          "text": "import { badOf, reachableAvoiding } from \"./bug-states.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "source": "script:statechart/ways-in.mjs",
+      "target": "script:statechart/lib.mjs",
+      "type": "imports",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/scripts/ways-in.mjs",
+          "line": 1,
+          "text": "import { joinAnd } from \"./lib.mjs\";",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
       "source": "setup-benny",
       "target": "how",
       "type": "references",
@@ -10841,6 +12318,23 @@
       "weight": 1
     },
     {
+      "source": "statechart",
+      "target": "script:statechart/statechart.mjs",
+      "type": "runs",
+      "mode": "always",
+      "when": null,
+      "evidence": [
+        {
+          "path": "pstack/skills/statechart/SKILL.md",
+          "line": 11,
+          "text": "Run `node <skill dir>/scripts/statechart.mjs --help` for the commands and for how to read a chart. Work in a scratch folder outside the repo. The command writes its files next to its input. The first run installs TLC and Java with mise, ...",
+          "match": "path",
+          "mode": "always"
+        }
+      ],
+      "weight": 1
+    },
+    {
       "source": "swarm",
       "target": "poteto-mode",
       "type": "references",
@@ -10850,7 +12344,7 @@
         {
           "path": "pstack/skills/swarm/SKILL.md",
           "line": 22,
-          "text": "4. Pick the worker model from the `swarm workers` line in `~/.cursor/rules/pstack-models.mdc`. If the rule or that line is missing, use `grok-4.7-xhigh-fast`. For `auto` or `inherit-parent`, omit `model` so the workers run on the parent ...",
+          "text": "3. Pick the worker model from the `swarm workers` line in `~/.cursor/rules/pstack-models.mdc`. If the rule or that line is missing, use `grok-4.7-xhigh-fast`. For `auto` or `inherit-parent`, omit `model` so the workers run on the parent ...",
           "match": "name",
           "mode": "always"
         }
