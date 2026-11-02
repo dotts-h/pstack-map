@@ -412,7 +412,7 @@
      "no": "carry on",
      "skip": [],
      "line": 35,
-     "text": "If the check is a TLA+ model, tell the next agent to read every result with the pstack [`/statechart`](../statechart/SKILL.md) skill. It shows each invariant violation the checker finds as its shortest path in plain words, and which of those violations a change fixes. When the check passes, `/statechart` draws a chart of how the system moves between states. Refer to `/statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.",
+     "text": "If the check is a TLA+ model, tell the next agent to read every result with the pstack [`/statechart`](../statechart/SKILL.md) skill. It shows each invariant violation the checker finds as its shortest path in plain words. When the check passes, `/statechart` draws a chart of how the system moves between states. Refer to `/statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.",
      "default": "no"
     }
    ]
@@ -634,107 +634,37 @@
   },
   "interrogate": {
    "file": "skills/interrogate/SKILL.md",
-   "stepSource": "Phase/Step headings",
+   "stepSource": "section headings (no explicit ordered list)",
    "steps": [
     {
      "n": 1,
-     "caption": "Scope",
+     "caption": "Frame",
      "line": 11
     },
     {
      "n": 2,
-     "caption": "Intent",
-     "line": 21
+     "caption": "Fan out",
+     "line": 15
     },
     {
      "n": 3,
-     "caption": "Spawn Reviewers",
-     "line": 25
-    },
-    {
-     "n": 4,
-     "caption": "Synthesize",
-     "line": 40
-    },
-    {
-     "n": 5,
-     "caption": "Lead Judgment",
-     "line": 44
+     "caption": "Verify",
+     "line": 21
     }
    ],
    "inputs": [
     {
-     "kind": "file",
-     "name": "references/reviewer-prompt.md",
-     "line": 38
-    },
-    {
-     "kind": "file",
-     "name": "references/rubric.md",
-     "line": 38
-    },
-    {
-     "kind": "file",
-     "name": "references/code-quality-review.md",
-     "line": 38
+     "kind": "skill",
+     "name": "in-your-own-words",
+     "line": 13
     },
     {
      "kind": "skill",
-     "name": "poteto-mode",
-     "line": 38
-    },
-    {
-     "kind": "file",
-     "name": "references/lead-judgment.md",
-     "line": 46
+     "name": "arena",
+     "line": 17
     }
    ],
-   "branches": [
-    {
-     "ask": 0,
-     "kind": "if",
-     "q": "Does the user point at specific files or a diff?",
-     "yes": "use that",
-     "no": "carry on",
-     "skip": [],
-     "line": 15,
-     "text": "- If the user points at specific files or a diff, use that.",
-     "default": "no"
-    },
-    {
-     "ask": 0,
-     "kind": "if",
-     "q": "Are you on a feature branch?",
-     "yes": "run git diff main...HEAD (or the appropriate base branch) for the full changeset",
-     "no": "carry on",
-     "skip": [],
-     "line": 16,
-     "text": "- If on a feature branch, run `git diff main...HEAD` (or the appropriate base branch) for the full changeset.",
-     "default": "no"
-    },
-    {
-     "ask": 0,
-     "kind": "if",
-     "q": "Do the user's message references recent work?",
-     "yes": "gather the relevant files",
-     "no": "carry on",
-     "skip": [],
-     "line": 17,
-     "text": "- If the user's message references recent work, gather the relevant files.",
-     "default": "no"
-    },
-    {
-     "ask": 2,
-     "kind": "if",
-     "q": "Does the Task tool reject a configured entry?",
-     "yes": "run that reviewer on its family's table default and say so",
-     "no": "carry on",
-     "skip": [],
-     "line": 36,
-     "text": "If the Task tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*`, and `grok-*` with `cursor-grok-*` and `composer-*`. A refused `composer-*` entry runs on Reviewer B's default. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.",
-     "default": "no"
-    }
-   ]
+   "branches": []
   },
   "ketchup": {
    "file": "skills/ketchup/SKILL.md",
@@ -782,8 +712,13 @@
     },
     {
      "n": 2,
-     "caption": "Render",
+     "caption": "Subtitles",
      "line": 21
+    },
+    {
+     "n": 3,
+     "caption": "Render",
+     "line": 25
     }
    ],
    "inputs": [],
@@ -1118,114 +1053,114 @@
     {
      "n": 1,
      "caption": "Principles",
-     "line": 38
+     "line": 39
     },
     {
      "n": 2,
      "caption": "Autonomy",
-     "line": 81
+     "line": 82
     },
     {
      "n": 3,
      "caption": "Subagents",
-     "line": 91
+     "line": 92
     },
     {
      "n": 4,
      "caption": "Writing the reply",
-     "line": 103
+     "line": 104
     },
     {
      "n": 5,
      "caption": "Comments",
-     "line": 117
+     "line": 118
     },
     {
      "n": 6,
      "caption": "Playbooks",
-     "line": 121
+     "line": 122
     }
    ],
    "inputs": [
     {
      "kind": "skill",
      "name": "how",
-     "line": 19
+     "line": 20
     },
     {
      "kind": "principle",
      "name": "principle-model-the-domain",
-     "line": 21
-    },
-    {
-     "kind": "skill",
-     "name": "architect",
      "line": 22
     },
     {
      "kind": "skill",
+     "name": "architect",
+     "line": 23
+    },
+    {
+     "kind": "skill",
      "name": "swarm",
-     "line": 23
-    },
-    {
-     "kind": "skill",
-     "name": "arena",
-     "line": 23
-    },
-    {
-     "kind": "skill",
-     "name": "interrogate",
      "line": 24
     },
     {
      "kind": "skill",
-     "name": "unslop",
-     "line": 26
+     "name": "arena",
+     "line": 24
     },
     {
      "kind": "skill",
-     "name": "technical-writing",
+     "name": "interrogate",
+     "line": 25
+    },
+    {
+     "kind": "skill",
+     "name": "unslop",
      "line": 27
     },
     {
      "kind": "skill",
+     "name": "technical-writing",
+     "line": 28
+    },
+    {
+     "kind": "skill",
      "name": "no-comments",
-     "line": 29
+     "line": 30
     },
     {
      "kind": "skill",
      "name": "benchmark-checklist",
-     "line": 31
+     "line": 32
     },
     {
      "kind": "file",
      "name": "references/bugbot-triage.md",
-     "line": 34
+     "line": 35
     },
     {
      "kind": "skill",
      "name": "show-me-your-work",
-     "line": 36
+     "line": 37
     },
     {
      "kind": "principle",
      "name": "principle-sequence-verifiable-units",
-     "line": 68
+     "line": 69
     },
     {
      "kind": "skill",
      "name": "why",
-     "line": 93
+     "line": 94
     },
     {
      "kind": "skill",
      "name": "reflect",
-     "line": 93
+     "line": 94
     },
     {
      "kind": "skill",
      "name": "figure-it-out",
-     "line": 125
+     "line": 126
     }
    ],
    "branches": []
@@ -1480,64 +1415,68 @@
    "steps": [
     {
      "n": 1,
-     "caption": "Pick the direction",
-     "line": 13
+     "caption": "Run",
+     "line": 11
     },
     {
      "n": 2,
-     "caption": "Spec to chart",
-     "line": 19
+     "caption": "Write the spec",
+     "line": 23
     },
     {
      "n": 3,
-     "caption": "Chart to spec",
-     "line": 28
+     "caption": "Pick the chart",
+     "line": 29
     },
     {
      "n": 4,
+     "caption": "Read the report",
+     "line": 62
+    },
+    {
+     "n": 5,
+     "caption": "Show the chart",
+     "line": 72
+    },
+    {
+     "n": 6,
      "caption": "Hand off",
-     "line": 34
+     "line": 78
     }
    ],
    "inputs": [
     {
      "kind": "file",
-     "name": "scripts/statechart.mjs",
-     "line": 11
+     "name": "scripts/statechart.ts",
+     "line": 19
+    },
+    {
+     "kind": "file",
+     "name": "references/render.md",
+     "line": 76
     }
    ],
    "branches": [
     {
-     "ask": 0,
-     "kind": "if",
-     "q": "Has the code already a TLA+ spec?",
-     "yes": "start from a copy of that spec",
+     "ask": 2,
+     "kind": "when",
+     "q": "Can a step occur only in some conditions?",
+     "yes": "end its label with the condition in brackets, in the reader's words, such as you press pla",
      "no": "carry on",
      "skip": [],
-     "line": 17,
-     "text": "If the code already has a TLA+ spec, start from a copy of that spec. Add the variables that the labels and rules need, and keep the spec's existing invariants. To audit the code against that spec, make the copy model what the code does, and pass the spec unchanged as `--against`. Check it with the config that its authors say it passes, and pass that config as `--against-config` unless it has the spec's file name. One mapping labels both models, so label states and steps from variables that both have. A label that reads a variable that only the copy has must test `\"name\" in v` first, and label the spec's states another way. When a model describes code, tie every variable and action to code that a reviewer can open, and take its name from that code. Make each action one indivisible step in the code. Put the file and line of the code that checks each condition of an action in a comment on that condition, as in `\\* pay.ts:120`.",
+     "line": 43,
+     "text": "When a step can occur only in some conditions, end its label with the condition in brackets, in the reader's words, such as `you press play [while the file loads]`. In a regions chart, the command writes the condition on the other regions on the arrow, in the words of their labels, such as `[when Offline]`. Your brackets replace it, and two arrows from one state can then look the same. So in a regions chart, do not write brackets for a condition on another region. When a value that no label shows decides where a step goes, name the result in the label, such as \"the roster read fails\".",
      "default": "no"
     },
     {
-     "ask": 1,
-     "kind": "if",
-     "q": "Is there a proposed fix?",
-     "yes": "model it and pass that model as --fixed",
-     "no": "carry on",
-     "skip": [],
-     "line": 24,
-     "text": "4. If there is a proposed fix, model it and pass that model as `--fixed`.",
-     "default": "no"
-    },
-    {
-     "ask": 1,
+     "ask": 5,
      "kind": "when",
      "q": "Does the model describe code?",
-     "yes": "replay each bug's story against the real code, as a test or a live repro, one step per mod",
+     "yes": "replay each bug path against the real code, as a test or a live repro, one step for each a",
      "no": "carry on",
      "skip": [],
-     "line": 26,
-     "text": "6. When the model describes code, replay each bug's story against the real code, as a test or a live repro, one step per model action. Drive only entry points that a user, a client, or another part of the system reaches, and assert only what they can observe. A test that asserts a flag that it sets, or that searches the source text, proves nothing. When a run proves part of the story and reading the code proves the rest, say which part each proves. When the test copies code that it cannot import, give the commit and line range of the copy, and list what the copy leaves out. If a bug does not reproduce, assume the model is wrong until you show otherwise. Fix the model, not the rule. For a design with no code yet, the TLC trace is the evidence, and the hand-off must say so.",
+     "line": 82,
+     "text": "When the model describes code, replay each bug path against the real code, as a test or a live repro, one step for each action. If a bug does not occur, think that the model is wrong until you show that it is not.",
      "default": "no"
     }
    ]
@@ -2039,7 +1978,7 @@
     },
     {
      "line": 9,
-     "text": "Mid-run discoveries are yours",
+     "text": "Mid-run discoveries that support the goal are yours",
      "skill": null
     },
     {
@@ -2099,22 +2038,12 @@
    "steps": [
     {
      "line": 5,
-     "text": "Run Autopilot-full's owners, minus the landing",
+     "text": "In place of step 5, stop at verified",
      "skill": null
     },
     {
      "line": 6,
-     "text": "Give the topology one writer",
-     "skill": null
-    },
-    {
-     "line": 7,
-     "text": "Absorb drift at the root",
-     "skill": null
-    },
-    {
-     "line": 8,
-     "text": "Deliver the chain, then keep your hands off it",
+     "text": "Stack a PR only when it builds on another PR",
      "skill": null
     }
    ]
@@ -2405,43 +2334,7 @@
   },
   "orchestrate": {
    "file": "skills/poteto-mode/playbooks/orchestrate.md",
-   "steps": [
-    {
-     "line": 61,
-     "text": "Frame",
-     "skill": null
-    },
-    {
-     "line": 62,
-     "text": "Install the runtime",
-     "skill": null
-    },
-    {
-     "line": 63,
-     "text": "Pilot",
-     "skill": null
-    },
-    {
-     "line": 64,
-     "text": "Scale",
-     "skill": null
-    },
-    {
-     "line": 65,
-     "text": "Drain",
-     "skill": null
-    },
-    {
-     "line": 66,
-     "text": "Land",
-     "skill": null
-    },
-    {
-     "line": 67,
-     "text": "Close",
-     "skill": null
-    }
-   ]
+   "steps": []
   },
   "pause-safely": {
    "file": "skills/poteto-mode/playbooks/pause-safely.md",
